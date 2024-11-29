@@ -86,71 +86,25 @@
             </div>
             <div class="card-body">
                 <div class="row">
-                    <div class="col-md-6">
-                        <h6><i class="fas fa-tasks me-2"></i>Task Details</h6>
+                    <div class="col-12">
+                        <h6><i class="fas fa-tasks me-2"></i>Task</h6>
                         <p>{{ agent.task }}</p>
                         
-                        <h6><i class="fas fa-info-circle me-2"></i>Status</h6>
-                        <p class="badge {% if agent.status == 'in_progress' %}bg-primary{% elif agent.status == 'pending' %}bg-warning{% else %}bg-success{% endif %}">
-                            <i class="fas {% if agent.status == 'in_progress' %}fa-spinner fa-spin{% elif agent.status == 'pending' %}fa-clock{% else %}fa-check{% endif %} me-1"></i>
-                            {{ agent.status or 'pending' }}
-                        </p>
-
-                        <h6><i class="fas fa-bug me-2"></i>Debug Info</h6>
-                        <div class="debug-info">
-                            <p class="mb-1"><span class="label">Output Length:</span> {{ agent.aider_output|length }}</p>
-                            <p class="mb-1"><span class="label">Last Updated:</span> {{ agent.last_updated or 'Never' }}</p>
-                            <p class="mb-1"><span class="label">Workspace:</span> {{ agent.workspace }}</p>
-                            <p class="mb-0"><span class="label">Repo Path:</span> {{ agent.repo_path or 'Not set' }}</p>
-                        </div>
-                    </div>
-                    <div class="col-md-6">
-                        <h6><i class="fas fa-folder-open me-2"></i>Workspace Files</h6>
-                        <ul class="list-group">
-                            {% for file in agent.files[:5] %}
-                            <li class="list-group-item">
-                                <i class="fas fa-file-code me-2"></i>{{ file }}
-                            </li>
-                            {% endfor %}
-                            {% if agent.files|length > 5 %}
-                            <li class="list-group-item text-muted">
-                                <i class="fas fa-ellipsis-h me-2"></i>and {{ agent.files|length - 5 }} more
-                            </li>
+                        <h6><i class="fas fa-terminal me-2"></i>Aider Output</h6>
+                        <div class="cli-output">
+                            {% if agent.aider_output %}
+                                {{ agent.aider_output|safe }}
+                            {% else %}
+                                <span class="text-muted">No output available yet...</span>
                             {% endif %}
-                        </ul>
-                    </div>
-                </div>
-
-                <div class="progress-section">
-                    <h6><i class="fas fa-terminal me-2"></i>Aider CLI Output</h6>
-                    <div class="cli-output">
-                        {% if agent.aider_output %}
-                            {{ agent.aider_output|safe }}
-                        {% else %}
-                            <span class="text-muted">No output available yet...</span>
-                        {% endif %}
-                    </div>
-                </div>
-
-                <div class="progress-section">
-                    <h6><i class="fas fa-clipboard-check me-2"></i>Last Critique</h6>
-                    {% if agent.prompt_details and agent.prompt_details.last_critique %}
-                    <div class="card">
-                        <div class="card-body">
-                            <p><i class="fas fa-file me-2"></i>Files Created: {{ agent.prompt_details.last_critique.files_created }}</p>
-                            <p><i class="fas fa-chart-line me-2"></i>Complexity: {{ agent.prompt_details.last_critique.complexity }}</p>
-                            <p><i class="fas fa-lightbulb me-2"></i>Potential Improvements: 
-                                {% if agent.prompt_details.last_critique.potential_improvements %}
-                                    {{ agent.prompt_details.last_critique.potential_improvements|join(', ') }}
-                                {% else %}
-                                    None
-                                {% endif %}
-                            </p>
+                        </div>
+                        
+                        <div class="mt-3">
+                            <small class="text-muted">
+                                <i class="fas fa-clock me-1"></i>Last Updated: {{ agent.last_updated or 'Never' }}
+                            </small>
                         </div>
                     </div>
-                    {% else %}
-                    <p class="text-muted"><i class="fas fa-info-circle me-2"></i>No critique available yet</p>
-                    {% endif %}
                 </div>
             </div>
             <div class="card-footer text-muted d-flex justify-content-between align-items-center">

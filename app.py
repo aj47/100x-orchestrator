@@ -44,48 +44,12 @@ def agent_view():
     next_check = now + datetime.timedelta(seconds=30)
     time_until_next_check = int((next_check - now).total_seconds())
     
-    # Enrich agent data with more details
+    # Ensure basic agent data exists
     for agent_id, agent in list(agents.items()):
-        # Ensure workspace exists and normalize paths
-        if 'workspace' not in agent:
-            agent['workspace'] = normalize_path(os.path.join('workspaces', agent_id))
-            tasks_data['agents'][agent_id]['workspace'] = agent['workspace']
-        else:
-            agent['workspace'] = normalize_path(agent['workspace'])
-            
-        if 'repo_path' in agent:
-            agent['repo_path'] = normalize_path(agent['repo_path'])
-        
-        # Ensure aider_output exists
         if 'aider_output' not in agent:
             agent['aider_output'] = ''
-        
-        # Log the output length for debugging
-        app.logger.debug(f"Agent {agent_id} output length: {len(agent.get('aider_output', ''))}")
-        
-        # Safely load prompt file
-        try:
-            prompt_file = Path(agent['workspace']) / 'config' / 'prompt.txt'
-            if prompt_file.exists():
-                with open(prompt_file, 'r') as f:
-                    prompt_data = json.load(f)
-                    agent['prompt_details'] = prompt_data
-                    # Also update aider_output from prompt data if available
-                    if 'aider_output' in prompt_data and prompt_data['aider_output']:
-                        agent['aider_output'] = prompt_data['aider_output']
-            else:
-                agent['prompt_details'] = {}
-        except (FileNotFoundError, json.JSONDecodeError) as e:
-            app.logger.error(f"Error loading prompt file for agent {agent_id}: {str(e)}")
-            agent['prompt_details'] = {}
-        
-        # Calculate workspace files
-        try:
-            workspace = Path(agent['workspace'])
-            agent['files'] = [str(f.relative_to(workspace)) for f in workspace.glob('**/*') if f.is_file()]
-        except Exception as e:
-            app.logger.error(f"Error getting files for agent {agent_id}: {str(e)}")
-            agent['files'] = []
+        if 'last_updated' not in agent:
+            agent['last_updated'] = None
     
     # Save updated tasks data
     save_tasks(tasks_data)
@@ -132,13 +96,16 @@ def create_agent():
                     tasks_data['tasks'].append(task_description)
         
         # Update tasks.json with repo URL and agents
-        tasks_data['repository_url'] = repo_url  # Match the key in tasks.json
+        tasks_data['repository_url'] = repo_url
         tasks_data['agents'] = tasks_data.get('agents', {})
         for agent_id in created_agents:
             tasks_data['agents'][agent_id] = {
-                'task': tasks_data['tasks'][-1],  # Last added task
+                'task': tasks_data['tasks'][-1],
                 'repo_url': repo_url,
-                'workspace': os.path.join('workspaces', agent_id)  # Add workspace path
+                'status': 'pending',
+                'created_at': datetime.datetime.now().isoformat(),
+                'last_updated': datetime.datetime.now().isoformat(),
+                'aider_output': ''
             }
         
         # Save updated tasks
