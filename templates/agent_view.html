@@ -37,8 +37,7 @@
             <div class="card-header">
                 <h5 class="mb-0"><i class="fas fa-info-circle me-2"></i>Agent Overview</h5>
             </div>
-            <div id="collapse-{{ agent_id }}" class="accordion-collapse collapse {% if loop.first %}show{% endif %}" aria-labelledby="heading-{{ agent_id }}">
-                <div class="accordion-body">
+            <div class="card-body">
                 <div class="row">
                     <div class="col-md-4">
                         <h6>Total Agents</h6>
@@ -64,16 +63,14 @@
             </span>
         </div>
 
-        <div id="agentList" class="accordion">
+        <div id="agentList">
         {% for agent_id, agent in agents.items() %}
-        <div class="card agent-card accordion-item" id="agent-{{ agent_id }}">
-            <div class="accordion-header" id="heading-{{ agent_id }}">
-                <div class="d-flex justify-content-between align-items-center p-3">
-                    <button class="accordion-button {% if not loop.first %}collapsed{% endif %}" type="button" data-bs-toggle="collapse" data-bs-target="#collapse-{{ agent_id }}" aria-expanded="{% if loop.first %}true{% else %}false{% endif %}" aria-controls="collapse-{{ agent_id }}">
-                        <h5 class="card-title mb-0">
-                            <i class="fas fa-robot me-2"></i>Agent: {{ agent_id }}
-                        </h5>
-                    </button>
+        <div class="card agent-card" id="agent-{{ agent_id }}">
+            <div class="card-header d-flex justify-content-between align-items-center">
+                <div>
+                    <h5 class="card-title mb-0">
+                        <i class="fas fa-robot me-2"></i>Agent: {{ agent_id }}
+                    </h5>
                     <div class="debug-links">
                         <a href="{{ agent.debug_urls.info }}" target="_blank">
                             <i class="fas fa-bug"></i> Debug Info
