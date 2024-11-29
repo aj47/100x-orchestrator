@@ -29,7 +29,7 @@ class Colors:
 # Configuration
 DEFAULT_AGENTS_PER_TASK = 2
 MODEL_NAME = os.environ.get('LITELLM_MODEL', 'anthropic/claude-3-5-sonnet-20240620')
-CONFIG_FILE = Path("config.json")
+CONFIG_FILE = Path("tasks/tasks.json")
 tools, available_functions = [], {}
 MAX_TOOL_OUTPUT_LENGTH = 5000  # Adjust as needed
 CHECK_INTERVAL = 5  # Reduced to 30 seconds for more frequent updates
@@ -351,7 +351,7 @@ class AiderSession:
             logging.error(f"[Session {self.session_id}] Error during cleanup: {e}", exc_info=True)
 
 def load_tasks():
-    """Load config from config.json."""
+    """Load config from tasks.json."""
     try:
         with open(CONFIG_FILE, 'r') as f:
             data = json.load(f)
