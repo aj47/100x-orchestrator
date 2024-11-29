@@ -189,12 +189,47 @@
         // Function to fetch updates via AJAX
         async function fetchUpdates() {
             try {
-                const response = await fetch('/agents');
-                const text = await response.text();
+                const response = await fetch('/tasks/tasks.json');
+                const tasksData = await response.json();
                 
-                // Create a temporary div to parse the HTML
-                const tempDiv = document.createElement('div');
-                tempDiv.innerHTML = text;
+                // Update each agent's output
+                for (const [agentId, agentData] of Object.entries(tasksData.agents)) {
+                    const agentCard = document.getElementById(`agent-${agentId}`);
+                    if (!agentCard) continue;
+
+                    // Update CLI output if it has changed
+                    const outputElement = agentCard.querySelector('.cli-output');
+                    if (outputElement && agentData.aider_output) {
+                        const currentText = outputElement.textContent || '';
+                        
+                        // Only update if output has changed
+                        if (agentData.aider_output !== currentText) {
+                            outputElement.innerHTML = agentData.aider_output;
+                            outputElement.scrollTop = outputElement.scrollHeight;
+                            
+                            // Flash effect for new content
+                            outputElement.style.transition = 'background-color 0.5s';
+                            outputElement.style.backgroundColor = '#2e4052';
+                            setTimeout(() => {
+                                outputElement.style.backgroundColor = '#1e1e1e';
+                            }, 500);
+                        }
+                    }
+
+                    // Update status and timestamps
+                    const statusBadge = agentCard.querySelector('.badge');
+                    if (statusBadge && agentData.status) {
+                        statusBadge.textContent = agentData.status;
+                        statusBadge.className = `badge ${agentData.status === 'in_progress' ? 'bg-primary' : 
+                                                      agentData.status === 'pending' ? 'bg-warning' : 'bg-success'}`;
+                    }
+
+                    // Update timestamps
+                    const lastUpdated = agentCard.querySelector('.card-footer div:last-child');
+                    if (lastUpdated && agentData.last_updated) {
+                        lastUpdated.innerHTML = `<i class="fas fa-clock me-1"></i>Last Updated: ${agentData.last_updated}`;
+                    }
+                }
                 
                 // Update each agent's output
                 const agents = document.querySelectorAll('.agent-card');
@@ -297,7 +332,7 @@
             });
 
             // Set up more frequent updates for CLI output
-            setInterval(forceUpdate, 2000); // Check for updates every 2 seconds
+            setInterval(forceUpdate, 1000); // Check for updates every second
         });
 
         // Hide loader when page is fully loaded

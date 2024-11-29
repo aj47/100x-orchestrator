@@ -132,7 +132,7 @@ def create_agent():
                     tasks_data['tasks'].append(task_description)
         
         # Update tasks.json with repo URL and agents
-        tasks_data['repo_url'] = repo_url
+        tasks_data['repository_url'] = repo_url  # Match the key in tasks.json
         tasks_data['agents'] = tasks_data.get('agents', {})
         for agent_id in created_agents:
             tasks_data['agents'][agent_id] = {
