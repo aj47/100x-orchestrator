@@ -23,9 +23,35 @@
         <div class="d-flex justify-content-between align-items-center mb-4">
             <h1><i class="fas fa-robot me-2"></i>Agent Progress Dashboard</h1>
             <div>
+                <button id="deleteAllAgents" class="btn btn-danger me-2">
+                    <i class="fas fa-trash-alt me-1"></i>Delete All Agents
+                </button>
                 <a href="/" class="btn btn-secondary">
                     <i class="fas fa-arrow-left me-1"></i>Back to Agent Creation
                 </a>
+            </div>
+        </div>
+
+        <!-- Agent Overview -->
+        <div class="card mb-4">
+            <div class="card-header">
+                <h5 class="mb-0"><i class="fas fa-info-circle me-2"></i>Agent Overview</h5>
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-md-4">
+                        <h6>Total Agents</h6>
+                        <p class="h3">{{ agents|length }}</p>
+                    </div>
+                    <div class="col-md-4">
+                        <h6>Active Tasks</h6>
+                        <p class="h3">{{ agents.values()|map(attribute='task')|unique|list|length }}</p>
+                    </div>
+                    <div class="col-md-4">
+                        <h6>Repository</h6>
+                        <p class="text-truncate">{{ agents.values()|map(attribute='repo_url')|first or 'Not set' }}</p>
+                    </div>
+                </div>
             </div>
         </div>
         
@@ -492,6 +518,53 @@
                 helpModal.show();
             };
             header.querySelector('div').appendChild(helpButton);
+        });
+
+        // Delete all agents functionality
+        document.getElementById('deleteAllAgents').addEventListener('click', async () => {
+            if (!confirm('Are you sure you want to delete all agents? This action cannot be undone.')) {
+                return;
+            }
+
+            const agents = document.querySelectorAll('.agent-card');
+            let successCount = 0;
+            let errorCount = 0;
+
+            for (const agent of agents) {
+                const agentId = agent.id.replace('agent-', '');
+                try {
+                    const response = await fetch(`/delete_agent/${agentId}`, {
+                        method: 'DELETE'
+                    });
+                    
+                    const result = await response.json();
+                    
+                    if (result.success) {
+                        agent.style.transition = 'all 0.5s ease-out';
+                        agent.style.opacity = '0';
+                        agent.style.transform = 'translateY(20px)';
+                        setTimeout(() => agent.remove(), 500);
+                        successCount++;
+                    } else {
+                        errorCount++;
+                    }
+                } catch (error) {
+                    errorCount++;
+                    console.error(`Error deleting agent ${agentId}:`, error);
+                }
+            }
+
+            // Show result message
+            showToast(
+                `Deleted ${successCount} agent${successCount !== 1 ? 's' : ''}` + 
+                (errorCount > 0 ? `. Failed to delete ${errorCount} agent${errorCount !== 1 ? 's' : ''}.` : '.'),
+                errorCount > 0 ? 'error' : 'success'
+            );
+
+            // Refresh page if all agents were deleted successfully
+            if (errorCount === 0) {
+                setTimeout(() => location.reload(), 1000);
+            }
         });
     </script>
 </body>
