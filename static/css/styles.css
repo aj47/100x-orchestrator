@@ -1,0 +1,205 @@
+/* Common styles */
+.container { 
+    max-width: 800px; 
+    margin-top: 2rem; 
+}
+
+.form-group { 
+    margin-bottom: 1rem; 
+}
+
+/* Task list styles */
+#taskList { 
+    margin-bottom: 1rem; 
+}
+
+.task-item { 
+    display: flex; 
+    margin-bottom: 0.5rem; 
+}
+
+.task-item input { 
+    flex-grow: 1; 
+    margin-right: 0.5rem; 
+}
+
+/* Agent card styles */
+.agent-card { 
+    margin-bottom: 1rem;
+    animation: fadeIn 0.5s ease-in-out;
+}
+
+.delete-agent-btn {
+    margin-left: 10px;
+}
+
+/* CLI output styles */
+.cli-output {
+    background-color: #1e1e1e;
+    color: #ffffff;
+    padding: 1rem;
+    border-radius: 5px;
+    font-family: 'Courier New', Courier, monospace;
+    white-space: pre-wrap;
+    word-wrap: break-word;
+    max-height: 400px;
+    overflow-y: auto;
+    font-size: 0.9rem;
+    line-height: 1.4;
+    tab-size: 4;
+    position: relative;
+    border: 1px solid #333;
+}
+
+.cli-output:empty::before {
+    content: 'No output available yet...';
+    color: #666;
+    font-style: italic;
+}
+
+.cli-output:hover {
+    border-color: #495057;
+}
+
+/* Timer styles */
+.timer { 
+    font-size: 1.2rem; 
+    font-weight: bold; 
+    color: #007bff; 
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem;
+    background-color: #f8f9fa;
+    padding: 0.5rem 1rem;
+    border-radius: 4px;
+    border: 1px solid #dee2e6;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+}
+
+/* Debug info styles */
+.debug-info {
+    background-color: #f8f9fa;
+    padding: 0.8rem;
+    border-radius: 4px;
+    margin-top: 0.5rem;
+    font-size: 0.85rem;
+    border: 1px solid #dee2e6;
+}
+
+.debug-info:hover {
+    border-color: #adb5bd;
+}
+
+.debug-info .label {
+    font-weight: bold;
+    color: #495057;
+    min-width: 100px;
+    display: inline-block;
+}
+
+/* Debug links styles */
+.debug-links {
+    font-size: 0.85rem;
+    display: flex;
+    gap: 1rem;
+    margin-top: 0.25rem;
+}
+
+.debug-links a {
+    color: #6c757d;
+    text-decoration: none;
+    display: flex;
+    align-items: center;
+    gap: 0.25rem;
+}
+
+.debug-links a:hover {
+    color: #495057;
+}
+
+.debug-links i {
+    font-size: 0.9rem;
+}
+
+/* Loading animation */
+.page-loader {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(255, 255, 255, 0.9);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    z-index: 9999;
+}
+
+.loader-content {
+    text-align: center;
+}
+
+.loader-spinner {
+    font-size: 3rem;
+    color: #007bff;
+    margin-bottom: 1rem;
+}
+
+/* Toast styles */
+.toast {
+    background-color: #fff;
+    border: none;
+    box-shadow: 0 0.5rem 1rem rgba(0, 0, 0, 0.15);
+}
+
+.toast-header {
+    background-color: transparent;
+    border-bottom: 1px solid rgba(0, 0, 0, 0.05);
+}
+
+.toast-body {
+    padding: 1rem;
+}
+
+.toast-body.success {
+    color: #198754;
+    background-color: #d1e7dd;
+}
+
+.toast-body.error {
+    color: #dc3545;
+    background-color: #f8d7da;
+}
+
+/* Animations */
+@keyframes fadeIn {
+    from { opacity: 0; transform: translateY(20px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes pulse {
+    0% { opacity: 1; transform: scale(1); }
+    50% { opacity: 0.5; transform: scale(1.2); }
+    100% { opacity: 1; transform: scale(1); }
+}
+
+/* Scrollbar styles */
+.cli-output::-webkit-scrollbar {
+    width: 8px;
+    height: 8px;
+}
+
+.cli-output::-webkit-scrollbar-track {
+    background: #2e2e2e;
+    border-radius: 4px;
+}
+
+.cli-output::-webkit-scrollbar-thumb {
+    background: #666;
+    border-radius: 4px;
+}
+
+.cli-output::-webkit-scrollbar-thumb:hover {
+    background: #888;
+}
