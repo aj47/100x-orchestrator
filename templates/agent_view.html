@@ -86,7 +86,7 @@
                                 <i class="fas fa-file-code me-2"></i>{{ file }}
                             </li>
                             {% endfor %}
-                            {% if (agent.files|length) > 5 %}
+                            {% if agent.files|length > 5 %}
                             <li class="list-group-item text-muted">
                                 <i class="fas fa-ellipsis-h me-2"></i>and {{ agent.files|length - 5 }} more
                             </li>
