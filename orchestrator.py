@@ -612,56 +612,31 @@ def cloneRepository(repository_url: str) -> bool:
         logging.error(f"Git clone failed with exit code {e.returncode}", exc_info=True)
         return False
 
-def critique_agent_progress(agent_id):
-    """Critique the progress of a specific agent."""
+def update_agent_output(agent_id):
+    """Update the output for a specific agent."""
     try:
-        logging.info(f"Critiquing progress for agent {agent_id}")
+        logging.info(f"Updating output for agent {agent_id}")
         tasks_data = load_tasks()
         agent_data = tasks_data['agents'].get(agent_id)
         
         if not agent_data:
             logging.error(f"No agent found with ID {agent_id}")
-            return None
-        
-        # Use repo_path for file search
-        repo_path = agent_data.get('repo_path')
-        if not repo_path:
-            logging.error(f"No repo path found for agent {agent_id}")
-            return None
+            return False
             
-        workspace = Path(repo_path)
-        if not workspace.exists():
-            logging.error(f"Workspace path does not exist: {workspace}")
-            return None
-        
-        src_files = list(workspace.glob('**/*.py'))  # Check Python files
-        logging.info(f"Found {len(src_files)} Python files in workspace")
-        
-        critique = {
-            'files_created': len(src_files),
-            'complexity': 'moderate',  # This would be a more sophisticated assessment
-            'potential_improvements': []
-        }
-        
-        # Update agent status based on critique
-        agent_data['status'] = 'in_progress' if len(src_files) > 0 else 'pending'
-        
-        # Update aider output
+        # Update aider output if session exists
         if agent_id in aider_sessions:
             output = aider_sessions[agent_id].get_output()
             agent_data['aider_output'] = output
+            agent_data['last_updated'] = datetime.datetime.now().isoformat()
             logging.debug(f"Updated aider output (length: {len(output)})")
+            save_tasks(tasks_data)
+            return True
         
-        agent_data['last_critique'] = critique
-        agent_data['last_updated'] = datetime.datetime.now().isoformat()
-        
-        save_tasks(tasks_data)
-        logging.info(f"Completed critique for agent {agent_id}")
-        return critique
+        return False
     
     except Exception as e:
-        logging.error(f"Error critiquing agent progress: {e}", exc_info=True)
-        return None
+        logging.error(f"Error updating agent output: {e}", exc_info=True)
+        return False
 
 def main_loop():
     """Main orchestration loop to manage agents."""
@@ -671,28 +646,10 @@ def main_loop():
             # Load current tasks and agents
             tasks_data = load_tasks()
             
-            # Check each agent's progress
-            for agent_id, agent_data in list(tasks_data['agents'].items()):
+            # Update each agent's output
+            for agent_id in list(tasks_data['agents'].keys()):
                 logging.info(f"Checking agent {agent_id}")
-                
-                # Critique progress
-                critique = critique_agent_progress(agent_id)
-                
-                # Update prompt file in temporary workspace
-                if agent_data.get('workspace'):
-                    prompt_file = Path(agent_data['workspace']) / 'config' / 'prompt.txt'
-                    prompt_file.parent.mkdir(parents=True, exist_ok=True)
-                    prompt_data = {
-                        'task': agent_data.get('task', ''),
-                        'status': agent_data.get('status', 'unknown'),
-                        'last_critique': critique,
-                        'aider_output': agent_data.get('aider_output', '')
-                    }
-                    prompt_file.write_text(json.dumps(prompt_data, indent=4))
-                    logging.debug(f"Updated prompt file for agent {agent_id}")
-            
-            # Save updated tasks
-            save_tasks(tasks_data)
+                update_agent_output(agent_id)
             
             # Wait before next check
             logging.info(f"Waiting {CHECK_INTERVAL} seconds before next check")
