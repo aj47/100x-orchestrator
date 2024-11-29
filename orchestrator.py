@@ -115,8 +115,8 @@ class AiderSession:
             startupinfo.dwFlags |= subprocess.STARTF_USESHOWWINDOW
             
             # Start aider process with unbuffered output
-            # cmd = f'aider --mini --message "{self.task}"'
-            cmd = f'aider --version'
+            cmd = f'aider --mini --yes --map-tokens 2046 --message "{self.task}"'
+            # cmd = f'aider --version'
             logging.info(f"[Session {self.session_id}] Executing command: {cmd}")
             
             # Set up environment with forced unbuffering
