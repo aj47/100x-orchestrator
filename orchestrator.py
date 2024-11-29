@@ -32,7 +32,7 @@ MODEL_NAME = os.environ.get('LITELLM_MODEL', 'anthropic/claude-3-5-sonnet-202406
 CONFIG_FILE = Path("config.json")
 tools, available_functions = [], {}
 MAX_TOOL_OUTPUT_LENGTH = 5000  # Adjust as needed
-CHECK_INTERVAL = 30  # Reduced to 30 seconds for more frequent updates
+CHECK_INTERVAL = 5  # Reduced to 30 seconds for more frequent updates
 
 # Global dictionary to store aider sessions
 aider_sessions = {}
@@ -115,7 +115,8 @@ class AiderSession:
             startupinfo.dwFlags |= subprocess.STARTF_USESHOWWINDOW
             
             # Start aider process with unbuffered output
-            cmd = f'aider --mini --message "{self.task}"'
+            # cmd = f'aider --mini --message "{self.task}"'
+            cmd = f'aider --version'
             logging.info(f"[Session {self.session_id}] Executing command: {cmd}")
             
             # Set up environment with forced unbuffering
