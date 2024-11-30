@@ -1,9 +1,0 @@
-
-Source URL: https://github.com/aj47/block-editor/tree/2.1-exponent-dev
-Rules: Create 2 sub agents per task
-Requirements:
-- add audio waveform to timeline
-- make help button more obvious, and make all hotkeys configurable
-- choose which labels you want to export
-Standards:
-- Always use Test Driven Development
