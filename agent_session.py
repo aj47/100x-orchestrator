@@ -8,11 +8,6 @@ from pathlib import Path
 import time
 import re
 
-# Reusing the existing Colors class from orchestrator.py
-class Colors:
-    HEADER = '\033[95m'; OKBLUE = '\033[94m'; OKCYAN = '\033[96m'; OKGREEN = '\033[92m'
-    WARNING = '\033[93m'; FAIL = '\033[91m'; ENDC = '\033[0m'; BOLD = '\033[1m'; UNDERLINE = '\033[4m'
-
 def normalize_path(path_str):
     """Normalize a path string to absolute path with forward slashes."""
     if not path_str:
@@ -203,7 +198,7 @@ class AgentSession:
         """
         try:
             timestamp = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
-            echo_line = f"<span class='user-message'>{Colors.OKBLUE}[{timestamp}] USER: {message}{Colors.ENDC}</span>\n"
+            echo_line = f"<span class='user-message'>[{timestamp}] USER: {message}</span>\n"
             
             with threading.Lock():
                 self.output_buffer.seek(0, 2)  # Seek to end

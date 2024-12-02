@@ -24,10 +24,6 @@ logging.basicConfig(
     ]
 )
 
-# ANSI escape codes for color and formatting
-class Colors:
-    HEADER = '\033[95m'; OKBLUE = '\033[94m'; OKCYAN = '\033[96m'; OKGREEN = '\033[92m'
-    WARNING = '\033[93m'; FAIL = '\033[91m'; ENDC = '\033[0m'; BOLD = '\033[1m'; UNDERLINE = '\033[4m'
 
 # Configuration
 DEFAULT_AGENTS_PER_TASK = 2
@@ -421,13 +417,13 @@ def main_loop():
                     
                     if agent_session.is_ready():
                         # Hard-coded follow-up message for now
-                        follow_up_message = "Please start working on the task by creating a plan and breaking it down into steps."
+                        follow_up_message = "/tokens"
                         
                         # Send message to agent session
                         # Note: This is a placeholder. You'll need to implement the actual message sending mechanism
                         logging.info(f"Agent {agent_id} is ready. Sending follow-up message.")
                         # TODO: Implement actual message sending to aider session
-                        # agent_session.send_message(follow_up_message)
+                        agent_session.send_message(follow_up_message)
             
             # Wait before next check
             logging.info(f"Waiting {CHECK_INTERVAL} seconds before next check")
