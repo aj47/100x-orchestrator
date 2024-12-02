@@ -203,7 +203,7 @@ class AgentSession:
         """
         try:
             timestamp = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
-            echo_line = f"{Colors.OKBLUE}[{timestamp}] USER: {message}{Colors.ENDC}\n"
+            echo_line = f"<span class='user-message'>{Colors.OKBLUE}[{timestamp}] USER: {message}{Colors.ENDC}</span>\n"
             
             with threading.Lock():
                 self.output_buffer.seek(0, 2)  # Seek to end

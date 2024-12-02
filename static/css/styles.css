@@ -203,3 +203,17 @@
 .cli-output::-webkit-scrollbar-thumb:hover {
     background: #888;
 }
+
+/* ANSI color classes */
+.cli-output .ansi-blue { color: #007bff; } /* OKBLUE */
+.cli-output .ansi-cyan { color: #17a2b8; } /* OKCYAN */
+.cli-output .ansi-green { color: #28a745; } /* OKGREEN */
+.cli-output .ansi-yellow { color: #ffc107; } /* WARNING */
+.cli-output .ansi-red { color: #dc3545; } /* FAIL */
+.cli-output .ansi-bold { font-weight: bold; } /* BOLD */
+.cli-output .ansi-underline { text-decoration: underline; } /* UNDERLINE */
+
+/* User message style */
+.cli-output .user-message {
+    color: #007bff; /* OKBLUE */
+}
