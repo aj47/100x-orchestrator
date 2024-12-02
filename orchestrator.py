@@ -387,7 +387,6 @@ def update_agent_output(agent_id):
             output = aider_sessions[agent_id].get_output()
             agent_data['aider_output'] = output
             agent_data['last_updated'] = datetime.datetime.now().isoformat()
-            logging.debug(f"Updated aider output (length: {len(output)})")
             save_tasks(tasks_data)
             return True
         
@@ -423,15 +422,16 @@ def main_loop():
                         # Get summary from OpenRouter
                         try:
                             openrouter = OpenRouterClient()
-                            summary = openrouter.get_session_summary(session_logs)
-                            logging.info(f"Got session summary for agent {agent_id}")
+                            follow_up_message = openrouter.chat_completion(session_logs, f"""You are operating an AI coding assistant (aider) in the terminal.
+                                                                            The overall goal is to {agent_session.task}.
+                                                                            Do not write code. Only give guidance and commands.
+                                                                            when the task is finished input %%FINISHED%%""")
                             
                             # Store summary in agent data
-                            tasks_data['agents'][agent_id]['last_critique'] = summary
+                            # tasks_data['agents'][agent_id]['last_critique'] = summary
                             save_tasks(tasks_data)
                             
                             # Send follow-up message
-                            follow_up_message = "/tokens"
                             logging.info(f"Agent {agent_id} is ready. Sending follow-up message.")
                             agent_session.send_message(follow_up_message)
                             

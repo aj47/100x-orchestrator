@@ -184,8 +184,6 @@ class AgentSession:
             # Restore position
             self.output_buffer.seek(pos)
             
-            logging.debug(f"[Session {self.session_id}] Retrieved output (length: {len(output)})")
-            logging.debug(f"[Session {self.session_id}] Output preview: {output[:200]}...")  # Log preview of output
             return output
         except Exception as e:
             logging.error(f"[Session {self.session_id}] Error getting output: {e}", exc_info=True)
