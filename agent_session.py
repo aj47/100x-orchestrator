@@ -195,7 +195,7 @@ class AgentSession:
         Check if the process is ready by verifying no changes in stdout for configured duration.
         
         Returns:
-            tuple: (bool, str) indicating readiness and potential message to send
+            bool: Indicating if the process is stable and ready
         """
         try:
             # Use configured stability duration
@@ -218,48 +218,16 @@ class AgentSession:
                 # Check if output has changed
                 if current_output != initial_output:
                     logging.debug(f"[Session {self.session_id}] Output changed during stability check")
-                    return False, None
+                    return False
             
             # No changes detected for entire duration
             logging.info(f"[Session {self.session_id}] Process stable for {stability_duration} seconds")
             
-            # Determine message to send based on output
-            message_to_send = self._extract_message_from_output(current_output)
-            
-            return True, message_to_send
+            return True
         
         except Exception as e:
             logging.error(f"[Session {self.session_id}] Error in readiness check: {e}", exc_info=True)
-            return False, None
-
-    def _extract_message_from_output(self, output):
-        """
-        Extract a meaningful message from the output buffer.
-        
-        Args:
-            output (str): Full output buffer content
-        
-        Returns:
-            str: Extracted message or None
-        """
-        # Truncate output if it exceeds max length
-        if len(output) > self.config['output_buffer_max_length']:
-            output = output[-self.config['output_buffer_max_length']:]
-        
-        # Look for specific patterns indicating readiness
-        patterns = [
-            r'How can I help you\?',
-            r'What would you like me to do\?',
-            r'Ready to make changes',
-            r'Tokens:'
-        ]
-        
-        for pattern in patterns:
-            match = re.search(pattern, output, re.IGNORECASE)
-            if match:
-                return match.group(0)
-        
-        return None
+            return False
 
     def cleanup(self):
         """Clean up the aider session"""
