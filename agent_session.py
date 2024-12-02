@@ -6,6 +6,7 @@ import io
 import logging
 from pathlib import Path
 import time
+import re
 
 # Reusing the existing Colors class from orchestrator.py
 class Colors:

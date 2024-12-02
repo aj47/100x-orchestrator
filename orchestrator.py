@@ -218,8 +218,10 @@ def initialiseCodingAgent(repository_url: str = None, task_description: str = No
     created_agent_ids = []
     
     try:
-        # Load tasks data to get repository URL
+        # Load tasks data to get repository URL and configuration
         tasks_data = load_tasks()
+        agent_config = tasks_data.get('config', {}).get('agent_session', {})
+        
         if repository_url:
             tasks_data['repository_url'] = repository_url
             save_tasks(tasks_data)
@@ -302,9 +304,9 @@ def initialiseCodingAgent(repository_url: str = None, task_description: str = No
                     shutil.rmtree(agent_workspace)
                     continue
 
-                # Initialize aider session with absolute path
+                # Initialize aider session with absolute path and configuration
                 logging.info("Initializing aider session")
-                aider_session = AgentSession(str(full_repo_path), task_description)
+                aider_session = AgentSession(str(full_repo_path), task_description, agent_config)
                 if not aider_session.start():
                     logging.error("Failed to start aider session")
                     shutil.rmtree(agent_workspace)
