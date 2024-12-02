@@ -1,0 +1,49 @@
+import os
+import requests
+import json
+import logging
+
+class OpenRouterClient:
+    """Client for interacting with OpenRouter API to get LLM summaries"""
+    
+    def __init__(self):
+        self.api_key = os.environ.get('OPENROUTER_API_KEY')
+        self.site_url = os.environ.get('YOUR_SITE_URL', 'http://localhost')
+        self.app_name = os.environ.get('YOUR_APP_NAME', 'Coding Agent Orchestrator')
+        
+        if not self.api_key:
+            raise ValueError("OPENROUTER_API_KEY environment variable is required")
+            
+        self.base_url = "https://openrouter.ai/api/v1/chat/completions"
+        
+    def get_session_summary(self, session_logs: str) -> str:
+        """Get a summary of the coding session logs"""
+        try:
+            response = requests.post(
+                url=self.base_url,
+                headers={
+                    "Authorization": f"Bearer {self.api_key}",
+                    "HTTP-Referer": self.site_url,
+                    "X-Title": self.app_name,
+                },
+                json={
+                    "model": "google/gemini-flash-1.5",
+                    "messages": [
+                        {
+                            "role": "system",
+                            "content": "You are to summarize the CLI output of a coding assistant in a report format useful to be sent to a critique."
+                        },
+                        {
+                            "role": "user",
+                            "content": session_logs
+                        }
+                    ]
+                }
+            )
+            
+            response.raise_for_status()
+            return response.json()['choices'][0]['message']['content']
+            
+        except Exception as e:
+            logging.error(f"Error getting session summary: {e}")
+            return f"Error generating summary: {str(e)}"

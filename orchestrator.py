@@ -1,4 +1,5 @@
 import os, json, traceback, subprocess, sys, uuid
+from openrouter_client import OpenRouterClient
 from pathlib import Path
 import shutil
 import tempfile
@@ -416,14 +417,26 @@ def main_loop():
                     agent_session = aider_sessions[agent_id]
                     
                     if agent_session.is_ready():
-                        # Hard-coded follow-up message for now
-                        follow_up_message = "/tokens"
+                        # Get current session output
+                        session_logs = agent_session.get_output()
                         
-                        # Send message to agent session
-                        # Note: This is a placeholder. You'll need to implement the actual message sending mechanism
-                        logging.info(f"Agent {agent_id} is ready. Sending follow-up message.")
-                        # TODO: Implement actual message sending to aider session
-                        agent_session.send_message(follow_up_message)
+                        # Get summary from OpenRouter
+                        try:
+                            openrouter = OpenRouterClient()
+                            summary = openrouter.get_session_summary(session_logs)
+                            logging.info(f"Got session summary for agent {agent_id}")
+                            
+                            # Store summary in agent data
+                            tasks_data['agents'][agent_id]['last_critique'] = summary
+                            save_tasks(tasks_data)
+                            
+                            # Send follow-up message
+                            follow_up_message = "/tokens"
+                            logging.info(f"Agent {agent_id} is ready. Sending follow-up message.")
+                            agent_session.send_message(follow_up_message)
+                            
+                        except Exception as e:
+                            logging.error(f"Error processing session summary: {e}")
             
             # Wait before next check
             logging.info(f"Waiting {CHECK_INTERVAL} seconds before next check")
