@@ -388,10 +388,26 @@ def main_loop():
             # Load current tasks and agents
             tasks_data = load_tasks()
             
-            # Update each agent's output
+            # Update each agent's output and check readiness
             for agent_id in list(tasks_data['agents'].keys()):
                 logging.info(f"Checking agent {agent_id}")
+                
+                # Update agent output
                 update_agent_output(agent_id)
+                
+                # Check if agent session is ready
+                if agent_id in aider_sessions:
+                    agent_session = aider_sessions[agent_id]
+                    
+                    if agent_session.is_ready():
+                        # Hard-coded follow-up message for now
+                        follow_up_message = "Please start working on the task by creating a plan and breaking it down into steps."
+                        
+                        # Send message to agent session
+                        # Note: This is a placeholder. You'll need to implement the actual message sending mechanism
+                        logging.info(f"Agent {agent_id} is ready. Sending follow-up message.")
+                        # TODO: Implement actual message sending to aider session
+                        # agent_session.send_message(follow_up_message)
             
             # Wait before next check
             logging.info(f"Waiting {CHECK_INTERVAL} seconds before next check")
