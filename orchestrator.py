@@ -98,20 +98,37 @@ def load_tasks():
     try:
         with open(CONFIG_FILE, 'r') as f:
             data = json.load(f)
-            if 'repository_url' not in data:
-                data['repository_url'] = ""
+            
+            # Ensure data has the correct structure
+            if not isinstance(data, dict):
+                logging.warning("tasks.json has incorrect structure, resetting to default")
+                data = {
+                    "tasks": [],
+                    "agents": {},
+                    "repository_url": ""
+                }
+            
+            # Ensure required keys exist
+            data.setdefault('tasks', [])
+            data.setdefault('agents', {})
+            data.setdefault('repository_url', '')
                 
             # Normalize paths in loaded data
-            for agent_id, agent_data in data.get('agents', {}).items():
-                if 'workspace' in agent_data:
-                    agent_data['workspace'] = normalize_path(agent_data['workspace'])
-                if 'repo_path' in agent_data:
-                    agent_data['repo_path'] = normalize_path(agent_data['repo_path'])
-                    
-                # Log the normalized paths
-                logging.debug(f"Loaded agent {agent_id} with normalized paths:")
-                logging.debug(f"  workspace: {agent_data.get('workspace')}")
-                logging.debug(f"  repo_path: {agent_data.get('repo_path')}")
+            if isinstance(data.get('agents'), dict):
+                for agent_id, agent_data in data['agents'].items():
+                    if isinstance(agent_data, dict):
+                        if 'workspace' in agent_data:
+                            agent_data['workspace'] = normalize_path(agent_data['workspace'])
+                        if 'repo_path' in agent_data:
+                            agent_data['repo_path'] = normalize_path(agent_data['repo_path'])
+                        
+                        # Log the normalized paths
+                        logging.debug(f"Loaded agent {agent_id} with normalized paths:")
+                        logging.debug(f"  workspace: {agent_data.get('workspace')}")
+                        logging.debug(f"  repo_path: {agent_data.get('repo_path')}")
+            else:
+                logging.warning("Agents data is not a dictionary, resetting to empty dict")
+                data['agents'] = {}
                 
             logging.debug(f"Loaded tasks data: {json.dumps(data, indent=2)}")
             return data
