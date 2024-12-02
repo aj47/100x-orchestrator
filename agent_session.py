@@ -5,6 +5,7 @@ import queue
 import io
 import logging
 from pathlib import Path
+import time
 
 # Reusing the existing Colors class from orchestrator.py
 class Colors:
@@ -178,6 +179,44 @@ class AgentSession:
         except Exception as e:
             logging.error(f"[Session {self.session_id}] Error getting output: {e}", exc_info=True)
             return ""
+
+    def is_ready(self, stability_duration=10):
+        """
+        Check if the process is ready by verifying no changes in stdout for a specified duration.
+        
+        Args:
+            stability_duration (int): Number of seconds to check for output stability. Defaults to 10.
+        
+        Returns:
+            bool: True if no changes in output for specified duration, False otherwise.
+        """
+        try:
+            # Initial output snapshot
+            initial_output = self.get_output()
+            logging.debug(f"[Session {self.session_id}] Initial output length: {len(initial_output)}")
+            
+            # Track time and output stability
+            start_time = time.time()
+            while time.time() - start_time < stability_duration:
+                # Short sleep to prevent tight looping
+                time.sleep(1)
+                
+                # Get current output
+                current_output = self.get_output()
+                logging.debug(f"[Session {self.session_id}] Current output length: {len(current_output)}")
+                
+                # Check if output has changed
+                if current_output != initial_output:
+                    logging.debug(f"[Session {self.session_id}] Output changed during stability check")
+                    return False
+            
+            # No changes detected for entire duration
+            logging.info(f"[Session {self.session_id}] Process stable for {stability_duration} seconds")
+            return True
+        
+        except Exception as e:
+            logging.error(f"[Session {self.session_id}] Error in readiness check: {e}", exc_info=True)
+            return False
 
     def cleanup(self):
         """Clean up the aider session"""
