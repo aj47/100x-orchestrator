@@ -49,8 +49,13 @@ class AgentSession:
         logging.info(f"[Session {self.session_id}] Initialized with workspace: {self.workspace_path}")
         logging.info(f"[Session {self.session_id}] Configuration: {self.config}")
 
-    def start(self):
-        """Start the aider session"""
+    def start(self) -> bool:
+        """
+        Start the aider session.
+        
+        Returns:
+            bool: True if session started successfully, False otherwise
+        """
         try:
             logging.info(f"[Session {self.session_id}] Starting aider session in workspace: {self.workspace_path}")
             
@@ -74,6 +79,7 @@ class AgentSession:
                 cwd=str(Path(self.workspace_path).resolve()),  # Ensure absolute path
                 stdout=subprocess.PIPE,
                 stderr=subprocess.PIPE,
+                stdin=subprocess.PIPE,  # Add stdin pipe for sending messages
                 startupinfo=startupinfo,
                 text=True,
                 bufsize=1,  # Line buffered
@@ -190,7 +196,7 @@ class AgentSession:
             logging.error(f"[Session {self.session_id}] Error getting output: {e}", exc_info=True)
             return ""
 
-    def is_ready(self):
+    def is_ready(self) -> bool:
         """
         Check if the process is ready by verifying no changes in stdout for configured duration.
         
@@ -229,20 +235,73 @@ class AgentSession:
             logging.error(f"[Session {self.session_id}] Error in readiness check: {e}", exc_info=True)
             return False
 
-    def cleanup(self):
+    def send_message(self, message: str, timeout: int = 10) -> bool:
+        """
+        Send a message to the aider process.
+        
+        Args:
+            message (str): The message to send to the aider process
+            timeout (int, optional): Timeout for sending the message. Defaults to 10 seconds.
+        
+        Returns:
+            bool: True if message sent successfully, False otherwise
+        """
+        try:
+            if not self.process or self.process.poll() is not None:
+                logging.error(f"[Session {self.session_id}] Cannot send message: Process is not running")
+                return False
+            
+            # Sanitize and prepare message
+            sanitized_message = message.replace('"', '\\"')
+            logging.info(f"[Session {self.session_id}] Sending message: {sanitized_message}")
+            
+            # Send message via stdin
+            try:
+                self.process.stdin.write(sanitized_message + "\n")
+                self.process.stdin.flush()
+                logging.debug(f"[Session {self.session_id}] Message sent successfully")
+                return True
+            except (BrokenPipeError, IOError) as pipe_error:
+                logging.error(f"[Session {self.session_id}] Pipe error sending message: {pipe_error}")
+                return False
+        
+        except Exception as e:
+            logging.error(f"[Session {self.session_id}] Error sending message: {e}", exc_info=True)
+            return False
+
+    def cleanup(self) -> None:
         """Clean up the aider session"""
         try:
             logging.info(f"[Session {self.session_id}] Starting cleanup")
             self._stop_event.set()
             if self.process:
                 logging.info(f"[Session {self.session_id}] Terminating process {self.process.pid}")
-                self.process.terminate()
+                
+                # Close stdin to prevent further writes
                 try:
+                    if self.process.stdin:
+                        self.process.stdin.close()
+                except Exception as stdin_close_error:
+                    logging.warning(f"[Session {self.session_id}] Error closing stdin: {stdin_close_error}")
+                
+                # Terminate process
+                try:
+                    self.process.terminate()
                     self.process.wait(timeout=5)
                     logging.info(f"[Session {self.session_id}] Process terminated successfully")
                 except subprocess.TimeoutExpired:
                     logging.warning(f"[Session {self.session_id}] Process did not terminate, forcing kill")
                     self.process.kill()
+                
+                # Close stdout and stderr
+                try:
+                    if self.process.stdout:
+                        self.process.stdout.close()
+                    if self.process.stderr:
+                        self.process.stderr.close()
+                except Exception as pipe_close_error:
+                    logging.warning(f"[Session {self.session_id}] Error closing pipes: {pipe_close_error}")
+            
             logging.info(f"[Session {self.session_id}] Cleanup completed")
         except Exception as e:
             logging.error(f"[Session {self.session_id}] Error during cleanup: {e}", exc_info=True)
