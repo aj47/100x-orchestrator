@@ -194,7 +194,24 @@ class AgentSession:
             return output
         except Exception as e:
             logging.error(f"[Session {self.session_id}] Error getting output: {e}", exc_info=True)
-            return ""
+    def _echo_message(self, message: str) -> None:
+        """
+        Echo the sent message to the output buffer, simulating user input in the CLI.
+
+        Args:
+            message (str): The message to echo
+        """
+        try:
+            timestamp = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+            echo_line = f"{Colors.OKBLUE}[{timestamp}] USER: {message}{Colors.ENDC}\n"
+            
+            with threading.Lock():
+                self.output_buffer.seek(0, 2)  # Seek to end
+                self.output_buffer.write(echo_line)
+                
+            logging.debug(f"[Session {self.session_id}] Echoed message to output buffer: {message}")
+        except Exception as e:
+            logging.error(f"[Session {self.session_id}] Error echoing message: {e}", exc_info=True)
 
     def is_ready(self) -> bool:
         """
@@ -252,14 +269,16 @@ class AgentSession:
                 return False
             
             # Sanitize and prepare message
+            self._echo_message(message)  # Echo message to output before sending
+            
             sanitized_message = message.replace('"', '\\"')
-            logging.info(f"[Session {self.session_id}] Sending message: {sanitized_message}")
+            logging.info(f"[Session {self.session_id}] Sending message to Aider: {sanitized_message}")
             
             # Send message via stdin
             try:
                 self.process.stdin.write(sanitized_message + "\n")
                 self.process.stdin.flush()
-                logging.debug(f"[Session {self.session_id}] Message sent successfully")
+                logging.debug(f"[Session {self.session_id}] Message sent to Aider successfully")
                 return True
             except (BrokenPipeError, IOError) as pipe_error:
                 logging.error(f"[Session {self.session_id}] Pipe error sending message: {pipe_error}")
