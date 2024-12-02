@@ -33,6 +33,9 @@ class Colors:
 DEFAULT_AGENTS_PER_TASK = 2
 MODEL_NAME = os.environ.get('LITELLM_MODEL', 'anthropic/claude-3-5-sonnet-20240620')
 CONFIG_FILE = Path("tasks/tasks.json")
+
+# Ensure tasks directory exists
+CONFIG_FILE.parent.mkdir(parents=True, exist_ok=True)
 tools, available_functions = [], {}
 MAX_TOOL_OUTPUT_LENGTH = 5000  # Adjust as needed
 CHECK_INTERVAL = 5  # Reduced to 30 seconds for more frequent updates
