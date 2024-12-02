@@ -64,7 +64,7 @@ class AgentSession:
             startupinfo.dwFlags |= subprocess.STARTF_USESHOWWINDOW
             
             # Start aider process with unbuffered output
-            cmd = f'aider --map-tokens 1024 --mini --message "{self.task}"'
+            cmd = f'aider --map-tokens 1024 --no-show-model-warnings --model openrouter/google/gemini-flash-1.5 --message "{self.task}"'
             # cmd = f'aider --version'
             logging.info(f"[Session {self.session_id}] Executing command: {cmd}")
             
