@@ -129,10 +129,23 @@ class AgentSession:
                     
                 logging.debug(f"[Session {self.session_id}] {pipe_name} received: {line.strip()}")
                 
+                # Format line for HTML display
+                formatted_line = (
+                    line.replace('&', '&amp;')
+                        .replace('<', '&lt;')
+                        .replace('>', '&gt;')
+                        .replace('\n', '<br>')
+                        .replace(' ', '&nbsp;')
+                )
+                
+                # Add timestamp and style
+                timestamp = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+                html_line = f'<div class="output-line"><span class="timestamp">[{timestamp}]</span> {formatted_line}</div>'
+                
                 # Immediately write to buffer with lock
                 with self._buffer_lock:
                     self.output_buffer.seek(0, 2)  # Seek to end
-                    self.output_buffer.write(line)
+                    self.output_buffer.write(html_line)
                     logging.debug(f"[Session {self.session_id}] Added to buffer: {line.strip()}")
                     
                 # Flush the pipe to ensure we get output immediately
@@ -167,7 +180,14 @@ class AgentSession:
         """
         try:
             timestamp = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
-            echo_line = f"<span class='user-message'>[{timestamp}] USER: {message}</span>\n"
+            formatted_message = (
+                message.replace('&', '&amp;')
+                    .replace('<', '&lt;')
+                    .replace('>', '&gt;')
+                    .replace('\n', '<br>')
+                    .replace(' ', '&nbsp;')
+            )
+            echo_line = f'<div class="output-line user-message"><span class="timestamp">[{timestamp}]</span> USER: {formatted_message}</div>'
             
             with threading.Lock():
                 self.output_buffer.seek(0, 2)  # Seek to end
