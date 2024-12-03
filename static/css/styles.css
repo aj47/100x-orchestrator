@@ -1,54 +1,108 @@
 /* Common styles */
+:root {
+    --primary-color: #6366f1;
+    --secondary-color: #4f46e5;
+    --success-color: #22c55e;
+    --danger-color: #ef4444;
+    --background-color: #f8fafc;
+    --text-color: #1e293b;
+    --border-radius: 0.75rem;
+}
+
+body {
+    background-color: var(--background-color);
+    color: var(--text-color);
+    font-family: 'Inter', system-ui, -apple-system, sans-serif;
+    line-height: 1.5;
+}
+
 .container { 
-    max-width: 800px; 
-    margin-top: 2rem; 
+    max-width: 1024px; 
+    margin: 2rem auto;
+    padding: 0 1.5rem;
 }
 
 .form-group { 
-    margin-bottom: 1rem; 
+    margin-bottom: 1.5rem;
 }
 
 /* Task list styles */
 #taskList { 
-    margin-bottom: 1rem; 
+    margin-bottom: 1.5rem;
+    background: white;
+    padding: 1.5rem;
+    border-radius: var(--border-radius);
+    box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1);
 }
 
 .task-item { 
     display: flex; 
-    margin-bottom: 0.5rem; 
+    margin-bottom: 1rem;
+    gap: 1rem;
+    align-items: center;
 }
 
 .task-item input { 
-    flex-grow: 1; 
-    margin-right: 0.5rem; 
+    flex-grow: 1;
+    padding: 0.75rem;
+    border: 1px solid #e2e8f0;
+    border-radius: 0.5rem;
+    transition: all 0.2s;
+}
+
+.task-item input:focus {
+    outline: none;
+    border-color: var(--primary-color);
+    box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.1);
 }
 
 /* Agent card styles */
 .agent-card { 
-    margin-bottom: 1rem;
+    background: white;
+    padding: 1.5rem;
+    margin-bottom: 1.5rem;
+    border-radius: var(--border-radius);
+    box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1);
     animation: fadeIn 0.5s ease-in-out;
+    transition: transform 0.2s, box-shadow 0.2s;
+}
+
+.agent-card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 10px 15px -3px rgb(0 0 0 / 0.1);
 }
 
 .delete-agent-btn {
-    margin-left: 10px;
+    margin-left: 1rem;
+    padding: 0.5rem 1rem;
+    background-color: var(--danger-color);
+    color: white;
+    border: none;
+    border-radius: 0.5rem;
+    transition: opacity 0.2s;
+}
+
+.delete-agent-btn:hover {
+    opacity: 0.9;
 }
 
 /* CLI output styles */
 .cli-output {
-    background-color: #1e1e1e;
-    color: #ffffff;
-    padding: 1rem;
-    border-radius: 5px;
-    font-family: 'Courier New', Courier, monospace;
+    background-color: #0f172a;
+    color: #e2e8f0;
+    padding: 1.5rem;
+    border-radius: var(--border-radius);
+    font-family: 'JetBrains Mono', 'Fira Code', 'Courier New', monospace;
     white-space: pre-wrap;
     word-wrap: break-word;
-    max-height: 400px;
+    max-height: 500px;
     overflow-y: auto;
-    font-size: 0.6rem;
-    line-height: 1.4;
+    font-size: 0.875rem;
+    line-height: 1.6;
     tab-size: 4;
     position: relative;
-    border: 1px solid #333;
+    border: 1px solid #1e293b;
+    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.2);
 }
 
 .cli-output:empty::before {
@@ -236,15 +290,24 @@
 }
 
 /* ANSI color classes */
-.cli-output .ansi-blue { color: #007bff; } /* OKBLUE */
-.cli-output .ansi-cyan { color: #17a2b8; } /* OKCYAN */
-.cli-output .ansi-green { color: #28a745; } /* OKGREEN */
-.cli-output .ansi-yellow { color: #ffc107; } /* WARNING */
-.cli-output .ansi-red { color: #dc3545; } /* FAIL */
-.cli-output .ansi-bold { font-weight: bold; } /* BOLD */
-.cli-output .ansi-underline { text-decoration: underline; } /* UNDERLINE */
+.cli-output .ansi-blue { color: #60a5fa; } /* OKBLUE */
+.cli-output .ansi-cyan { color: #67e8f9; } /* OKCYAN */
+.cli-output .ansi-green { color: #4ade80; } /* OKGREEN */
+.cli-output .ansi-yellow { color: #fbbf24; } /* WARNING */
+.cli-output .ansi-red { color: #f87171; } /* FAIL */
+.cli-output .ansi-bold { 
+    font-weight: 600;
+    letter-spacing: 0.025em;
+} /* BOLD */
+.cli-output .ansi-underline { 
+    text-decoration: underline;
+    text-decoration-thickness: 2px;
+    text-underline-offset: 2px;
+} /* UNDERLINE */
 
 /* User message style */
 .cli-output .user-message {
-    color: #007bff; /* OKBLUE */
+    color: #60a5fa;
+    font-weight: 500;
+    padding: 0.25rem 0;
 }
