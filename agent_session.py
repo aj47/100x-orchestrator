@@ -61,6 +61,10 @@ class AgentSession:
             env['PYTHONUNBUFFERED'] = '1'
             env['PYTHONIOENCODING'] = 'utf-8'
             
+            # Create startupinfo to hide console window
+            startupinfo = subprocess.STARTUPINFO()
+            startupinfo.dwFlags |= subprocess.STARTF_USESHOWWINDOW
+            
             # Start aider process with unbuffered output and console mode
             cmd = [
                 'aider',
