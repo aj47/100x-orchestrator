@@ -127,7 +127,7 @@ def load_tasks():
                 logging.warning("Agents data is not a dictionary, resetting to empty dict")
                 data['agents'] = {}
                 
-            logging.debug(f"Loaded tasks data: {json.dumps(data, indent=2)}")
+            # logging.debug(f"Loaded tasks data: {json.dumps(data, indent=2)}")
             return data
     except FileNotFoundError:
         logging.info("tasks.json not found, creating new data structure")
@@ -238,14 +238,6 @@ def initialiseCodingAgent(repository_url: str = None, task_description: str = No
         # Load tasks data to get repository URL and configuration
         tasks_data = load_tasks()
         agent_config = tasks_data.get('config', {}).get('agent_session', {})
-        
-        if repository_url:
-            tasks_data['repository_url'] = repository_url
-            save_tasks(tasks_data)
-            logging.info(f"Updated repository URL: {repository_url}")
-        else:
-            repository_url = tasks_data.get('repository_url')
-            logging.info(f"Using existing repository URL: {repository_url}")
         
         for i in range(num_agents):
             logging.info(f"Creating agent {i+1} of {num_agents}")
