@@ -281,21 +281,25 @@ def initialiseCodingAgent(repository_url: str = None, task_description: str = No
                     logging.error("No repository URL provided")
                     shutil.rmtree(agent_workspace)
                     continue
+
+                # Extract repo name from URL
+                repo_name = repository_url.rstrip('/').split('/')[-1]
+                if repo_name.endswith('.git'):
+                    repo_name = repo_name[:-4]
                 
-                logging.info(f"Cloning repository: {repository_url}")
+                logging.info(f"Cloning repository: {repository_url} into {repo_name}")
                 if not cloneRepository(repository_url):
                     logging.error("Failed to clone repository")
                     shutil.rmtree(agent_workspace)
                     continue
                 
-                # Get the cloned repository directory name
-                repo_dirs = [d for d in os.listdir('.') if os.path.isdir(d) and not d.startswith('.')]
-                if not repo_dirs:
-                    logging.error("No repository directory found after cloning")
+                # Verify the cloned directory exists and is a git repo
+                if not os.path.exists(repo_name) or not os.path.isdir(os.path.join(repo_name, '.git')):
+                    logging.error(f"Repository directory {repo_name} not found or not a git repository")
                     shutil.rmtree(agent_workspace)
                     continue
                 
-                repo_dir = repo_dirs[0]
+                repo_dir = repo_name
                 full_repo_path = workspace_dirs["repo"] / repo_dir
                 full_repo_path = full_repo_path.resolve()  # Get absolute path
                 logging.info(f"Repository cloned to: {full_repo_path}")
@@ -356,11 +360,28 @@ def cloneRepository(repository_url: str) -> bool:
         if not repository_url:
             logging.error("No repository URL provided")
             return False
+            
         logging.info(f"Cloning repository: {repository_url}")
-        subprocess.check_call(f"git clone {repository_url}", shell=True)
+        
+        # Use --quiet to reduce output noise
+        result = subprocess.run(
+            f"git clone --quiet {repository_url}",
+            shell=True,
+            capture_output=True,
+            text=True
+        )
+        
+        if result.returncode != 0:
+            logging.error(f"Git clone failed: {result.stderr}")
+            return False
+            
         return True
-    except subprocess.CalledProcessError as e:
-        logging.error(f"Git clone failed with exit code {e.returncode}", exc_info=True)
+        
+    except subprocess.SubprocessError as e:
+        logging.error(f"Git clone failed: {str(e)}", exc_info=True)
+        return False
+    except Exception as e:
+        logging.error(f"Unexpected error during clone: {str(e)}", exc_info=True)
         return False
 
 def update_agent_output(agent_id):
