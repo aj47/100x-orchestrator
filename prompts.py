@@ -1,4 +1,4 @@
-def OPENROUTER_PROMPT(task_description: str) -> str:
+def PROMPT_AIDER(task_description: str) -> str:
     return f"""You are operating an AI coding assistant (aider) in the terminal.
 The overall goal is to {task_description}.
 Do not write code. Only give guidance and commands.

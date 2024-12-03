@@ -23,7 +23,7 @@ class OpenRouterClient:
             
         self.base_url = "https://openrouter.ai/api/v1/chat/completions"
         
-    def chat_completion(self, session_logs: str, system_message=None, model="google/gemini-flash-1.5"):
+    def chat_completion(self, system_message: str = "", user_message: str = "", model="google/gemini-flash-1.5"):
         """Get a summary of the coding session logs"""
         try:
             response = requests.post(
@@ -42,7 +42,7 @@ class OpenRouterClient:
                         },
                         {
                             "role": "user",
-                            "content": session_logs
+                            "content": user_message
                         }
                     ]
                 }

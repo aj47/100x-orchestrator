@@ -1,5 +1,5 @@
 import os, json, traceback, subprocess, sys, uuid
-from prompts import OPENROUTER_PROMPT
+from prompts import PROMPT_AIDER
 from openrouter_client import OpenRouterClient
 from pathlib import Path
 import shutil
@@ -437,23 +437,28 @@ def main_loop():
                         try:
                             openrouter = OpenRouterClient()
                             follow_up_message = openrouter.chat_completion(
-                                session_logs, 
-                                OPENROUTER_PROMPT(agent_session.task)
+                                PROMPT_AIDER(agent_session.task),
+                                session_logs
                             )
                                 
                             # Store summary in agent data
                             # tasks_data['agents'][agent_id]['last_critique'] = summary
                             save_tasks(tasks_data)
-                                
-                            # Send follow-up message if the process is running
-                            if agent_session.send_message(follow_up_message):
-                                logging.info(f"Agent {agent_id} is ready. Sending follow-up message.")
-                                logging.info(f"==========================================================")
-                                logging.info(follow_up_message)
-                                logging.info(f"==========================================================")
+                            
+                            if follow_up_message == "%%FINISHED%%":
+                                logging.info(f"Agent {agent_id} is finished. Stopping the process.")
+                                agent_session.stop()
+                                continue
                             else:
-                                logging.error(f"Failed to send follow-up message to agent {agent_id}")
-                                
+                                # Send follow-up message if the process is running
+                                if agent_session.send_message(follow_up_message):
+                                    logging.info(f"Agent {agent_id} is ready. Sending follow-up message.")
+                                    logging.info(f"==========================================================")
+                                    logging.info(follow_up_message)
+                                    logging.info(f"==========================================================")
+                                else:
+                                    logging.error(f"Failed to send follow-up message to agent {agent_id}")
+                                    
                         except Exception as e:
                             logging.error(f"Error processing session summary: {e}")
                 
