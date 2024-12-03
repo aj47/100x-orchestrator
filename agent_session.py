@@ -113,6 +113,12 @@ class AgentSession:
             
             stdout_thread.start()
             stderr_thread.start()
+
+            # Wait briefly for startup
+            time.sleep(2)
+            # Send initial task
+            if self.task:
+                self.send_message(self.task)
             
             logging.info(f"[Session {self.session_id}] Started output processing threads")
 
@@ -139,8 +145,18 @@ class AgentSession:
                     sleep(0.1)  # Short sleep to prevent CPU spinning
                     continue
                 
-                # Skip the prompt toolkit initialization message
-                if "Can't initialize prompt toolkit" in line:
+                # Skip startup messages
+                if any(msg in line for msg in [
+                    "Can't initialize prompt toolkit",
+                    "Newer aider version",
+                    "Run this command to update:",
+                    "python.exe -m pip install",
+                    "Aider v",
+                    "Model:",
+                    "Git repo:",
+                    "Repo-map:",
+                    "Use /help"
+                ]):
                     continue
                     
                 logging.debug(f"[Session {self.session_id}] {pipe_name} received: {line.strip()}")
