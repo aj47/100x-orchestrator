@@ -72,8 +72,7 @@ class AgentSession:
                 '--map-tokens', '1024',
                 '--no-show-model-warnings',
                 '--model', 'openrouter/google/gemini-flash-1.5',
-                '--no-pretty',  # Disable pretty output
-                '--no-color',   # Disable color output for Windows compatibility
+                '--no-pretty'
             ]
             
             # Add custom commands if provided
