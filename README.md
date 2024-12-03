@@ -1,15 +1,57 @@
 # 100x-orchestrator
 
-A web-based orchestration system for managing AI coding agents. The system uses Aider (an AI coding assistant) to handle coding tasks and provides real-time monitoring of agent outputs through a user-friendly interface.
+A web-based orchestration system for managing AI coding agents with advanced multi-layered architecture.
+
+## Architecture Overview
+
+The 100x-orchestrator system consists of three key components:
+
+1. **Orchestrator**: 
+   - The central control unit managing the entire system
+   - Coordinates agent creation, task allocation, and monitoring
+   - Handles resource management and inter-agent communication
+
+2. **Aider Agents**: 
+   - Individual task-specific agents responsible for executing coding tasks
+   - Each agent has its own workspace and dedicated configuration
+   - Manages the lifecycle of its associated Aider instance
+
+3. **Aider Instances**: 
+   - Actual AI coding assistants that perform specific coding operations
+   - Dedicated to each Aider Agent
+   - Interact directly with the repository and execute coding tasks
 
 ## Features
 
-- **Multi-Agent Management**: Create and manage multiple AI coding agents
-- **Real-Time Output Tracking**: Monitor agent progress and outputs in real-time
+- **Advanced Multi-Agent Management**: Create and manage multiple AI coding agents with granular control
+- **Real-Time Output Tracking**: Monitor agent and Aider instance progress
 - **Git Integration**: Automatic repository cloning and branch management
-- **Workspace Isolation**: Each agent works in an isolated environment
-- **Web Interface**: User-friendly dashboard for agent management
-- **Session Management**: Robust handling of agent sessions and outputs
+- **Workspace Isolation**: Strict isolation for each agent and its Aider instance
+- **Web Interface**: Comprehensive dashboard for system monitoring
+- **Intelligent Session Management**: Robust handling of agent lifecycles and Aider interactions
+
+## Architecture Diagram
+
+```
++-------------------+
+|   Orchestrator    |
+|  (Central Control)|
++--------+----------+
+         |
+         | Manages
+         v
++--------+----------+
+|   Aider Agents    |
+| (Task Executors)  |
++--------+----------+
+         |
+         | Instantiates
+         v
++--------+----------+
+| Aider Instances   |
+| (AI Coding Tools) |
++-------------------+
+```
 
 ## Installation
 
