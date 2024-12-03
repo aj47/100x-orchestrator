@@ -60,12 +60,11 @@ class AgentSession:
             startupinfo = subprocess.STARTUPINFO()
             startupinfo.dwFlags |= subprocess.STARTF_USESHOWWINDOW
             
-            # Set up environment with forced unbuffering and console config
+            # Set up environment with forced unbuffering
             env = os.environ.copy()
             env['PYTHONUNBUFFERED'] = '1'
             env['PYTHONIOENCODING'] = 'utf-8'
-            env['FORCE_COLOR'] = '1'  # Force color output
-            env['TERM'] = 'xterm-256color'  # Set terminal type
+            # Remove terminal color forcing for Windows compatibility
             
             # Start aider process with unbuffered output and console mode
             cmd = [
@@ -73,7 +72,8 @@ class AgentSession:
                 '--map-tokens', '1024',
                 '--no-show-model-warnings',
                 '--model', 'openrouter/google/gemini-flash-1.5',
-                '--no-pretty',  # Disable pretty output that requires console
+                '--no-pretty',  # Disable pretty output
+                '--no-color',   # Disable color output for Windows compatibility
             ]
             
             # Add custom commands if provided
