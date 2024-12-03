@@ -73,13 +73,12 @@ class AgentSession:
                 '--no-show-model-warnings',
                 '--model', 'openrouter/google/gemini-flash-1.5',
                 '--no-pretty',  # Disable pretty output that requires console
-                '--message', self.task
             ]
             logging.info(f"[Session {self.session_id}] Executing command: {' '.join(cmd)}")
             
             self.process = subprocess.Popen(
                 cmd,
-                shell=False,  # Don't use shell to avoid console issues
+                shell=True,
                 cwd=str(Path(self.workspace_path).resolve()),
                 stdout=subprocess.PIPE,
                 stderr=subprocess.PIPE,
