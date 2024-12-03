@@ -476,4 +476,4 @@ if __name__ == "__main__":
                                     agent_session.send_message(follow_up_message)
                                 else:
                                     logging.error(f"[Agent {agent_id}] Cannot send message: Process is not running")
-    import prompts
+    from prompts import OPENROUTER_PROMPT
