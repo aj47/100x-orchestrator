@@ -172,7 +172,7 @@ def save_tasks(tasks_data):
             logging.debug(f"  workspace: {data_to_save['agents'][agent_id]['workspace']}")
             logging.debug(f"  repo_path: {data_to_save['agents'][agent_id]['repo_path']}")
         
-        logging.debug(f"Saving tasks data: {json.dumps(data_to_save, indent=2)}")
+        logging.debug(f"Saving tasks data")
         with open(CONFIG_FILE, 'w') as f:
             json.dump(data_to_save, f, indent=4)
         logging.info("Successfully saved tasks data")
@@ -438,6 +438,9 @@ def main_loop():
                             follow_up_message = openrouter.chat_completion(session_logs, f"""You are operating an AI coding assistant (aider) in the terminal.
                                                                             The overall goal is to {agent_session.task}.
                                                                             Do not write code. Only give guidance and commands.
+                                                                            Commands you can use: 
+                                                                            "/ls", "/git <command>", "/help", "/add <file>"
+                                                                            when using a command. provide THE COMMAND ONLY. no other text. no quotation marks.
                                                                             when the task is finished input %%FINISHED%%""")
                             
                             # Store summary in agent data
@@ -445,7 +448,10 @@ def main_loop():
                             save_tasks(tasks_data)
                             
                             # Send follow-up message
+                            logging.info(f"==========================================================")
                             logging.info(f"Agent {agent_id} is ready. Sending follow-up message.")
+                            logging.info(follow_up_message)
+                            logging.info(f"==========================================================")
                             agent_session.send_message(follow_up_message)
                             
                         except Exception as e:
