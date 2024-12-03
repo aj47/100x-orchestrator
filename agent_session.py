@@ -56,12 +56,10 @@ class AgentSession:
         try:
             logging.info(f"[Session {self.session_id}] Starting aider session in workspace: {self.workspace_path}")
             
-            # Set up environment with Windows console handling
+            # Set up environment with forced unbuffering
             env = os.environ.copy()
             env['PYTHONUNBUFFERED'] = '1'
             env['PYTHONIOENCODING'] = 'utf-8'
-            env['PROMPT_TOOLKIT_NO_CPR'] = '1'  # Disable cursor position requests
-            env['TERM'] = 'dumb'  # Use dumb terminal mode
             
             # Start aider process with unbuffered output and console mode
             cmd = [
@@ -84,10 +82,12 @@ class AgentSession:
                 stdout=subprocess.PIPE,
                 stderr=subprocess.PIPE,
                 stdin=subprocess.PIPE,
+                startupinfo=startupinfo,
                 text=True,
                 bufsize=1,  # Line buffered
                 universal_newlines=True,
-                env=env
+                env=env,
+                creationflags=subprocess.CREATE_NO_WINDOW  # Prevent console window
             )
             
             logging.info(f"[Session {self.session_id}] Process started with PID: {self.process.pid}")
@@ -133,6 +133,10 @@ class AgentSession:
                 if not line:
                     # No data available but process still running
                     sleep(0.1)  # Short sleep to prevent CPU spinning
+                    continue
+                
+                # Skip the prompt toolkit initialization message
+                if "Can't initialize prompt toolkit" in line:
                     continue
                     
                 logging.debug(f"[Session {self.session_id}] {pipe_name} received: {line.strip()}")
