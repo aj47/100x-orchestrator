@@ -169,7 +169,6 @@ class AgentSession:
             message (str): The message to echo
         """
         try:
-            timestamp = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
             echo_line = self._format_output_line(f"USER: {message}")
             # Add user-message class to the div
             echo_line = echo_line.replace('class="output-line"', 'class="output-line user-message"')
@@ -273,9 +272,7 @@ class AgentSession:
                 .replace(' ', '&nbsp;')
         )
         
-        # Add timestamp and wrap in styled div
-        timestamp = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
-        return f'<div class="output-line"><span class="timestamp">[{timestamp}]</span> {formatted_line}</div>'
+        return f'<div class="output-line">{formatted_line}</div>'
 
     def cleanup(self) -> None:
         """Clean up the aider session"""
