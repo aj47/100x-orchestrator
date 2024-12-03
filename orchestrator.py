@@ -467,8 +467,6 @@ def main_loop():
 if __name__ == "__main__":
     logging.info("Starting orchestrator")
     main_loop()
-                                    logging.info(f"==========================================================")
-                                    agent_session.send_message(follow_up_message)
                                 else:
                                     logging.error(f"[Agent {agent_id}] Cannot send message: Process is not running")
     from prompts import OPENROUTER_PROMPT
