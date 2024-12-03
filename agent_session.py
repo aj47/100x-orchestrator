@@ -1,4 +1,5 @@
 import os, json, traceback, subprocess, sys, uuid
+from time import sleep
 import threading
 import datetime
 import queue
@@ -119,9 +120,12 @@ class AgentSession:
         """Read output from a pipe and write directly to buffer"""
         try:
             logging.info(f"[Session {self.session_id}] Started reading from {pipe_name}")
-            for line in iter(pipe.readline, ''):
-                if self._stop_event.is_set():
-                    break
+            while not self._stop_event.is_set() and self.process and self.process.poll() is None:
+                line = pipe.readline()
+                if not line:
+                    # No data available but process still running
+                    sleep(0.1)  # Short sleep to prevent CPU spinning
+                    continue
                     
                 logging.debug(f"[Session {self.session_id}] {pipe_name} received: {line.strip()}")
                 
@@ -134,14 +138,10 @@ class AgentSession:
                 # Flush the pipe to ensure we get output immediately
                 pipe.flush()
                 
+            logging.info(f"[Session {self.session_id}] {pipe_name} reader stopping - process terminated: {self.process.poll() if self.process else 'No process'}")
+                
         except Exception as e:
             logging.error(f"[Session {self.session_id}] Error reading from {pipe_name}: {e}", exc_info=True)
-        finally:
-            try:
-                pipe.close()
-                logging.info(f"[Session {self.session_id}] Closed {pipe_name} pipe")
-            except Exception as e:
-                logging.error(f"[Session {self.session_id}] Error closing {pipe_name} pipe: {e}", exc_info=True)
 
     def get_output(self):
         """Get the current output buffer contents"""
