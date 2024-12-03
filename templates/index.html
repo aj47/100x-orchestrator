@@ -58,6 +58,13 @@
                                min="1" max="10" value="1" 
                                placeholder="Number of agents to create for each task">
                     </div>
+
+                    <div class="form-group">
+                        <label for="aiderCommands">Additional Aider Commands</label>
+                        <input type="text" class="form-control" id="aiderCommands"
+                               placeholder="e.g. --test --yes">
+                        <small class="form-text text-muted">Optional: Add custom command line arguments for aider</small>
+                    </div>
                     
                     <div class="form-group">
                         <label>Tasks</label>
@@ -256,7 +263,8 @@
                         body: JSON.stringify({
                             repo_url: document.getElementById('repoUrl').value,
                             tasks: tasks,
-                            num_agents: agentCount
+                            num_agents: agentCount,
+                            aider_commands: document.getElementById('aiderCommands').value.trim()
                         })
                     });
                     

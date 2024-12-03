@@ -26,7 +26,7 @@ def normalize_path(path_str):
         return None
 
 class AgentSession:
-    def __init__(self, workspace_path, task, config=None):
+    def __init__(self, workspace_path, task, config=None, aider_commands=None):
         self.workspace_path = normalize_path(workspace_path)
         self.task = task
         self.output_buffer = io.StringIO()
@@ -34,6 +34,7 @@ class AgentSession:
         self._stop_event = threading.Event()
         self.session_id = str(uuid.uuid4())[:8]  # For logging
         self._buffer_lock = threading.Lock()  # Add lock for thread-safe buffer access
+        self.aider_commands = aider_commands
         
         # Load configuration with defaults
         default_config = {
@@ -74,6 +75,10 @@ class AgentSession:
                 '--model', 'openrouter/google/gemini-flash-1.5',
                 '--no-pretty',  # Disable pretty output that requires console
             ]
+            
+            # Add custom commands if provided
+            if self.aider_commands:
+                cmd.extend(self.aider_commands.split())
             logging.info(f"[Session {self.session_id}] Executing command: {' '.join(cmd)}")
             
             self.process = subprocess.Popen(
