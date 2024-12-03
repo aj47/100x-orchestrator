@@ -467,11 +467,6 @@ def main_loop():
 if __name__ == "__main__":
     logging.info("Starting orchestrator")
     main_loop()
-                                # Check if the aider session is running before sending a message
-                                if aider_sessions.get(agent_id) and aider_sessions[agent_id].process and aider_sessions[agent_id].process.poll() is None:
-                                    logging.info(f"==========================================================")
-                                    logging.info(f"Agent {agent_id} is ready. Sending follow-up message.")
-                                    logging.info(follow_up_message)
                                     logging.info(f"==========================================================")
                                     agent_session.send_message(follow_up_message)
                                 else:
