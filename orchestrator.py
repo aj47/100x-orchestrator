@@ -1,6 +1,7 @@
 import os, json, traceback, subprocess, sys, uuid
 from prompts import PROMPT_AIDER
 from openrouter_client import OpenRouterClient
+from prompt_processor import PromptProcessor
 from pathlib import Path
 import shutil
 import tempfile
@@ -38,8 +39,9 @@ tools, available_functions = [], {}
 MAX_TOOL_OUTPUT_LENGTH = 5000  # Adjust as needed
 CHECK_INTERVAL = 5  # Reduced to 30 seconds for more frequent updates
 
-# Global dictionary to store aider sessions
+# Global dictionaries to store sessions and processors
 aider_sessions = {}
+prompt_processors = {}
 
 def normalize_path(path_str):
     """Normalize a path string to absolute path with forward slashes."""
@@ -318,17 +320,20 @@ def initialiseCodingAgent(repository_url: str = None, task_description: str = No
                     shutil.rmtree(agent_workspace)
                     continue
 
-                # Initialize aider session with absolute path and configuration
-                logging.info("Initializing aider session")
+                # Initialize aider session and prompt processor
+                logging.info("Initializing aider session and prompt processor")
                 aider_session = AgentSession(str(full_repo_path), task_description, agent_config)
+                prompt_processor = PromptProcessor()
+                
                 if not aider_session.start():
                     logging.error("Failed to start aider session")
                     shutil.rmtree(agent_workspace)
                     continue
 
-                # Store session in global dictionary
+                # Store sessions in global dictionaries
                 aider_sessions[agent_id] = aider_session
-                logging.info("Aider session started successfully")
+                prompt_processors[agent_id] = prompt_processor
+                logging.info("Aider session and prompt processor started successfully")
 
             finally:
                 # Always return to original directory
@@ -450,18 +455,21 @@ def main_loop():
                                 agent_session.stop()
                                 continue
                             else:
-                                # Extract just the action from the response
-                                try:
-                                    response_data = json.loads(follow_up_message)
-                                    action_message = response_data.get('action', '')
+                                # Process the response through PromptProcessor
+                                if agent_id in prompt_processors:
+                                    processor = prompt_processors[agent_id]
+                                    action = processor.process_response(agent_id, follow_up_message)
                                 
-                                    # Send just the action if the process is running
-                                    if agent_session.send_message(action_message):
-                                        logging.info(f"Agent {agent_id} is ready. Sending action: {action_message}")
+                                    if action:
+                                        # Send the processed action if the process is running
+                                        if agent_session.send_message(action):
+                                            logging.info(f"Agent {agent_id} is ready. Sending action: {action}")
+                                        else:
+                                            logging.error(f"Failed to send action to agent {agent_id}")
                                     else:
-                                        logging.error(f"Failed to send action to agent {agent_id}")
-                                except json.JSONDecodeError:
-                                    logging.error(f"Invalid JSON response from OpenRouter")
+                                        logging.error(f"Failed to process response from OpenRouter")
+                                else:
+                                    logging.error(f"No prompt processor found for agent {agent_id}")
                                     
                         except Exception as e:
                             logging.error(f"Error processing session summary: {e}")
