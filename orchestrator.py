@@ -1,4 +1,5 @@
 import os, json, traceback, subprocess, sys, uuid
+from prompts import OPENROUTER_PROMPT
 from openrouter_client import OpenRouterClient
 from pathlib import Path
 import shutil
@@ -447,6 +448,7 @@ def main_loop():
                             # Send follow-up message if the process is running
                             if agent_session.send_message(follow_up_message):
                                 logging.info(f"Agent {agent_id} is ready. Sending follow-up message.")
+                                logging.info(f"==========================================================")
                                 logging.info(follow_up_message)
                                 logging.info(f"==========================================================")
                             else:
@@ -466,4 +468,3 @@ def main_loop():
 if __name__ == "__main__":
     logging.info("Starting orchestrator")
     main_loop()
-    from prompts import OPENROUTER_PROMPT

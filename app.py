@@ -39,7 +39,7 @@ console_handler.setFormatter(formatter)
 # Add the handlers to the app's logger
 app.logger.addHandler(file_handler)
 app.logger.addHandler(console_handler)
-app.logger.setLevel(logging.DEBUG)
+# app.logger.setLevel(logging.DEBUG)
 
 @app.route('/')
 def index():

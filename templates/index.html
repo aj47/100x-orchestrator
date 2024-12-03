@@ -165,13 +165,14 @@
             // Update overview every 5 seconds
             setInterval(updateOverview, 5000);
             const taskList = document.getElementById('taskList');
+            const repoUrl = document.getElementById('repoUrl');
             const addTaskButton = document.getElementById('addTask');
             
             // Fetch initial tasks from tasks.json
             try {
                 const tasksResponse = await fetch('/tasks/tasks.json');
                 const tasksData = await tasksResponse.json();
-                
+                repoUrl.value = tasksData.repository_url;
                 // Populate initial tasks
                 tasksData.tasks.forEach((taskDescription, index) => {
                     const taskItem = createTaskItem(taskDescription, index === 0);
