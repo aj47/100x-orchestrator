@@ -59,18 +59,27 @@ class AgentSession:
             startupinfo = subprocess.STARTUPINFO()
             startupinfo.dwFlags |= subprocess.STARTF_USESHOWWINDOW
             
-            # Start aider process with unbuffered output
-            cmd = f'aider --map-tokens 1024 --no-show-model-warnings --model openrouter/google/gemini-flash-1.5 --message "{self.task}"'
-            logging.info(f"[Session {self.session_id}] Executing command: {cmd}")
-            
-            # Set up environment with forced unbuffering
+            # Set up environment with forced unbuffering and console config
             env = os.environ.copy()
             env['PYTHONUNBUFFERED'] = '1'
             env['PYTHONIOENCODING'] = 'utf-8'
+            env['FORCE_COLOR'] = '1'  # Force color output
+            env['TERM'] = 'xterm-256color'  # Set terminal type
+            
+            # Start aider process with unbuffered output and console mode
+            cmd = [
+                'aider',
+                '--map-tokens', '1024',
+                '--no-show-model-warnings',
+                '--model', 'openrouter/google/gemini-flash-1.5',
+                '--no-pretty',  # Disable pretty output that requires console
+                '--message', self.task
+            ]
+            logging.info(f"[Session {self.session_id}] Executing command: {' '.join(cmd)}")
             
             self.process = subprocess.Popen(
                 cmd,
-                shell=True,
+                shell=False,  # Don't use shell to avoid console issues
                 cwd=str(Path(self.workspace_path).resolve()),
                 stdout=subprocess.PIPE,
                 stderr=subprocess.PIPE,
@@ -79,7 +88,8 @@ class AgentSession:
                 text=True,
                 bufsize=1,  # Line buffered
                 universal_newlines=True,
-                env=env
+                env=env,
+                creationflags=subprocess.CREATE_NO_WINDOW  # Prevent console window
             )
             
             logging.info(f"[Session {self.session_id}] Process started with PID: {self.process.pid}")
