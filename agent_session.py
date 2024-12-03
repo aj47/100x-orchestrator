@@ -129,18 +129,8 @@ class AgentSession:
                     
                 logging.debug(f"[Session {self.session_id}] {pipe_name} received: {line.strip()}")
                 
-                # Format line for HTML display
-                formatted_line = (
-                    line.replace('&', '&amp;')
-                        .replace('<', '&lt;')
-                        .replace('>', '&gt;')
-                        .replace('\n', '<br>')
-                        .replace(' ', '&nbsp;')
-                )
-                
-                # Add timestamp and style
-                timestamp = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
-                html_line = f'<div class="output-line"><span class="timestamp">[{timestamp}]</span> {formatted_line}</div>'
+                # Format the line using helper method
+                html_line = self._format_output_line(line)
                 
                 # Immediately write to buffer with lock
                 with self._buffer_lock:
@@ -180,14 +170,9 @@ class AgentSession:
         """
         try:
             timestamp = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
-            formatted_message = (
-                message.replace('&', '&amp;')
-                    .replace('<', '&lt;')
-                    .replace('>', '&gt;')
-                    .replace('\n', '<br>')
-                    .replace(' ', '&nbsp;')
-            )
-            echo_line = f'<div class="output-line user-message"><span class="timestamp">[{timestamp}]</span> USER: {formatted_message}</div>'
+            echo_line = self._format_output_line(f"USER: {message}")
+            # Add user-message class to the div
+            echo_line = echo_line.replace('class="output-line"', 'class="output-line user-message"')
             
             with threading.Lock():
                 self.output_buffer.seek(0, 2)  # Seek to end
@@ -276,6 +261,21 @@ class AgentSession:
         except Exception as e:
             logging.error(f"[Session {self.session_id}] Error sending message: {e}", exc_info=True)
             return False
+
+    def _format_output_line(self, line: str) -> str:
+        """Format a line of output for HTML display with proper escaping and styling"""
+        # Escape HTML special characters
+        formatted_line = (
+            line.replace('&', '&amp;')
+                .replace('<', '&lt;')
+                .replace('>', '&gt;')
+                .replace('\n', '<br>')
+                .replace(' ', '&nbsp;')
+        )
+        
+        # Add timestamp and wrap in styled div
+        timestamp = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+        return f'<div class="output-line"><span class="timestamp">[{timestamp}]</span> {formatted_line}</div>'
 
     def cleanup(self) -> None:
         """Clean up the aider session"""

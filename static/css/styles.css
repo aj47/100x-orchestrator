@@ -184,6 +184,37 @@
     100% { opacity: 1; transform: scale(1); }
 }
 
+/* CLI Output specific styles */
+.cli-output {
+    background-color: #1e1e1e;
+    color: #d4d4d4;
+    font-family: 'Consolas', 'Monaco', monospace;
+    padding: 10px;
+    border-radius: 5px;
+    max-height: 400px;
+    overflow-y: auto;
+}
+
+.output-container {
+    white-space: pre-wrap;
+    word-wrap: break-word;
+}
+
+.output-line {
+    margin: 2px 0;
+    line-height: 1.4;
+}
+
+.timestamp {
+    color: #569cd6;
+    margin-right: 8px;
+}
+
+.user-message {
+    color: #4ec9b0;
+    font-weight: bold;
+}
+
 /* Scrollbar styles */
 .cli-output::-webkit-scrollbar {
     width: 8px;
