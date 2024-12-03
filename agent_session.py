@@ -183,7 +183,7 @@ class AgentSession:
             message (str): The message to echo
         """
         try:
-            echo_line = self._format_output_line(f"USER: {message}")
+            echo_line = self._format_output_line(f"{message}")
             # Add user-message class to the div
             echo_line = echo_line.replace('class="output-line"', 'class="output-line user-message"')
             

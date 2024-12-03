@@ -18,7 +18,7 @@ class OpenRouterClient:
         if not self.api_key:
             raise ValueError(f"OPENROUTER_API_KEY not found in {env_path}")
         
-    def chat_completion(self, system_message: str = "", user_message: str = "", model="google/gemini-flash-1.5"):
+    def chat_completion(self, system_message: str = "", user_message: str = "", model="openrouter/google/gemini-flash-1.5"):
         """Get a summary of the coding session logs using JSON mode"""
         try:
             response = completion(
