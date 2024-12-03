@@ -450,14 +450,18 @@ def main_loop():
                                 agent_session.stop()
                                 continue
                             else:
-                                # Send follow-up message if the process is running
-                                if agent_session.send_message(follow_up_message):
-                                    logging.info(f"Agent {agent_id} is ready. Sending follow-up message.")
-                                    logging.info(f"==========================================================")
-                                    logging.info(follow_up_message)
-                                    logging.info(f"==========================================================")
-                                else:
-                                    logging.error(f"Failed to send follow-up message to agent {agent_id}")
+                                # Extract just the action from the response
+                                try:
+                                    response_data = json.loads(follow_up_message)
+                                    action_message = response_data.get('action', '')
+                                
+                                    # Send just the action if the process is running
+                                    if agent_session.send_message(action_message):
+                                        logging.info(f"Agent {agent_id} is ready. Sending action: {action_message}")
+                                    else:
+                                        logging.error(f"Failed to send action to agent {agent_id}")
+                                except json.JSONDecodeError:
+                                    logging.error(f"Invalid JSON response from OpenRouter")
                                     
                         except Exception as e:
                             logging.error(f"Error processing session summary: {e}")
