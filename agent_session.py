@@ -30,9 +30,9 @@ class AgentSession:
         self.task = task
         self.output_buffer = io.StringIO()
         self.process = None
-        self.output_queue = queue.Queue()
         self._stop_event = threading.Event()
         self.session_id = str(uuid.uuid4())[:8]  # For logging
+        self._buffer_lock = threading.Lock()  # Add lock for thread-safe buffer access
         
         # Load configuration with defaults
         default_config = {
@@ -60,7 +60,6 @@ class AgentSession:
             
             # Start aider process with unbuffered output
             cmd = f'aider --map-tokens 1024 --no-show-model-warnings --model openrouter/google/gemini-flash-1.5 --message "{self.task}"'
-            # cmd = f'aider --version'
             logging.info(f"[Session {self.session_id}] Executing command: {cmd}")
             
             # Set up environment with forced unbuffering
@@ -71,10 +70,10 @@ class AgentSession:
             self.process = subprocess.Popen(
                 cmd,
                 shell=True,
-                cwd=str(Path(self.workspace_path).resolve()),  # Ensure absolute path
+                cwd=str(Path(self.workspace_path).resolve()),
                 stdout=subprocess.PIPE,
                 stderr=subprocess.PIPE,
-                stdin=subprocess.PIPE,  # Add stdin pipe for sending messages
+                stdin=subprocess.PIPE,
                 startupinfo=startupinfo,
                 text=True,
                 bufsize=1,  # Line buffered
@@ -98,20 +97,14 @@ class AgentSession:
                 daemon=True,
                 name=f"stderr-{self.session_id}"
             )
-            process_thread = threading.Thread(
-                target=self._process_output, 
-                daemon=True,
-                name=f"process-{self.session_id}"
-            )
             
             stdout_thread.start()
             stderr_thread.start()
-            process_thread.start()
             
             logging.info(f"[Session {self.session_id}] Started output processing threads")
 
             # Verify threads are running
-            for thread in [stdout_thread, stderr_thread, process_thread]:
+            for thread in [stdout_thread, stderr_thread]:
                 if not thread.is_alive():
                     logging.error(f"[Session {self.session_id}] Thread {thread.name} failed to start")
                     return False
@@ -123,16 +116,24 @@ class AgentSession:
             return False
 
     def _read_output(self, pipe, pipe_name):
-        """Read output from a pipe and put it in the queue"""
+        """Read output from a pipe and write directly to buffer"""
         try:
             logging.info(f"[Session {self.session_id}] Started reading from {pipe_name}")
             for line in iter(pipe.readline, ''):
                 if self._stop_event.is_set():
                     break
+                    
                 logging.debug(f"[Session {self.session_id}] {pipe_name} received: {line.strip()}")
-                self.output_queue.put(line)
+                
+                # Immediately write to buffer with lock
+                with self._buffer_lock:
+                    self.output_buffer.seek(0, 2)  # Seek to end
+                    self.output_buffer.write(line)
+                    logging.debug(f"[Session {self.session_id}] Added to buffer: {line.strip()}")
+                    
                 # Flush the pipe to ensure we get output immediately
                 pipe.flush()
+                
         except Exception as e:
             logging.error(f"[Session {self.session_id}] Error reading from {pipe_name}: {e}", exc_info=True)
         finally:
@@ -141,36 +142,6 @@ class AgentSession:
                 logging.info(f"[Session {self.session_id}] Closed {pipe_name} pipe")
             except Exception as e:
                 logging.error(f"[Session {self.session_id}] Error closing {pipe_name} pipe: {e}", exc_info=True)
-
-    def _process_output(self):
-        """Process output from the queue and write to buffer"""
-        logging.info(f"[Session {self.session_id}] Started output processing thread")
-        buffer_update_count = 0
-        
-        while not self._stop_event.is_set():
-            try:
-                # Reduced timeout for more frequent updates
-                try:
-                    line = self.output_queue.get(timeout=0.05)
-                except queue.Empty:
-                    continue
-                
-                # Lock for thread safety when updating buffer
-                with threading.Lock():
-                    self.output_buffer.seek(0, 2)  # Seek to end
-                    self.output_buffer.write(line)
-                    buffer_update_count += 1
-                    
-                    # Log buffer status
-                    current_content = self.output_buffer.getvalue()
-                    logging.debug(f"[Session {self.session_id}] Buffer update #{buffer_update_count}")
-                    logging.debug(f"[Session {self.session_id}] Current buffer length: {len(current_content)}")
-                    logging.debug(f"[Session {self.session_id}] Last line added: {line.strip()}")
-                    
-            except Exception as e:
-                logging.error(f"[Session {self.session_id}] Error processing output: {e}", exc_info=True)
-                # Don't break on error, try to continue processing
-                continue
 
     def get_output(self):
         """Get the current output buffer contents"""
