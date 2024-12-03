@@ -230,7 +230,12 @@ class AgentSession:
         try:
             if not self.process or self.process.poll() is not None:
                 logging.error(f"[Session {self.session_id}] Cannot send message: Process is not running")
-                return False
+                # Attempt to restart the process
+                if self.start():
+                    logging.info(f"[Session {self.session_id}] Process restarted successfully")
+                else:
+                    logging.error(f"[Session {self.session_id}] Failed to restart the process")
+                    return False
             
             # Sanitize and prepare message
             self._echo_message(message)  # Echo message to output before sending

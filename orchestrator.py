@@ -416,51 +416,50 @@ def main_loop():
         try:
             # Load current tasks and agents
             tasks_data = load_tasks()
-            
+                
             # Update each agent's output and check readiness
             for agent_id in list(tasks_data['agents'].keys()):
                 logging.info(f"Checking agent {agent_id}")
-                
+                    
                 # Update agent output
                 update_agent_output(agent_id)
-                
+                    
                 # Check if agent session is ready
                 if agent_id in aider_sessions:
                     agent_session = aider_sessions[agent_id]
-                    
+                        
                     if agent_session.is_ready():
                         # Get current session output
                         session_logs = agent_session.get_output()
-                        
+                            
                         # Get summary from OpenRouter
                         try:
                             openrouter = OpenRouterClient()
-                            follow_up_message = openrouter.chat_completion(session_logs, f"""You are operating an AI coding assistant (aider) in the terminal.
-                                                                            The overall goal is to {agent_session.task}.
-                                                                            Do not write code. Only give guidance and commands.
-                                                                            Commands you can use: 
-                                                                            "/ls", "/git <command>", "/help", "/add <file>"
-                                                                            when using a command. provide THE COMMAND ONLY. no other text. no quotation marks.
-                                                                            when the task is finished input %%FINISHED%%""")
-                            
+                            follow_up_message = openrouter.chat_completion(
+                                session_logs, 
+                                OPENROUTER_PROMPT(agent_session.task)
+                            )
+                                
                             # Store summary in agent data
                             # tasks_data['agents'][agent_id]['last_critique'] = summary
                             save_tasks(tasks_data)
-                            
-                            # Send follow-up message
-                            logging.info(f"==========================================================")
-                            logging.info(f"Agent {agent_id} is ready. Sending follow-up message.")
-                            logging.info(follow_up_message)
-                            logging.info(f"==========================================================")
-                            agent_session.send_message(follow_up_message)
-                            
+                                
+                            # Send follow-up message if the process is running
+                            if agent_session.send_message(follow_up_message):
+                                logging.info(f"==========================================================")
+                                logging.info(f"Agent {agent_id} is ready. Sending follow-up message.")
+                                logging.info(follow_up_message)
+                                logging.info(f"==========================================================")
+                            else:
+                                logging.error(f"Failed to send follow-up message to agent {agent_id}")
+                                
                         except Exception as e:
                             logging.error(f"Error processing session summary: {e}")
-            
+                
             # Wait before next check
             logging.info(f"Waiting {CHECK_INTERVAL} seconds before next check")
             sleep(CHECK_INTERVAL)
-        
+            
         except Exception as e:
             logging.error(f"Error in main loop: {e}", exc_info=True)
             sleep(CHECK_INTERVAL)
@@ -468,3 +467,13 @@ def main_loop():
 if __name__ == "__main__":
     logging.info("Starting orchestrator")
     main_loop()
+                                # Check if the aider session is running before sending a message
+                                if aider_sessions.get(agent_id) and aider_sessions[agent_id].process and aider_sessions[agent_id].process.poll() is None:
+                                    logging.info(f"==========================================================")
+                                    logging.info(f"Agent {agent_id} is ready. Sending follow-up message.")
+                                    logging.info(follow_up_message)
+                                    logging.info(f"==========================================================")
+                                    agent_session.send_message(follow_up_message)
+                                else:
+                                    logging.error(f"[Agent {agent_id}] Cannot send message: Process is not running")
+    import prompts
