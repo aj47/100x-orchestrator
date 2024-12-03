@@ -89,6 +89,22 @@
                     <div class="col-12">
                         <h6><i class="fas fa-tasks me-2"></i>Task</h6>
                         <p>{{ agent.task }}</p>
+
+                        <h6><i class="fas fa-brain me-2"></i>Agent State</h6>
+                        <div class="agent-state mb-3">
+                            <div class="progress-item">
+                                <strong>Progress:</strong> {{ agent.progress }}
+                            </div>
+                            <div class="thought-item">
+                                <strong>Thought:</strong> {{ agent.thought }}
+                            </div>
+                            <div class="future-item">
+                                <strong>Future:</strong> {{ agent.future }}
+                            </div>
+                            <div class="action-item">
+                                <strong>Last Action:</strong> {{ agent.last_action }}
+                            </div>
+                        </div>
                         
                         <h6><i class="fas fa-terminal me-2"></i>Aider Output</h6>
                         <div class="cli-output">

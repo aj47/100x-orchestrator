@@ -184,6 +184,44 @@
     100% { opacity: 1; transform: scale(1); }
 }
 
+/* Agent state styles */
+.agent-state {
+    background-color: #f8f9fa;
+    padding: 1rem;
+    border-radius: 5px;
+    border: 1px solid #dee2e6;
+    margin-bottom: 1rem;
+}
+
+.agent-state > div {
+    margin-bottom: 0.5rem;
+}
+
+.agent-state > div:last-child {
+    margin-bottom: 0;
+}
+
+.agent-state strong {
+    color: #495057;
+    margin-right: 0.5rem;
+}
+
+.progress-item {
+    color: #28a745;
+}
+
+.thought-item {
+    color: #17a2b8;
+}
+
+.future-item {
+    color: #6c757d;
+}
+
+.action-item {
+    color: #dc3545;
+}
+
 /* CLI Output specific styles */
 .cli-output {
     background-color: #1e1e1e;
