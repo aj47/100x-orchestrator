@@ -17,13 +17,55 @@ import datetime
 
 app = Flask(__name__)
 
+# Configure logging to be more verbose
+import logging
+from logging.handlers import RotatingFileHandler
+
+# Create a file handler
+file_handler = RotatingFileHandler('flask_debug.log', maxBytes=10000, backupCount=3)
+file_handler.setLevel(logging.DEBUG)
+
+# Create a console handler
+console_handler = logging.StreamHandler()
+console_handler.setLevel(logging.INFO)
+
+# Create a formatter and add it to the handlers
+formatter = logging.Formatter(
+    '%(asctime)s - %(name)s - %(levelname)s - %(message)s'
+)
+file_handler.setFormatter(formatter)
+console_handler.setFormatter(formatter)
+
+# Add the handlers to the app's logger
+app.logger.addHandler(file_handler)
+app.logger.addHandler(console_handler)
+# app.logger.setLevel(logging.DEBUG)
+
 @app.route('/')
 def index():
     return render_template('index.html')
 
 @app.route('/tasks/tasks.json')
 def serve_tasks_json():
-    """Serve the tasks.json file"""
+    """Serve the tasks.json file, creating it if it doesn't exist"""
+    tasks_file = Path('tasks/tasks.json')
+    
+    # Ensure tasks directory exists
+    tasks_file.parent.mkdir(parents=True, exist_ok=True)
+    
+    # Create file with default content if it doesn't exist
+    if not tasks_file.exists():
+        default_data = {
+            "tasks": [],
+            "agents": {},
+            "repository_url": "",
+            "config": {
+                "agent_session": {}
+            }
+        }
+        with tasks_file.open('w') as f:
+            json.dump(default_data, f, indent=4)
+    
     return send_from_directory('tasks', 'tasks.json')
 
 @app.route('/agents')
@@ -66,7 +108,11 @@ def create_agent():
         tasks = data.get('tasks', [])
         num_agents = data.get('num_agents', 1)  # Default to 1 if not specified
         
+        # Enhanced logging for debugging
+        app.logger.info(f"Received create_agent request: {data}")
+        
         if not repo_url or not tasks:
+            app.logger.error("Missing repository URL or tasks")
             return jsonify({'error': 'Repository URL and tasks are required'}), 400
         
         # Ensure tasks is a list
@@ -82,18 +128,25 @@ def create_agent():
             # Set environment variable for repo URL
             os.environ['REPOSITORY_URL'] = repo_url
             
-            # Initialize agent with specified number of agents per task
-            agent_ids = initialiseCodingAgent(
-                repository_url=repo_url, 
-                task_description=task_description, 
-                num_agents=num_agents
-            )
+            app.logger.info(f"Attempting to initialize agent for task: {task_description}")
             
-            if agent_ids:
-                created_agents.extend(agent_ids)
-                # Add task to tasks list if not already present
-                if task_description not in tasks_data['tasks']:
-                    tasks_data['tasks'].append(task_description)
+            # Initialize agent with specified number of agents per task
+            try:
+                agent_ids = initialiseCodingAgent(
+                    repository_url=repo_url, 
+                    task_description=task_description, 
+                    num_agents=num_agents
+                )
+                
+                if agent_ids:
+                    created_agents.extend(agent_ids)
+                    # Add task to tasks list if not already present
+                    if task_description not in tasks_data['tasks']:
+                        tasks_data['tasks'].append(task_description)
+                else:
+                    app.logger.warning(f"Failed to create agents for task: {task_description}")
+            except Exception as task_error:
+                app.logger.error(f"Error initializing agent for task {task_description}: {task_error}", exc_info=True)
         
         # Update tasks.json with repo URL and agents
         tasks_data['repository_url'] = repo_url
@@ -126,18 +179,22 @@ def create_agent():
         check_and_start_main_loop()
         
         if created_agents:
+            app.logger.info(f"Successfully created agents: {created_agents}")
             return jsonify({
                 'success': True,
                 'agent_ids': created_agents,
                 'message': f'Agents {", ".join(created_agents)} created successfully'
             })
         else:
+            app.logger.error("Failed to create any agents")
             return jsonify({
                 'success': False,
                 'error': 'Failed to create any agents'
             }), 500
             
     except Exception as e:
+        # Log the full exception details
+        app.logger.error(f"Unexpected error in create_agent: {e}", exc_info=True)
         return jsonify({
             'success': False,
             'error': str(e)

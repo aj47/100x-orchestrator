@@ -1,15 +1,13 @@
 import os, json, traceback, subprocess, sys, uuid
+from time import sleep
 import threading
 import datetime
 import queue
 import io
 import logging
 from pathlib import Path
-
-# Reusing the existing Colors class from orchestrator.py
-class Colors:
-    HEADER = '\033[95m'; OKBLUE = '\033[94m'; OKCYAN = '\033[96m'; OKGREEN = '\033[92m'
-    WARNING = '\033[93m'; FAIL = '\033[91m'; ENDC = '\033[0m'; BOLD = '\033[1m'; UNDERLINE = '\033[4m'
+import time
+import re
 
 def normalize_path(path_str):
     """Normalize a path string to absolute path with forward slashes."""
@@ -28,46 +26,72 @@ def normalize_path(path_str):
         return None
 
 class AgentSession:
-    def __init__(self, workspace_path, task):
+    def __init__(self, workspace_path, task, config=None, aider_commands=None):
         self.workspace_path = normalize_path(workspace_path)
         self.task = task
         self.output_buffer = io.StringIO()
         self.process = None
-        self.output_queue = queue.Queue()
         self._stop_event = threading.Event()
         self.session_id = str(uuid.uuid4())[:8]  # For logging
+        self._buffer_lock = threading.Lock()  # Add lock for thread-safe buffer access
+        self.aider_commands = aider_commands
+        
+        # Load configuration with defaults
+        default_config = {
+            'stability_duration': 10,
+            'output_buffer_max_length': 10000
+        }
+        self.config = {**default_config, **(config or {})}
+        
         logging.info(f"[Session {self.session_id}] Initialized with workspace: {self.workspace_path}")
+        logging.info(f"[Session {self.session_id}] Configuration: {self.config}")
 
-    def start(self):
-        """Start the aider session"""
+    def start(self) -> bool:
+        """
+        Start the aider session.
+        
+        Returns:
+            bool: True if session started successfully, False otherwise
+        """
         try:
             logging.info(f"[Session {self.session_id}] Starting aider session in workspace: {self.workspace_path}")
-            
-            # Create startupinfo to hide console window
-            startupinfo = subprocess.STARTUPINFO()
-            startupinfo.dwFlags |= subprocess.STARTF_USESHOWWINDOW
-            
-            # Start aider process with unbuffered output
-            cmd = f'aider --map-tokens 1024 --mini --message "{self.task}"'
-            # cmd = f'aider --version'
-            logging.info(f"[Session {self.session_id}] Executing command: {cmd}")
             
             # Set up environment with forced unbuffering
             env = os.environ.copy()
             env['PYTHONUNBUFFERED'] = '1'
             env['PYTHONIOENCODING'] = 'utf-8'
             
+            # Create startupinfo to hide console window
+            startupinfo = subprocess.STARTUPINFO()
+            startupinfo.dwFlags |= subprocess.STARTF_USESHOWWINDOW
+            
+            # Start aider process with unbuffered output and console mode
+            cmd = [
+                'aider',
+                '--map-tokens', '1024',
+                '--no-show-model-warnings',
+                '--model', 'openrouter/google/gemini-flash-1.5',
+                '--no-pretty'
+            ]
+            
+            # Add custom commands if provided
+            if self.aider_commands:
+                cmd.extend(self.aider_commands.split())
+            logging.info(f"[Session {self.session_id}] Executing command: {' '.join(cmd)}")
+            
             self.process = subprocess.Popen(
                 cmd,
                 shell=True,
-                cwd=str(Path(self.workspace_path).resolve()),  # Ensure absolute path
+                cwd=str(Path(self.workspace_path).resolve()),
                 stdout=subprocess.PIPE,
                 stderr=subprocess.PIPE,
+                stdin=subprocess.PIPE,
                 startupinfo=startupinfo,
                 text=True,
                 bufsize=1,  # Line buffered
                 universal_newlines=True,
-                env=env
+                env=env,
+                creationflags=subprocess.CREATE_NO_WINDOW  # Prevent console window
             )
             
             logging.info(f"[Session {self.session_id}] Process started with PID: {self.process.pid}")
@@ -86,20 +110,20 @@ class AgentSession:
                 daemon=True,
                 name=f"stderr-{self.session_id}"
             )
-            process_thread = threading.Thread(
-                target=self._process_output, 
-                daemon=True,
-                name=f"process-{self.session_id}"
-            )
             
             stdout_thread.start()
             stderr_thread.start()
-            process_thread.start()
+
+            # Wait briefly for startup
+            time.sleep(2)
+            # Send initial task
+            if self.task:
+                self.send_message(self.task)
             
             logging.info(f"[Session {self.session_id}] Started output processing threads")
 
             # Verify threads are running
-            for thread in [stdout_thread, stderr_thread, process_thread]:
+            for thread in [stdout_thread, stderr_thread]:
                 if not thread.is_alive():
                     logging.error(f"[Session {self.session_id}] Thread {thread.name} failed to start")
                     return False
@@ -111,54 +135,48 @@ class AgentSession:
             return False
 
     def _read_output(self, pipe, pipe_name):
-        """Read output from a pipe and put it in the queue"""
+        """Read output from a pipe and write directly to buffer"""
         try:
             logging.info(f"[Session {self.session_id}] Started reading from {pipe_name}")
-            for line in iter(pipe.readline, ''):
-                if self._stop_event.is_set():
-                    break
-                logging.debug(f"[Session {self.session_id}] {pipe_name} received: {line.strip()}")
-                self.output_queue.put(line)
-                # Flush the pipe to ensure we get output immediately
-                pipe.flush()
-        except Exception as e:
-            logging.error(f"[Session {self.session_id}] Error reading from {pipe_name}: {e}", exc_info=True)
-        finally:
-            try:
-                pipe.close()
-                logging.info(f"[Session {self.session_id}] Closed {pipe_name} pipe")
-            except Exception as e:
-                logging.error(f"[Session {self.session_id}] Error closing {pipe_name} pipe: {e}", exc_info=True)
-
-    def _process_output(self):
-        """Process output from the queue and write to buffer"""
-        logging.info(f"[Session {self.session_id}] Started output processing thread")
-        buffer_update_count = 0
-        
-        while not self._stop_event.is_set():
-            try:
-                # Reduced timeout for more frequent updates
-                try:
-                    line = self.output_queue.get(timeout=0.05)
-                except queue.Empty:
+            while not self._stop_event.is_set() and self.process and self.process.poll() is None:
+                line = pipe.readline()
+                if not line:
+                    # No data available but process still running
+                    sleep(0.1)  # Short sleep to prevent CPU spinning
                     continue
                 
-                # Lock for thread safety when updating buffer
-                with threading.Lock():
+                # Skip startup messages
+                if any(msg in line for msg in [
+                    "Can't initialize prompt toolkit",
+                    "Newer aider version",
+                    "Run this command to update:",
+                    "python.exe -m pip install aider",
+                    "Aider v",
+                    "Model:",
+                    "Git repo:",
+                    "Repo-map:",
+                    "Use /help"
+                ]):
+                    continue
+                    
+                logging.debug(f"[Session {self.session_id}] {pipe_name} received: {line.strip()}")
+                
+                # Format the line using helper method
+                html_line = self._format_output_line(line)
+                
+                # Immediately write to buffer with lock
+                with self._buffer_lock:
                     self.output_buffer.seek(0, 2)  # Seek to end
-                    self.output_buffer.write(line)
-                    buffer_update_count += 1
+                    self.output_buffer.write(html_line)
+                    logging.debug(f"[Session {self.session_id}] Added to buffer: {line.strip()}")
                     
-                    # Log buffer status
-                    current_content = self.output_buffer.getvalue()
-                    logging.debug(f"[Session {self.session_id}] Buffer update #{buffer_update_count}")
-                    logging.debug(f"[Session {self.session_id}] Current buffer length: {len(current_content)}")
-                    logging.debug(f"[Session {self.session_id}] Last line added: {line.strip()}")
-                    
-            except Exception as e:
-                logging.error(f"[Session {self.session_id}] Error processing output: {e}", exc_info=True)
-                # Don't break on error, try to continue processing
-                continue
+                # Flush the pipe to ensure we get output immediately
+                pipe.flush()
+                
+            logging.info(f"[Session {self.session_id}] {pipe_name} reader stopping - process terminated: {self.process.poll() if self.process else 'No process'}")
+                
+        except Exception as e:
+            logging.error(f"[Session {self.session_id}] Error reading from {pipe_name}: {e}", exc_info=True)
 
     def get_output(self):
         """Get the current output buffer contents"""
@@ -172,27 +190,155 @@ class AgentSession:
             # Restore position
             self.output_buffer.seek(pos)
             
-            logging.debug(f"[Session {self.session_id}] Retrieved output (length: {len(output)})")
-            logging.debug(f"[Session {self.session_id}] Output preview: {output[:200]}...")  # Log preview of output
             return output
         except Exception as e:
             logging.error(f"[Session {self.session_id}] Error getting output: {e}", exc_info=True)
-            return ""
+    def _echo_message(self, message: str) -> None:
+        """
+        Echo the sent message to the output buffer, simulating user input in the CLI.
 
-    def cleanup(self):
+        Args:
+            message (str): The message to echo
+        """
+        try:
+            echo_line = self._format_output_line(f"{message}")
+            # Add user-message class to the div
+            echo_line = echo_line.replace('class="output-line"', 'class="output-line user-message"')
+            
+            with threading.Lock():
+                self.output_buffer.seek(0, 2)  # Seek to end
+                self.output_buffer.write(echo_line)
+                
+            logging.debug(f"[Session {self.session_id}] Echoed message to output buffer: {message}")
+        except Exception as e:
+            logging.error(f"[Session {self.session_id}] Error echoing message: {e}", exc_info=True)
+
+    def is_ready(self) -> bool:
+        """
+        Check if the process is ready by verifying no changes in stdout for configured duration.
+        
+        Returns:
+            bool: Indicating if the process is stable and ready
+        """
+        try:
+            # Use configured stability duration
+            stability_duration = self.config['stability_duration']
+            
+            # Initial output snapshot
+            initial_output = self.get_output()
+            logging.debug(f"[Session {self.session_id}] Initial output length: {len(initial_output)}")
+            
+            # Track time and output stability
+            start_time = time.time()
+            while time.time() - start_time < stability_duration:
+                # Short sleep to prevent tight looping
+                time.sleep(1)
+                
+                # Get current output
+                current_output = self.get_output()
+                logging.debug(f"[Session {self.session_id}] Current output length: {len(current_output)}")
+                
+                # Check if output has changed
+                if current_output != initial_output:
+                    logging.debug(f"[Session {self.session_id}] Output changed during stability check")
+                    return False
+            
+            # No changes detected for entire duration
+            logging.info(f"[Session {self.session_id}] Process stable for {stability_duration} seconds")
+            
+            return True
+        
+        except Exception as e:
+            logging.error(f"[Session {self.session_id}] Error in readiness check: {e}", exc_info=True)
+            return False
+
+    def send_message(self, message: str, timeout: int = 10) -> bool:
+        """
+        Send a message to the aider process.
+        
+        Args:
+            message (str): The message to send to the aider process
+            timeout (int, optional): Timeout for sending the message. Defaults to 10 seconds.
+        
+        Returns:
+            bool: True if message sent successfully, False otherwise
+        """
+        try:
+            if not self.process or self.process.poll() is not None:
+                logging.error(f"[Session {self.session_id}] Cannot send message: Process is not running")
+                # Attempt to restart the process
+                if self.start():
+                    logging.info(f"[Session {self.session_id}] Process restarted successfully")
+                else:
+                    logging.error(f"[Session {self.session_id}] Failed to restart the process")
+                    return False
+            
+            # Sanitize and prepare message
+            self._echo_message(message)  # Echo message to output before sending
+            
+            sanitized_message = message.replace('"', '\\"')
+            logging.info(f"[Session {self.session_id}] Sending message to Aider: {sanitized_message}")
+            
+            # Send message via stdin
+            try:
+                self.process.stdin.write(sanitized_message + "\n")
+                self.process.stdin.flush()
+                logging.debug(f"[Session {self.session_id}] Message sent to Aider successfully")
+                return True
+            except (BrokenPipeError, IOError) as pipe_error:
+                logging.error(f"[Session {self.session_id}] Pipe error sending message: {pipe_error}")
+                return False
+        
+        except Exception as e:
+            logging.error(f"[Session {self.session_id}] Error sending message: {e}", exc_info=True)
+            return False
+
+    def _format_output_line(self, line: str) -> str:
+        """Format a line of output for HTML display with proper escaping and styling"""
+        # Escape HTML special characters
+        formatted_line = (
+            line.replace('&', '&amp;')
+                .replace('<', '&lt;')
+                .replace('>', '&gt;')
+                .replace('\n', '<br>')
+                .replace(' ', '&nbsp;')
+        )
+        
+        return f'<div class="output-line">{formatted_line}</div>'
+
+    def cleanup(self) -> None:
         """Clean up the aider session"""
         try:
             logging.info(f"[Session {self.session_id}] Starting cleanup")
             self._stop_event.set()
             if self.process:
                 logging.info(f"[Session {self.session_id}] Terminating process {self.process.pid}")
-                self.process.terminate()
+                
+                # Close stdin to prevent further writes
                 try:
+                    if self.process.stdin:
+                        self.process.stdin.close()
+                except Exception as stdin_close_error:
+                    logging.warning(f"[Session {self.session_id}] Error closing stdin: {stdin_close_error}")
+                
+                # Terminate process
+                try:
+                    self.process.terminate()
                     self.process.wait(timeout=5)
                     logging.info(f"[Session {self.session_id}] Process terminated successfully")
                 except subprocess.TimeoutExpired:
                     logging.warning(f"[Session {self.session_id}] Process did not terminate, forcing kill")
                     self.process.kill()
+                
+                # Close stdout and stderr
+                try:
+                    if self.process.stdout:
+                        self.process.stdout.close()
+                    if self.process.stderr:
+                        self.process.stderr.close()
+                except Exception as pipe_close_error:
+                    logging.warning(f"[Session {self.session_id}] Error closing pipes: {pipe_close_error}")
+            
             logging.info(f"[Session {self.session_id}] Cleanup completed")
         except Exception as e:
             logging.error(f"[Session {self.session_id}] Error during cleanup: {e}", exc_info=True)

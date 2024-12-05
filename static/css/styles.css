@@ -44,7 +44,7 @@
     word-wrap: break-word;
     max-height: 400px;
     overflow-y: auto;
-    font-size: 0.9rem;
+    font-size: 0.6rem;
     line-height: 1.4;
     tab-size: 4;
     position: relative;
@@ -184,6 +184,75 @@
     100% { opacity: 1; transform: scale(1); }
 }
 
+/* Agent state styles */
+.agent-state {
+    background-color: #f8f9fa;
+    padding: 1rem;
+    border-radius: 5px;
+    border: 1px solid #dee2e6;
+    margin-bottom: 1rem;
+}
+
+.agent-state > div {
+    margin-bottom: 0.5rem;
+}
+
+.agent-state > div:last-child {
+    margin-bottom: 0;
+}
+
+.agent-state strong {
+    color: #495057;
+    margin-right: 0.5rem;
+}
+
+.progress-item {
+    color: #28a745;
+}
+
+.thought-item {
+    color: #17a2b8;
+}
+
+.future-item {
+    color: #6c757d;
+}
+
+.action-item {
+    color: #dc3545;
+}
+
+/* CLI Output specific styles */
+.cli-output {
+    background-color: #1e1e1e;
+    color: #d4d4d4;
+    font-family: 'Consolas', 'Monaco', monospace;
+    padding: 10px;
+    border-radius: 5px;
+    max-height: 400px;
+    overflow-y: auto;
+}
+
+.output-container {
+    white-space: pre-wrap;
+    word-wrap: break-word;
+}
+
+.output-line {
+    margin: 2px 0;
+    line-height: 1.4;
+}
+
+.timestamp {
+    color: #569cd6;
+    margin-right: 8px;
+}
+
+.user-message {
+    color: #4ec9b0;
+    font-weight: bold;
+}
+
 /* Scrollbar styles */
 .cli-output::-webkit-scrollbar {
     width: 8px;
@@ -202,4 +271,18 @@
 
 .cli-output::-webkit-scrollbar-thumb:hover {
     background: #888;
+}
+
+/* ANSI color classes */
+.cli-output .ansi-blue { color: #007bff; } /* OKBLUE */
+.cli-output .ansi-cyan { color: #17a2b8; } /* OKCYAN */
+.cli-output .ansi-green { color: #28a745; } /* OKGREEN */
+.cli-output .ansi-yellow { color: #ffc107; } /* WARNING */
+.cli-output .ansi-red { color: #dc3545; } /* FAIL */
+.cli-output .ansi-bold { font-weight: bold; } /* BOLD */
+.cli-output .ansi-underline { text-decoration: underline; } /* UNDERLINE */
+
+/* User message style */
+.cli-output .user-message {
+    color: #007bff; /* OKBLUE */
 }

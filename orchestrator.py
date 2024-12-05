@@ -1,4 +1,7 @@
 import os, json, traceback, subprocess, sys, uuid
+from prompts import PROMPT_AIDER
+from openrouter_client import OpenRouterClient
+from prompt_processor import PromptProcessor
 from pathlib import Path
 import shutil
 import tempfile
@@ -24,21 +27,21 @@ logging.basicConfig(
     ]
 )
 
-# ANSI escape codes for color and formatting
-class Colors:
-    HEADER = '\033[95m'; OKBLUE = '\033[94m'; OKCYAN = '\033[96m'; OKGREEN = '\033[92m'
-    WARNING = '\033[93m'; FAIL = '\033[91m'; ENDC = '\033[0m'; BOLD = '\033[1m'; UNDERLINE = '\033[4m'
 
 # Configuration
 DEFAULT_AGENTS_PER_TASK = 2
 MODEL_NAME = os.environ.get('LITELLM_MODEL', 'anthropic/claude-3-5-sonnet-20240620')
 CONFIG_FILE = Path("tasks/tasks.json")
+
+# Ensure tasks directory exists
+CONFIG_FILE.parent.mkdir(parents=True, exist_ok=True)
 tools, available_functions = [], {}
 MAX_TOOL_OUTPUT_LENGTH = 5000  # Adjust as needed
 CHECK_INTERVAL = 5  # Reduced to 30 seconds for more frequent updates
 
-# Global dictionary to store aider sessions
+# Global dictionaries to store sessions and processors
 aider_sessions = {}
+prompt_processors = {}
 
 def normalize_path(path_str):
     """Normalize a path string to absolute path with forward slashes."""
@@ -95,22 +98,39 @@ def load_tasks():
     try:
         with open(CONFIG_FILE, 'r') as f:
             data = json.load(f)
-            if 'repository_url' not in data:
-                data['repository_url'] = ""
+            
+            # Ensure data has the correct structure
+            if not isinstance(data, dict):
+                logging.warning("tasks.json has incorrect structure, resetting to default")
+                data = {
+                    "tasks": [],
+                    "agents": {},
+                    "repository_url": ""
+                }
+            
+            # Ensure required keys exist
+            data.setdefault('tasks', [])
+            data.setdefault('agents', {})
+            data.setdefault('repository_url', '')
                 
             # Normalize paths in loaded data
-            for agent_id, agent_data in data.get('agents', {}).items():
-                if 'workspace' in agent_data:
-                    agent_data['workspace'] = normalize_path(agent_data['workspace'])
-                if 'repo_path' in agent_data:
-                    agent_data['repo_path'] = normalize_path(agent_data['repo_path'])
-                    
-                # Log the normalized paths
-                logging.debug(f"Loaded agent {agent_id} with normalized paths:")
-                logging.debug(f"  workspace: {agent_data.get('workspace')}")
-                logging.debug(f"  repo_path: {agent_data.get('repo_path')}")
+            if isinstance(data.get('agents'), dict):
+                for agent_id, agent_data in data['agents'].items():
+                    if isinstance(agent_data, dict):
+                        if 'workspace' in agent_data:
+                            agent_data['workspace'] = normalize_path(agent_data['workspace'])
+                        if 'repo_path' in agent_data:
+                            agent_data['repo_path'] = normalize_path(agent_data['repo_path'])
+                        
+                        # Log the normalized paths
+                        logging.debug(f"Loaded agent {agent_id} with normalized paths:")
+                        logging.debug(f"  workspace: {agent_data.get('workspace')}")
+                        logging.debug(f"  repo_path: {agent_data.get('repo_path')}")
+            else:
+                logging.warning("Agents data is not a dictionary, resetting to empty dict")
+                data['agents'] = {}
                 
-            logging.debug(f"Loaded tasks data: {json.dumps(data, indent=2)}")
+            # logging.debug(f"Loaded tasks data: {json.dumps(data, indent=2)}")
             return data
     except FileNotFoundError:
         logging.info("tasks.json not found, creating new data structure")
@@ -155,7 +175,7 @@ def save_tasks(tasks_data):
             logging.debug(f"  workspace: {data_to_save['agents'][agent_id]['workspace']}")
             logging.debug(f"  repo_path: {data_to_save['agents'][agent_id]['repo_path']}")
         
-        logging.debug(f"Saving tasks data: {json.dumps(data_to_save, indent=2)}")
+        logging.debug(f"Saving tasks data")
         with open(CONFIG_FILE, 'w') as f:
             json.dump(data_to_save, f, indent=4)
         logging.info("Successfully saved tasks data")
@@ -218,15 +238,9 @@ def initialiseCodingAgent(repository_url: str = None, task_description: str = No
     created_agent_ids = []
     
     try:
-        # Load tasks data to get repository URL
+        # Load tasks data to get repository URL and configuration
         tasks_data = load_tasks()
-        if repository_url:
-            tasks_data['repository_url'] = repository_url
-            save_tasks(tasks_data)
-            logging.info(f"Updated repository URL: {repository_url}")
-        else:
-            repository_url = tasks_data.get('repository_url')
-            logging.info(f"Using existing repository URL: {repository_url}")
+        agent_config = tasks_data.get('config', {}).get('agent_session', {})
         
         for i in range(num_agents):
             logging.info(f"Creating agent {i+1} of {num_agents}")
@@ -270,21 +284,25 @@ def initialiseCodingAgent(repository_url: str = None, task_description: str = No
                     logging.error("No repository URL provided")
                     shutil.rmtree(agent_workspace)
                     continue
+
+                # Extract repo name from URL
+                repo_name = repository_url.rstrip('/').split('/')[-1]
+                if repo_name.endswith('.git'):
+                    repo_name = repo_name[:-4]
                 
-                logging.info(f"Cloning repository: {repository_url}")
+                logging.info(f"Cloning repository: {repository_url} into {repo_name}")
                 if not cloneRepository(repository_url):
                     logging.error("Failed to clone repository")
                     shutil.rmtree(agent_workspace)
                     continue
                 
-                # Get the cloned repository directory name
-                repo_dirs = [d for d in os.listdir('.') if os.path.isdir(d) and not d.startswith('.')]
-                if not repo_dirs:
-                    logging.error("No repository directory found after cloning")
+                # Verify the cloned directory exists and is a git repo
+                if not os.path.exists(repo_name) or not os.path.isdir(os.path.join(repo_name, '.git')):
+                    logging.error(f"Repository directory {repo_name} not found or not a git repository")
                     shutil.rmtree(agent_workspace)
                     continue
                 
-                repo_dir = repo_dirs[0]
+                repo_dir = repo_name
                 full_repo_path = workspace_dirs["repo"] / repo_dir
                 full_repo_path = full_repo_path.resolve()  # Get absolute path
                 logging.info(f"Repository cloned to: {full_repo_path}")
@@ -302,17 +320,20 @@ def initialiseCodingAgent(repository_url: str = None, task_description: str = No
                     shutil.rmtree(agent_workspace)
                     continue
 
-                # Initialize aider session with absolute path
-                logging.info("Initializing aider session")
-                aider_session = AgentSession(str(full_repo_path), task_description)
+                # Initialize aider session and prompt processor
+                logging.info("Initializing aider session and prompt processor")
+                aider_session = AgentSession(str(full_repo_path), task_description, agent_config)
+                prompt_processor = PromptProcessor()
+                
                 if not aider_session.start():
                     logging.error("Failed to start aider session")
                     shutil.rmtree(agent_workspace)
                     continue
 
-                # Store session in global dictionary
+                # Store sessions in global dictionaries
                 aider_sessions[agent_id] = aider_session
-                logging.info("Aider session started successfully")
+                prompt_processors[agent_id] = prompt_processor
+                logging.info("Aider session and prompt processor started successfully")
 
             finally:
                 # Always return to original directory
@@ -345,11 +366,28 @@ def cloneRepository(repository_url: str) -> bool:
         if not repository_url:
             logging.error("No repository URL provided")
             return False
+            
         logging.info(f"Cloning repository: {repository_url}")
-        subprocess.check_call(f"git clone {repository_url}", shell=True)
+        
+        # Use --quiet to reduce output noise
+        result = subprocess.run(
+            f"git clone --quiet {repository_url}",
+            shell=True,
+            capture_output=True,
+            text=True
+        )
+        
+        if result.returncode != 0:
+            logging.error(f"Git clone failed: {result.stderr}")
+            return False
+            
         return True
-    except subprocess.CalledProcessError as e:
-        logging.error(f"Git clone failed with exit code {e.returncode}", exc_info=True)
+        
+    except subprocess.SubprocessError as e:
+        logging.error(f"Git clone failed: {str(e)}", exc_info=True)
+        return False
+    except Exception as e:
+        logging.error(f"Unexpected error during clone: {str(e)}", exc_info=True)
         return False
 
 def update_agent_output(agent_id):
@@ -368,7 +406,6 @@ def update_agent_output(agent_id):
             output = aider_sessions[agent_id].get_output()
             agent_data['aider_output'] = output
             agent_data['last_updated'] = datetime.datetime.now().isoformat()
-            logging.debug(f"Updated aider output (length: {len(output)})")
             save_tasks(tasks_data)
             return True
         
@@ -385,16 +422,62 @@ def main_loop():
         try:
             # Load current tasks and agents
             tasks_data = load_tasks()
-            
-            # Update each agent's output
+                
+            # Update each agent's output and check readiness
             for agent_id in list(tasks_data['agents'].keys()):
                 logging.info(f"Checking agent {agent_id}")
+                    
+                # Update agent output
                 update_agent_output(agent_id)
-            
+                    
+                # Check if agent session is ready
+                if agent_id in aider_sessions:
+                    agent_session = aider_sessions[agent_id]
+                        
+                    if agent_session.is_ready():
+                        # Get current session output
+                        session_logs = agent_session.get_output()
+                            
+                        # Get summary from OpenRouter
+                        try:
+                            openrouter = OpenRouterClient()
+                            follow_up_message = openrouter.chat_completion(
+                                PROMPT_AIDER(agent_session.task),
+                                session_logs
+                            )
+                                
+                            # Store summary in agent data
+                            # tasks_data['agents'][agent_id]['last_critique'] = summary
+                            save_tasks(tasks_data)
+                            
+                            if follow_up_message == "%%FINISHED%%":
+                                logging.info(f"Agent {agent_id} is finished. Stopping the process.")
+                                agent_session.stop()
+                                continue
+                            else:
+                                # Process the response through PromptProcessor
+                                if agent_id in prompt_processors:
+                                    processor = prompt_processors[agent_id]
+                                    action = processor.process_response(agent_id, follow_up_message)
+                                
+                                    if action:
+                                        # Send the processed action if the process is running
+                                        if agent_session.send_message(action):
+                                            logging.info(f"Agent {agent_id} is ready. Sending action: {action}")
+                                        else:
+                                            logging.error(f"Failed to send action to agent {agent_id}")
+                                    else:
+                                        logging.error(f"Failed to process response from OpenRouter")
+                                else:
+                                    logging.error(f"No prompt processor found for agent {agent_id}")
+                                    
+                        except Exception as e:
+                            logging.error(f"Error processing session summary: {e}")
+                
             # Wait before next check
             logging.info(f"Waiting {CHECK_INTERVAL} seconds before next check")
             sleep(CHECK_INTERVAL)
-        
+            
         except Exception as e:
             logging.error(f"Error in main loop: {e}", exc_info=True)
             sleep(CHECK_INTERVAL)
