@@ -1,4 +1,5 @@
-from flask import Flask, render_template, request, jsonify, send_from_directory
+from flask import Flask, render_template, request, jsonify, send_from_directory, session
+from github_client import GitHubClient
 from orchestrator import (
     initialiseCodingAgent, 
     main_loop, 
@@ -16,6 +17,14 @@ from pathlib import Path
 import datetime
 
 app = Flask(__name__)
+app.secret_key = os.environ.get('FLASK_SECRET_KEY', 'dev')
+
+# Initialize GitHub client
+github_client = None
+try:
+    github_client = GitHubClient()
+except ValueError as e:
+    logging.error(f"Failed to initialize GitHub client: {e}")
 
 # Configure logging to be more verbose
 import logging
@@ -350,6 +359,50 @@ def debug_validate_paths(agent_id):
         return jsonify({
             'error': str(e)
         }), 500
+
+@app.route('/github/repositories')
+def list_repositories():
+    """Get list of GitHub repositories"""
+    if not github_client:
+        return jsonify({'error': 'GitHub client not initialized'}), 500
+        
+    repos = github_client.get_repositories()
+    return jsonify({'repositories': repos})
+
+@app.route('/github/commits/<path:repo_name>')
+def get_commits(repo_name):
+    """Get recent commits for a repository"""
+    if not github_client:
+        return jsonify({'error': 'GitHub client not initialized'}), 500
+        
+    branch = request.args.get('branch', 'main')
+    limit = int(request.args.get('limit', 10))
+    
+    commits = github_client.get_recent_commits(repo_name, branch, limit)
+    return jsonify({'commits': commits})
+
+@app.route('/github/pull-request', methods=['POST'])
+def create_pull_request():
+    """Create a new pull request"""
+    if not github_client:
+        return jsonify({'error': 'GitHub client not initialized'}), 500
+        
+    data = request.get_json()
+    required = ['repo_name', 'title', 'head']
+    if not all(k in data for k in required):
+        return jsonify({'error': 'Missing required fields'}), 400
+        
+    pr = github_client.create_pull_request(
+        repo_name=data['repo_name'],
+        title=data['title'],
+        head=data['head'],
+        base=data.get('base', 'main'),
+        body=data.get('body')
+    )
+    
+    if pr:
+        return jsonify({'pull_request': pr})
+    return jsonify({'error': 'Failed to create pull request'}), 500
 
 if __name__ == '__main__':
     app.run(debug=True)
