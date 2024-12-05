@@ -316,6 +316,24 @@
     --cli-text: #ffffff;
 }
 
+:root[data-theme="tf"] {
+    --bg-primary: #000000;
+    --bg-secondary: #0a0a0a;
+    --text-primary: #00ff00;
+    --text-secondary: #00cc00;
+    --border-color: #00ff00;
+    --card-bg: rgba(0, 20, 0, 0.9);
+    --btn-bg: #003300;
+    --btn-text: #00ff00;
+    --cli-bg: #000000;
+    --cli-text: #00ff00;
+    --accent-color: #00ff00;
+    --hover-color: #00cc00;
+    --tf-glow: 0 0 10px rgba(0, 255, 0, 0.5);
+    --danger-color: #ff0000;
+    --danger-hover: #cc0000;
+}
+
 /* Theme transition */
 * {
     transition: background-color 0.3s ease, color 0.3s ease;
@@ -361,4 +379,32 @@ body {
 
 #themeToggle:hover {
     background-color: var(--bg-secondary);
+}
+
+/* TF theme specific styles - only apply when tf theme is active */
+[data-theme="tf"] body {
+    font-family: 'Share Tech Mono', monospace;
+    background-image: 
+        linear-gradient(rgba(0, 255, 0, 0.03) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(0, 255, 0, 0.03) 1px, transparent 1px);
+    background-size: 20px 20px;
+}
+
+[data-theme="tf"] .card {
+    box-shadow: var(--tf-glow);
+    backdrop-filter: blur(5px);
+}
+
+[data-theme="tf"] .btn-primary {
+    text-shadow: 0 0 5px var(--text-primary);
+}
+
+[data-theme="tf"] .btn-primary:hover {
+    box-shadow: var(--tf-glow);
+    transform: translateY(-2px);
+}
+
+[data-theme="tf"] .cli-output {
+    box-shadow: var(--tf-glow);
+    font-family: 'Share Tech Mono', monospace;
 }
