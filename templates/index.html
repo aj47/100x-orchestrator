@@ -11,10 +11,27 @@
     <div class="container">
         <div class="d-flex justify-content-between align-items-center mb-4">
             <h1>100x Orchestrator</h1>
-            <a href="/agents" class="btn btn-primary">View Agents</a>
+            {% if authenticated %}
+                <div>
+                    <a href="/agents" class="btn btn-primary me-2">View Agents</a>
+                    <a href="/logout" class="btn btn-outline-danger">Logout</a>
+                </div>
+            {% endif %}
         </div>
         
-        <!-- Agent Overview -->
+        {% if not authenticated %}
+        <!-- Login Screen -->
+        <div class="card">
+            <div class="card-body text-center">
+                <h2 class="mb-4">Welcome to 100x Orchestrator</h2>
+                <p class="mb-4">Please authenticate with GitHub to continue</p>
+                <a href="/login" class="btn btn-dark btn-lg">
+                    <i class="fab fa-github me-2"></i>Login with GitHub
+                </a>
+            </div>
+        </div>
+        {% else %}
+        <!-- Main Dashboard UI - Only shown after authentication -->
         <div class="card mb-4">
             <div class="card-header">
                 <h5 class="mb-0"><i class="fas fa-info-circle me-2"></i>Agent Overview</h5>
@@ -135,6 +152,7 @@
         </div>
     </div>
 
+    {% if authenticated %}
     <script>
         // GitHub Integration Functions
         async function loadRepositories() {
@@ -456,5 +474,6 @@
             });
         });
     </script>
+    {% endif %}
 </body>
 </html>
