@@ -150,7 +150,7 @@ class AgentSession:
                     "Can't initialize prompt toolkit",
                     "Newer aider version",
                     "Run this command to update:",
-                    "python.exe -m pip install",
+                    "python.exe -m pip install aider",
                     "Aider v",
                     "Model:",
                     "Git repo:",
