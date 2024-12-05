@@ -1,6 +1,5 @@
 <!DOCTYPE html>
 <html lang="en">
-
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -8,19 +7,18 @@
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet">
     <link href="/static/css/styles.css" rel="stylesheet">
 </head>
-
 <body>
     <div class="container">
         <div class="d-flex justify-content-between align-items-center mb-4">
             <h1>100x Orchestrator</h1>
             {% if authenticated %}
-            <div>
-                <a href="/agents" class="btn btn-primary me-2">View Agents</a>
-                <a href="/logout" class="btn btn-outline-danger">Logout</a>
-            </div>
+                <div>
+                    <a href="/agents" class="btn btn-primary me-2">View Agents</a>
+                    <a href="/logout" class="btn btn-outline-danger">Logout</a>
+                </div>
             {% endif %}
         </div>
-
+        
         {% if not authenticated %}
         <!-- Login Screen -->
         <div class="card">
@@ -29,8 +27,7 @@
                 <div class="alert alert-info">
                     <h5>First Time Setup</h5>
                     <ol class="mb-0">
-                        <li>Go to <a href="https://github.com/settings/tokens" target="_blank">GitHub Personal Access
-                                Tokens</a></li>
+                        <li>Go to <a href="https://github.com/settings/tokens" target="_blank">GitHub Personal Access Tokens</a></li>
                         <li>Click "Generate new token (classic)"</li>
                         <li>Give it a name (e.g., "100x-orchestrator")</li>
                         <li>Select the <code>repo</code> scope</li>
@@ -42,8 +39,7 @@
                     <div class="mb-3">
                         <label for="githubToken" class="form-label">GitHub Personal Access Token</label>
                         <input type="password" class="form-control" id="githubToken" required>
-                        <div class="form-text">Your token is stored locally in your browser and never sent to any server
-                            except GitHub.</div>
+                        <div class="form-text">Your token is stored locally in your browser and never sent to any server except GitHub.</div>
                     </div>
                     <button type="submit" class="btn btn-dark btn-lg">
                         <i class="fab fa-github me-2"></i>Connect with GitHub
@@ -86,36 +82,36 @@
                     <div class="form-group">
                         <label for="repoUrl">Git Repository URL</label>
                         <input type="text" class="form-control" id="repoUrl" required
-                            placeholder="https://github.com/username/repo.git">
+                               placeholder="https://github.com/username/repo.git">
                     </div>
-
+                    
                     <div class="form-group">
                         <label for="agentCount">Number of Agents per Task</label>
-                        <input type="number" class="form-control" id="agentCount" min="1" max="10" value="1"
-                            placeholder="Number of agents to create for each task">
+                        <input type="number" class="form-control" id="agentCount" 
+                               min="1" max="10" value="1" 
+                               placeholder="Number of agents to create for each task">
                     </div>
 
                     <div class="form-group">
                         <label for="aiderCommands">Additional Aider Commands</label>
-                        <input type="text" class="form-control" id="aiderCommands" placeholder="e.g. --test --yes">
-                        <small class="form-text text-muted">Optional: Add custom command line arguments for
-                            aider</small>
+                        <input type="text" class="form-control" id="aiderCommands"
+                               placeholder="e.g. --test --yes">
+                        <small class="form-text text-muted">Optional: Add custom command line arguments for aider</small>
                     </div>
-
+                    
                     <div class="form-group">
                         <label>Tasks</label>
                         <div id="taskList">
                             <!-- Tasks will be dynamically populated here -->
                         </div>
-                        <button type="button" id="addTask" class="btn btn-secondary btn-sm mb-2">+ Add Another
-                            Task</button>
+                        <button type="button" id="addTask" class="btn btn-secondary btn-sm mb-2">+ Add Another Task</button>
                     </div>
-
+                    
                     <button type="submit" class="btn btn-primary">Create Agents</button>
                 </form>
             </div>
         </div>
-
+        
         <div id="result" class="mt-4" style="display: none;">
             <div class="alert" role="alert"></div>
         </div>
@@ -138,8 +134,8 @@
                     </div>
                     <div class="col-md-6">
                         <h6>Or Enter External Repository URL</h6>
-                        <input type="text" class="form-control" id="externalRepoUrl"
-                            placeholder="https://github.com/username/repo.git">
+                        <input type="text" class="form-control" id="externalRepoUrl" 
+                               placeholder="https://github.com/username/repo.git">
                     </div>
                 </div>
                 <button id="loadIssues" class="btn btn-primary" disabled>
@@ -147,39 +143,39 @@
                 </button>
             </div>
 
-            <!-- Recent Commits -->
-            <div class="mb-4">
-                <h6>Recent Commits</h6>
-                <div id="commitsList" class="list-group">
-                    <!-- Commits will be listed here -->
+                <!-- Recent Commits -->
+                <div class="mb-4">
+                    <h6>Recent Commits</h6>
+                    <div id="commitsList" class="list-group">
+                        <!-- Commits will be listed here -->
+                    </div>
+                </div>
+
+                <!-- Create Pull Request -->
+                <div>
+                    <h6>Create Pull Request</h6>
+                    <form id="prForm">
+                        <div class="mb-3">
+                            <label class="form-label">Title</label>
+                            <input type="text" class="form-control" id="prTitle" required>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">Head Branch</label>
+                            <input type="text" class="form-control" id="prHead" required>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">Base Branch</label>
+                            <input type="text" class="form-control" id="prBase" value="main">
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">Description</label>
+                            <textarea class="form-control" id="prBody" rows="3"></textarea>
+                        </div>
+                        <button type="submit" class="btn btn-primary">Create Pull Request</button>
+                    </form>
                 </div>
             </div>
-
-            <!-- Create Pull Request -->
-            <div>
-                <h6>Create Pull Request</h6>
-                <form id="prForm">
-                    <div class="mb-3">
-                        <label class="form-label">Title</label>
-                        <input type="text" class="form-control" id="prTitle" required>
-                    </div>
-                    <div class="mb-3">
-                        <label class="form-label">Head Branch</label>
-                        <input type="text" class="form-control" id="prHead" required>
-                    </div>
-                    <div class="mb-3">
-                        <label class="form-label">Base Branch</label>
-                        <input type="text" class="form-control" id="prBase" value="main">
-                    </div>
-                    <div class="mb-3">
-                        <label class="form-label">Description</label>
-                        <textarea class="form-control" id="prBody" rows="3"></textarea>
-                    </div>
-                    <button type="submit" class="btn btn-primary">Create Pull Request</button>
-                </form>
-            </div>
         </div>
-    </div>
     </div>
     {% endif %}
     <script>
@@ -187,7 +183,7 @@
         document.getElementById('tokenForm')?.addEventListener('submit', async (e) => {
             e.preventDefault();
             const token = document.getElementById('githubToken').value;
-
+            
             // Verify token works by testing the GitHub API
             try {
                 const response = await fetch('/verify_token', {
@@ -197,14 +193,14 @@
                     },
                     body: JSON.stringify({ token })
                 });
-
+                
                 const data = await response.json();
                 if (data.valid) {
                     localStorage.setItem('github_token', token);
                     // Add token to request headers before reloading
                     const headers = new Headers();
                     headers.append('X-GitHub-Token', token);
-
+                    
                     // Fetch the page with the token header
                     const pageResponse = await fetch('/', { headers });
                     const html = await pageResponse.text();
@@ -225,7 +221,7 @@
                 window.location.href = '/';
                 return null;
             }
-
+            
             return fetch(url, {
                 ...options,
                 headers: {
@@ -240,10 +236,10 @@
             try {
                 const response = await fetch('/github/repositories');
                 const data = await response.json();
-
+                
                 const select = document.getElementById('repoSelect');
                 select.innerHTML = '<option value="">Select a repository...</option>';
-
+                
                 if (data.repositories) {
                     data.repositories.forEach(repo => {
                         const option = document.createElement('option');
@@ -262,10 +258,10 @@
             try {
                 const response = await fetch(`/github/commits/${repoName}`);
                 const data = await response.json();
-
+                
                 const commitsList = document.getElementById('commitsList');
                 commitsList.innerHTML = '';
-
+                
                 if (data.commits) {
                     data.commits.forEach(commit => {
                         const commitItem = document.createElement('div');
@@ -313,7 +309,7 @@
             // Pull request form submission
             document.getElementById('prForm').addEventListener('submit', async (e) => {
                 e.preventDefault();
-
+                
                 const repoName = document.getElementById('repoSelect').value;
                 if (!repoName) {
                     showAlert('Please select a repository first', 'warning');
@@ -349,213 +345,212 @@
                 }
             });
 
-            // Function to update overview statistics
-            async function updateOverview() {
-                try {
-                    const response = await fetch('/tasks/tasks.json');
-                    const data = await response.json();
-                    const agents = data.agents || {};
-                    const agentCount = Object.keys(agents).length;
+        // Function to update overview statistics
+        async function updateOverview() {
+            try {
+                const response = await fetch('/tasks/tasks.json');
+                const data = await response.json();
+                const agents = data.agents || {};
+                const agentCount = Object.keys(agents).length;
+                
+                // Update statistics
+                document.getElementById('totalAgents').textContent = agentCount;
+                
+                // Calculate unique tasks
+                const uniqueTasks = new Set(Object.values(agents).map(agent => agent.task)).size;
+                document.getElementById('activeTasks').textContent = uniqueTasks;
+                
+                // Update repository display
+                document.getElementById('repoDisplay').textContent = data.repository_url || 'Not set';
+                
+                // Show/hide delete button based on agent count
+                document.getElementById('deleteAllAgents').style.display = agentCount > 0 ? 'inline-block' : 'none';
+            } catch (error) {
+                console.error('Error updating overview:', error);
+            }
+        }
 
-                    // Update statistics
-                    document.getElementById('totalAgents').textContent = agentCount;
-
-                    // Calculate unique tasks
-                    const uniqueTasks = new Set(Object.values(agents).map(agent => agent.task)).size;
-                    document.getElementById('activeTasks').textContent = uniqueTasks;
-
-                    // Update repository display
-                    document.getElementById('repoDisplay').textContent = data.repository_url || 'Not set';
-
-                    // Show/hide delete button based on agent count
-                    document.getElementById('deleteAllAgents').style.display = agentCount > 0 ? 'inline-block' : 'none';
-                } catch (error) {
-                    console.error('Error updating overview:', error);
-                }
+        // Delete all agents functionality
+        document.getElementById('deleteAllAgents').addEventListener('click', async () => {
+            if (!confirm('Are you sure you want to delete all agents? This action cannot be undone.')) {
+                return;
             }
 
-            // Delete all agents functionality
-            document.getElementById('deleteAllAgents').addEventListener('click', async () => {
-                if (!confirm('Are you sure you want to delete all agents? This action cannot be undone.')) {
-                    return;
+            try {
+                const response = await fetch('/tasks/tasks.json');
+                const data = await response.json();
+                const agents = Object.keys(data.agents || {});
+                
+                let successCount = 0;
+                let errorCount = 0;
+
+                for (const agentId of agents) {
+                    try {
+                        const deleteResponse = await fetch(`/delete_agent/${agentId}`, {
+                            method: 'DELETE'
+                        });
+                        
+                        if (deleteResponse.ok) {
+                            successCount++;
+                        } else {
+                            errorCount++;
+                        }
+                    } catch (error) {
+                        errorCount++;
+                        console.error(`Error deleting agent ${agentId}:`, error);
+                    }
                 }
 
-                try {
-                    const response = await fetch('/tasks/tasks.json');
-                    const data = await response.json();
-                    const agents = Object.keys(data.agents || {});
+                // Show result in alert
+                const resultDiv = document.getElementById('result');
+                const alertDiv = resultDiv.querySelector('.alert');
+                resultDiv.style.display = 'block';
+                
+                if (errorCount === 0) {
+                    alertDiv.className = 'alert alert-success';
+                    alertDiv.textContent = `Successfully deleted ${successCount} agent(s)`;
+                    // Refresh overview after successful deletion
+                    setTimeout(updateOverview, 1000);
+                } else {
+                    alertDiv.className = 'alert alert-warning';
+                    alertDiv.textContent = `Deleted ${successCount} agent(s). Failed to delete ${errorCount} agent(s).`;
+                }
+            } catch (error) {
+                console.error('Error in delete all operation:', error);
+                const resultDiv = document.getElementById('result');
+                const alertDiv = resultDiv.querySelector('.alert');
+                resultDiv.style.display = 'block';
+                alertDiv.className = 'alert alert-danger';
+                alertDiv.textContent = `Error: ${error.message}`;
+            }
+        });
 
-                    let successCount = 0;
-                    let errorCount = 0;
-
-                    for (const agentId of agents) {
-                        try {
-                            const deleteResponse = await fetch(`/delete_agent/${agentId}`, {
-                                method: 'DELETE'
-                            });
-
-                            if (deleteResponse.ok) {
-                                successCount++;
-                            } else {
-                                errorCount++;
-                            }
-                        } catch (error) {
-                            errorCount++;
-                            console.error(`Error deleting agent ${agentId}:`, error);
+        document.addEventListener('DOMContentLoaded', async () => {
+            // Initial overview update
+            await updateOverview();
+            
+            // Update overview every 5 seconds
+            setInterval(updateOverview, 5000);
+            const taskList = document.getElementById('taskList');
+            const repoUrl = document.getElementById('repoUrl');
+            const addTaskButton = document.getElementById('addTask');
+            
+            // Fetch initial tasks from tasks.json
+            try {
+                const tasksResponse = await fetch('/tasks/tasks.json');
+                const tasksData = await tasksResponse.json();
+                repoUrl.value = tasksData.repository_url;
+                // Populate initial tasks
+                tasksData.tasks.forEach((taskDescription, index) => {
+                    const taskItem = createTaskItem(taskDescription, index === 0);
+                    taskList.appendChild(taskItem);
+                });
+            } catch (error) {
+                console.error('Error fetching tasks:', error);
+            }
+            
+            // Function to create a task item
+            function createTaskItem(initialValue = '', isFirst = false) {
+                const taskItem = document.createElement('div');
+                taskItem.classList.add('task-item');
+                
+                const input = document.createElement('input');
+                input.type = 'text';
+                input.classList.add('form-control', 'task-description');
+                input.placeholder = 'Describe the task for the agent...';
+                input.required = true;
+                input.value = initialValue;
+                
+                const removeButton = document.createElement('button');
+                removeButton.type = 'button';
+                removeButton.classList.add('btn', 'btn-danger', 'remove-task');
+                removeButton.textContent = '-';
+                removeButton.style.display = isFirst ? 'none' : 'inline-block';
+                
+                // Remove task functionality
+                removeButton.addEventListener('click', (e) => {
+                    const taskItems = taskList.querySelectorAll('.task-item');
+                    if (taskItems.length > 1) {
+                        e.target.closest('.task-item').remove();
+                        
+                        // Hide remove button for first task if only one remains
+                        const remainingTaskItems = taskList.querySelectorAll('.task-item');
+                        if (remainingTaskItems.length === 1) {
+                            remainingTaskItems[0].querySelector('.remove-task').style.display = 'none';
                         }
                     }
-
-                    // Show result in alert
-                    const resultDiv = document.getElementById('result');
-                    const alertDiv = resultDiv.querySelector('.alert');
+                });
+                
+                taskItem.appendChild(input);
+                taskItem.appendChild(removeButton);
+                
+                return taskItem;
+            }
+            
+            // Add task button functionality
+            addTaskButton.addEventListener('click', () => {
+                const taskItems = taskList.querySelectorAll('.task-item');
+                
+                // Show remove buttons for all existing tasks
+                taskItems.forEach(item => {
+                    item.querySelector('.remove-task').style.display = 'inline-block';
+                });
+                
+                const newTaskItem = createTaskItem();
+                taskList.appendChild(newTaskItem);
+            });
+            
+            // Form submission
+            document.getElementById('agentForm').addEventListener('submit', async (e) => {
+                e.preventDefault();
+                
+                const resultDiv = document.getElementById('result');
+                const alertDiv = resultDiv.querySelector('.alert');
+                
+                try {
+                    // Collect tasks
+                    const tasks = Array.from(document.querySelectorAll('.task-description'))
+                        .map(input => input.value.trim())
+                        .filter(task => task !== '');
+                    
+                    const agentCount = parseInt(document.getElementById('agentCount').value, 10);
+                    
+                    const response = await fetch('/create_agent', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                        },
+                        body: JSON.stringify({
+                            repo_url: document.getElementById('repoUrl').value,
+                            tasks: tasks,
+                            num_agents: agentCount,
+                            aider_commands: document.getElementById('aiderCommands').value.trim()
+                        })
+                    });
+                    
+                    const data = await response.json();
+                    
                     resultDiv.style.display = 'block';
-
-                    if (errorCount === 0) {
+                    if (data.success) {
                         alertDiv.className = 'alert alert-success';
-                        alertDiv.textContent = `Successfully deleted ${successCount} agent(s)`;
-                        // Refresh overview after successful deletion
-                        setTimeout(updateOverview, 1000);
+                        alertDiv.textContent = `Success! Agents ${data.agent_ids.join(', ')} created. Redirecting to Agent View...`;
+                        
+                        // Redirect to agents view after a short delay
+                        setTimeout(() => {
+                            window.location.href = '/agents';
+                        }, 2000);
                     } else {
-                        alertDiv.className = 'alert alert-warning';
-                        alertDiv.textContent = `Deleted ${successCount} agent(s). Failed to delete ${errorCount} agent(s).`;
+                        alertDiv.className = 'alert alert-danger';
+                        alertDiv.textContent = `Error: ${data.error}`;
                     }
                 } catch (error) {
-                    console.error('Error in delete all operation:', error);
-                    const resultDiv = document.getElementById('result');
-                    const alertDiv = resultDiv.querySelector('.alert');
                     resultDiv.style.display = 'block';
                     alertDiv.className = 'alert alert-danger';
                     alertDiv.textContent = `Error: ${error.message}`;
                 }
             });
-
-            document.addEventListener('DOMContentLoaded', async () => {
-                // Initial overview update
-                await updateOverview();
-
-                // Update overview every 5 seconds
-                setInterval(updateOverview, 5000);
-                const taskList = document.getElementById('taskList');
-                const repoUrl = document.getElementById('repoUrl');
-                const addTaskButton = document.getElementById('addTask');
-
-                // Fetch initial tasks from tasks.json
-                try {
-                    const tasksResponse = await fetch('/tasks/tasks.json');
-                    const tasksData = await tasksResponse.json();
-                    repoUrl.value = tasksData.repository_url;
-                    // Populate initial tasks
-                    tasksData.tasks.forEach((taskDescription, index) => {
-                        const taskItem = createTaskItem(taskDescription, index === 0);
-                        taskList.appendChild(taskItem);
-                    });
-                } catch (error) {
-                    console.error('Error fetching tasks:', error);
-                }
-
-                // Function to create a task item
-                function createTaskItem(initialValue = '', isFirst = false) {
-                    const taskItem = document.createElement('div');
-                    taskItem.classList.add('task-item');
-
-                    const input = document.createElement('input');
-                    input.type = 'text';
-                    input.classList.add('form-control', 'task-description');
-                    input.placeholder = 'Describe the task for the agent...';
-                    input.required = true;
-                    input.value = initialValue;
-
-                    const removeButton = document.createElement('button');
-                    removeButton.type = 'button';
-                    removeButton.classList.add('btn', 'btn-danger', 'remove-task');
-                    removeButton.textContent = '-';
-                    removeButton.style.display = isFirst ? 'none' : 'inline-block';
-
-                    // Remove task functionality
-                    removeButton.addEventListener('click', (e) => {
-                        const taskItems = taskList.querySelectorAll('.task-item');
-                        if (taskItems.length > 1) {
-                            e.target.closest('.task-item').remove();
-
-                            // Hide remove button for first task if only one remains
-                            const remainingTaskItems = taskList.querySelectorAll('.task-item');
-                            if (remainingTaskItems.length === 1) {
-                                remainingTaskItems[0].querySelector('.remove-task').style.display = 'none';
-                            }
-                        }
-                    });
-
-                    taskItem.appendChild(input);
-                    taskItem.appendChild(removeButton);
-
-                    return taskItem;
-                }
-
-                // Add task button functionality
-                addTaskButton.addEventListener('click', () => {
-                    const taskItems = taskList.querySelectorAll('.task-item');
-
-                    // Show remove buttons for all existing tasks
-                    taskItems.forEach(item => {
-                        item.querySelector('.remove-task').style.display = 'inline-block';
-                    });
-
-                    const newTaskItem = createTaskItem();
-                    taskList.appendChild(newTaskItem);
-                });
-
-                // Form submission
-                document.getElementById('agentForm').addEventListener('submit', async (e) => {
-                    e.preventDefault();
-
-                    const resultDiv = document.getElementById('result');
-                    const alertDiv = resultDiv.querySelector('.alert');
-
-                    try {
-                        // Collect tasks
-                        const tasks = Array.from(document.querySelectorAll('.task-description'))
-                            .map(input => input.value.trim())
-                            .filter(task => task !== '');
-
-                        const agentCount = parseInt(document.getElementById('agentCount').value, 10);
-
-                        const response = await fetch('/create_agent', {
-                            method: 'POST',
-                            headers: {
-                                'Content-Type': 'application/json',
-                            },
-                            body: JSON.stringify({
-                                repo_url: document.getElementById('repoUrl').value,
-                                tasks: tasks,
-                                num_agents: agentCount,
-                                aider_commands: document.getElementById('aiderCommands').value.trim()
-                            })
-                        });
-
-                        const data = await response.json();
-
-                        resultDiv.style.display = 'block';
-                        if (data.success) {
-                            alertDiv.className = 'alert alert-success';
-                            alertDiv.textContent = `Success! Agents ${data.agent_ids.join(', ')} created. Redirecting to Agent View...`;
-
-                            // Redirect to agents view after a short delay
-                            setTimeout(() => {
-                                window.location.href = '/agents';
-                            }, 2000);
-                        } else {
-                            alertDiv.className = 'alert alert-danger';
-                            alertDiv.textContent = `Error: ${data.error}`;
-                        }
-                    } catch (error) {
-                        resultDiv.style.display = 'block';
-                        alertDiv.className = 'alert alert-danger';
-                        alertDiv.textContent = `Error: ${error.message}`;
-                    }
-                });
-            });
-        }
+        });
+    }
     </script>
 </body>
-
 </html>
