@@ -1,3 +1,4 @@
+import logging
 from flask import Flask, render_template, request, jsonify, send_from_directory, session
 from github_client import GitHubClient
 from orchestrator import (
@@ -27,7 +28,6 @@ except ValueError as e:
     logging.error(f"Failed to initialize GitHub client: {e}")
 
 # Configure logging to be more verbose
-import logging
 from logging.handlers import RotatingFileHandler
 
 # Create a file handler
