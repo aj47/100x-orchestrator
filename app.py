@@ -2,7 +2,6 @@ import logging
 import os
 from functools import wraps
 from flask import Flask, render_template, request, jsonify, send_from_directory, session, redirect, url_for
-from requests_oauthlib import OAuth2Session
 from dotenv import load_dotenv
 from github_client import GitHubClient
 from orchestrator import (
@@ -27,29 +26,29 @@ load_dotenv()
 app = Flask(__name__)
 app.secret_key = os.environ.get('FLASK_SECRET_KEY', 'dev')
 
-# GitHub OAuth config
-GITHUB_CLIENT_ID = os.environ.get('GITHUB_CLIENT_ID')
-GITHUB_CLIENT_SECRET = os.environ.get('GITHUB_CLIENT_SECRET')
-GITHUB_AUTHORIZE_URL = 'https://github.com/login/oauth/authorize'
-GITHUB_TOKEN_URL = 'https://github.com/login/oauth/access_token'
 
-if not all([GITHUB_CLIENT_ID, GITHUB_CLIENT_SECRET]):
-    logging.warning('GitHub OAuth credentials not set. Set GITHUB_CLIENT_ID and GITHUB_CLIENT_SECRET env variables.')
+
+# Initialize GitHub client map to store client instances per token
+github_clients = {}
+
+def get_github_client(token):
+    """Get or create a GitHub client instance for the given token"""
+    if token not in github_clients:
+        try:
+            github_clients[token] = GitHubClient(token)
+        except Exception as e:
+            app.logger.error(f"Failed to initialize GitHub client: {e}")
+            return None
+    return github_clients[token]
 
 def login_required(f):
     @wraps(f)
     def decorated_function(*args, **kwargs):
-        if 'github_token' not in session:
-            return redirect(url_for('login'))
+        token = request.headers.get('X-GitHub-Token')
+        if not token or not get_github_client(token):
+            return jsonify({'error': 'Authentication required'}), 401
         return f(*args, **kwargs)
     return decorated_function
-
-# Initialize GitHub client
-github_client = None
-try:
-    github_client = GitHubClient()
-except ValueError as e:
-    logging.error(f"Failed to initialize GitHub client: {e}")
 
 # Configure logging to be more verbose
 from logging.handlers import RotatingFileHandler
@@ -76,38 +75,25 @@ app.logger.addHandler(console_handler)
 
 @app.route('/')
 def index():
-    authenticated = 'github_token' in session
-    return render_template('index.html', authenticated=authenticated)
+    return render_template('index.html', authenticated=False)
 
-@app.route('/login')
-def login():
-    """Initialize GitHub OAuth flow"""
-    github = OAuth2Session(GITHUB_CLIENT_ID)
-    authorization_url, state = github.authorization_url(GITHUB_AUTHORIZE_URL)
-    session['oauth_state'] = state
-    return redirect(authorization_url)
-
-@app.route('/logout')
-def logout():
-    """Clear session and logout"""
-    session.clear()
-    return redirect(url_for('index'))
-
-@app.route('/callback')
-def callback():
-    """Handle GitHub OAuth callback"""
-    github = OAuth2Session(GITHUB_CLIENT_ID, state=session.get('oauth_state'))
+@app.route('/verify_token', methods=['POST'])
+def verify_token():
+    """Verify if a GitHub token is valid"""
+    data = request.get_json()
+    token = data.get('token')
+    
+    if not token:
+        return jsonify({'valid': False}), 400
+        
     try:
-        token = github.fetch_token(
-            GITHUB_TOKEN_URL,
-            client_secret=GITHUB_CLIENT_SECRET,
-            authorization_response=request.url
-        )
-        session['github_token'] = token
-        return redirect(url_for('index'))
+        client = get_github_client(token)
+        if client and client.verify_token():
+            return jsonify({'valid': True})
+        return jsonify({'valid': False})
     except Exception as e:
-        app.logger.error(f"OAuth callback error: {e}")
-        return redirect(url_for('index'))
+        app.logger.error(f"Token verification error: {e}")
+        return jsonify({'valid': False})
 
 @app.route('/tasks/tasks.json')
 def serve_tasks_json():
@@ -419,10 +405,13 @@ def debug_validate_paths(agent_id):
 @login_required
 def list_repositories():
     """Get list of GitHub repositories"""
-    if not github_client:
+    token = request.headers.get('X-GitHub-Token')
+    client = get_github_client(token)
+    
+    if not client:
         return jsonify({'error': 'GitHub client not initialized'}), 500
         
-    repos = github_client.get_repositories()
+    repos = client.get_repositories()
     return jsonify({'repositories': repos})
 
 @app.route('/github/commits/<path:repo_name>')
@@ -461,6 +450,31 @@ def create_pull_request():
     if pr:
         return jsonify({'pull_request': pr})
     return jsonify({'error': 'Failed to create pull request'}), 500
+
+@app.route('/github/issues/<path:repo_identifier>')
+@login_required
+def get_repository_issues(repo_identifier):
+    """Get issues from a GitHub repository"""
+    if not github_client:
+        return jsonify({'error': 'GitHub client not initialized'}), 500
+    
+    try:
+        # Handle both full repository names and URLs
+        if '/' not in repo_identifier or repo_identifier.count('/') != 1:
+            # Try to extract owner/repo from URL
+            from urllib.parse import urlparse
+            parsed = urlparse(repo_identifier)
+            path_parts = parsed.path.strip('/').split('/')
+            if len(path_parts) >= 2:
+                repo_identifier = f"{path_parts[-2]}/{path_parts[-1].replace('.git', '')}"
+            else:
+                return jsonify({'error': 'Invalid repository identifier'}), 400
+        
+        issues = github_client.get_repository_issues(repo_identifier)
+        return jsonify({'issues': issues})
+    except Exception as e:
+        app.logger.error(f"Error getting repository issues: {e}")
+        return jsonify({'error': str(e)}), 500
 
 if __name__ == '__main__':
     app.run(debug=True)

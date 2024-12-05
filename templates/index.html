@@ -22,12 +22,29 @@
         {% if not authenticated %}
         <!-- Login Screen -->
         <div class="card">
-            <div class="card-body text-center">
+            <div class="card-body">
                 <h2 class="mb-4">Welcome to 100x Orchestrator</h2>
-                <p class="mb-4">Please authenticate with GitHub to continue</p>
-                <a href="/login" class="btn btn-dark btn-lg">
-                    <i class="fab fa-github me-2"></i>Login with GitHub
-                </a>
+                <div class="alert alert-info">
+                    <h5>First Time Setup</h5>
+                    <ol class="mb-0">
+                        <li>Go to <a href="https://github.com/settings/tokens" target="_blank">GitHub Personal Access Tokens</a></li>
+                        <li>Click "Generate new token (classic)"</li>
+                        <li>Give it a name (e.g., "100x-orchestrator")</li>
+                        <li>Select the <code>repo</code> scope</li>
+                        <li>Click "Generate token" and copy it</li>
+                        <li>Paste the token below</li>
+                    </ol>
+                </div>
+                <form id="tokenForm" class="mt-4">
+                    <div class="mb-3">
+                        <label for="githubToken" class="form-label">GitHub Personal Access Token</label>
+                        <input type="password" class="form-control" id="githubToken" required>
+                        <div class="form-text">Your token is stored locally in your browser and never sent to any server except GitHub.</div>
+                    </div>
+                    <button type="submit" class="btn btn-dark btn-lg">
+                        <i class="fab fa-github me-2"></i>Connect with GitHub
+                    </button>
+                </form>
             </div>
         </div>
         {% else %}
@@ -58,7 +75,6 @@
                 </div>
             </div>
         </div>
-
         <div class="card">
             <div class="card-body">
                 <h5 class="card-title">Create New Agents</h5>
@@ -103,19 +119,29 @@
         <!-- GitHub Integration Section -->
         <div class="card mt-4">
             <div class="card-header">
-                <h5 class="mb-0"><i class="fab fa-github me-2"></i>GitHub Integration</h5>
+                <h5 class="mb-0"><i class="fas fa-info-circle me-2"></i>Repository Selection</h5>
             </div>
             <div class="card-body">
-                <!-- Repository List -->
-                <div class="mb-4">
-                    <h6>Your Repositories</h6>
-                    <select id="repoSelect" class="form-select">
-                        <option value="">Select a repository...</option>
-                    </select>
-                    <button id="refreshRepos" class="btn btn-secondary btn-sm mt-2">
-                        Refresh Repositories
-                    </button>
+                <div class="row mb-4">
+                    <div class="col-md-6">
+                        <h6>Select from Your Repositories</h6>
+                        <select id="repoSelect" class="form-select mb-2">
+                            <option value="">Select a repository...</option>
+                        </select>
+                        <button id="refreshRepos" class="btn btn-secondary btn-sm">
+                            Refresh Repositories
+                        </button>
+                    </div>
+                    <div class="col-md-6">
+                        <h6>Or Enter External Repository URL</h6>
+                        <input type="text" class="form-control" id="externalRepoUrl" 
+                               placeholder="https://github.com/username/repo.git">
+                    </div>
                 </div>
+                <button id="loadIssues" class="btn btn-primary" disabled>
+                    Load Issues as Tasks
+                </button>
+            </div>
 
                 <!-- Recent Commits -->
                 <div class="mb-4">
@@ -151,10 +177,54 @@
             </div>
         </div>
     </div>
-
-    {% if authenticated %}
+    {% endif %}
     <script>
-        // GitHub Integration Functions
+        // Store token in localStorage
+        document.getElementById('tokenForm')?.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const token = document.getElementById('githubToken').value;
+            
+            // Verify token works by testing the GitHub API
+            try {
+                const response = await fetch('/verify_token', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({ token })
+                });
+                
+                const data = await response.json();
+                if (data.valid) {
+                    localStorage.setItem('github_token', token);
+                    window.location.reload();
+                } else {
+                    alert('Invalid token. Please check your token and try again.');
+                }
+            } catch (error) {
+                alert('Error verifying token. Please try again.');
+                console.error('Error:', error);
+            }
+        });
+
+        // Add token to all GitHub API requests
+        function addTokenToRequest(url, options = {}) {
+            const token = localStorage.getItem('github_token');
+            if (!token) {
+                window.location.href = '/';
+                return null;
+            }
+            
+            return fetch(url, {
+                ...options,
+                headers: {
+                    ...options.headers,
+                    'X-GitHub-Token': token
+                }
+            });
+        }
+
+        // Modified GitHub Integration Functions to use token
         async function loadRepositories() {
             try {
                 const response = await fetch('/github/repositories');
@@ -474,6 +544,5 @@
             });
         });
     </script>
-    {% endif %}
 </body>
 </html>

@@ -23,6 +23,11 @@ The 100x-orchestrator system consists of three key components:
 
 ## Features
 
+- **GitHub Integration**: 
+  - Simple authentication using Personal Access Token
+  - Repository selection from user's repositories
+  - Automatic issue import as tasks
+  - External repository support
 - **Advanced Multi-Agent Management**: Create and manage multiple AI coding agents with granular control
 - **Real-Time Output Tracking**: Monitor agent and Aider instance progress
 - **Git Integration**: Automatic repository cloning and branch management
@@ -75,10 +80,13 @@ pip install -r requirements.txt
 
 ## Configuration
 
-1. Set up your environment variables:
+1. Set up your environment variables in `~/.env`:
 ```bash
-set LITELLM_MODEL=anthropic/claude-3-5-sonnet-20240620  # On Windows
-# export LITELLM_MODEL=anthropic/claude-3-5-sonnet-20240620  # On Unix/MacOS
+# Required for LiteLLM
+LITELLM_MODEL=anthropic/claude-3-5-sonnet-20240620
+
+# Required for Flask
+FLASK_SECRET_KEY=your_secret_key
 ```
 
 2. The system uses tasks.json for configuration:
@@ -90,6 +98,18 @@ set LITELLM_MODEL=anthropic/claude-3-5-sonnet-20240620  # On Windows
 }
 ```
 
+## GitHub Setup
+
+1. Create a Personal Access Token (PAT):
+   - Go to GitHub Settings > Developer settings > Personal access tokens
+   - Click "Generate new token (classic)"
+   - Give it a name (e.g., "100x-orchestrator")
+   - Select the `repo` scope
+   - Click "Generate token" and copy it
+   - You'll enter this token when you first launch the application
+
+Note: Your Personal Access Token is stored securely in your browser's local storage and is only used to communicate directly with GitHub's API.
+
 ## Usage
 
 1. Start the web server:
@@ -99,13 +119,17 @@ python app.py
 
 2. Access the web interface at `http://localhost:5000`
 
-3. Create new agents:
-   - Enter a Git repository URL
-   - Define your tasks
+3. First Time Setup:
+   - Enter your GitHub Personal Access Token
+   - Click "Connect with GitHub"
+
+4. Create new agents:
+   - Select a repository from your GitHub account or enter an external repository URL
+   - Click "Load Issues as Tasks" to import repository issues
    - Choose number of agents per task
    - Click "Create Agent"
 
-4. Monitor progress:
+5. Monitor progress:
    - View real-time agent outputs
    - Check agent status
    - Manage agent lifecycle
@@ -114,18 +138,21 @@ python app.py
 
 ```
 100x-orchestrator/
-├── app.py              # Web interface
-├── orchestrator.py     # Core orchestration logic
-├── requirements.txt    # Project dependencies
-├── tasks/             # Task configuration
-├── templates/         # Web interface templates
-└── workspaces/        # Agent workspaces
+|-- app.py              # Web interface and GitHub integration
+|-- github_client.py    # GitHub API integration
+|-- orchestrator.py     # Core orchestration logic
+|-- requirements.txt    # Project dependencies
+|-- tasks/             # Task configuration
+|-- templates/         # Web interface templates
+`-- workspaces/        # Agent workspaces
 ```
 
 ## Technical Stack
 
 - Python 3.8+
 - Flask
+- PyGithub
+- OAuth2
 - Aider
 - Git
 - LiteLLM
@@ -163,4 +190,3 @@ Python Coding Standards
 ## License
 
 [MIT License](LICENSE)
-

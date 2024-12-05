@@ -2,23 +2,25 @@ from github import Github
 from typing import List, Dict, Optional
 import os
 from pathlib import Path
-from dotenv import load_dotenv
 import logging
 
 class GitHubClient:
     """Client for interacting with GitHub API"""
     
-    def __init__(self):
-        # Load environment variables from ~/.env
-        env_path = Path.home() / '.env'
-        if not load_dotenv(env_path):
-            logging.warning(f"Could not load {env_path}")
-            
-        self.token = os.getenv('GITHUB_TOKEN')
-        if not self.token:
-            raise ValueError(f"GITHUB_TOKEN not found in {env_path}")
-            
-        self.client = Github(self.token)
+    def __init__(self, token: str):
+        """Initialize with GitHub Personal Access Token"""
+        self.token = token
+        self.client = Github(token)
+    
+    def verify_token(self) -> bool:
+        """Verify if the token is valid by making a test API call"""
+        try:
+            # Try to get the authenticated user's username
+            self.client.get_user().login
+            return True
+        except Exception as e:
+            logging.error(f"Token verification failed: {e}")
+            return False
         
     def get_repositories(self) -> List[Dict]:
         """Get list of repositories the user has access to"""
@@ -36,6 +38,32 @@ class GitHubClient:
             return repos
         except Exception as e:
             logging.error(f"Error getting repositories: {e}")
+            return []
+
+    def get_repository_issues(self, repo_name: str) -> List[Dict]:
+        """Get open issues from a repository"""
+        try:
+            repo = self.client.get_repo(repo_name)
+            issues = []
+            for issue in repo.get_issues(state='open'):
+                # Skip pull requests (they are also considered issues in GitHub's API)
+                if issue.pull_request:
+                    continue
+                    
+                issues.append({
+                    'number': issue.number,
+                    'title': issue.title,
+                    'body': issue.body,
+                    'url': issue.html_url,
+                    'state': issue.state,
+                    'labels': [label.name for label in issue.labels],
+                    'created_at': issue.created_at.isoformat(),
+                    'updated_at': issue.updated_at.isoformat(),
+                    'assignees': [assignee.login for assignee in issue.assignees]
+                })
+            return issues
+        except Exception as e:
+            logging.error(f"Error getting repository issues: {e}")
             return []
             
     def create_pull_request(self, repo_name: str, title: str, 
