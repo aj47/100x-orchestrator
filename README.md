@@ -142,21 +142,67 @@ python app.py
 |-- github_client.py    # GitHub API integration
 |-- orchestrator.py     # Core orchestration logic
 |-- requirements.txt    # Project dependencies
+|-- static/            # Static assets
+|   |-- css/          # CSS stylesheets
+|   |   `-- styles.css
+|   `-- js/           # JavaScript modules
+|       |-- index.js      # Homepage functionality
+|       `-- agent_view.js # Agent monitoring dashboard
 |-- tasks/             # Task configuration
 |-- templates/         # Web interface templates
+|   |-- index.html    # Homepage template
+|   `-- agent_view.html # Agent monitoring template
 `-- workspaces/        # Agent workspaces
 ```
 
 ## Technical Stack
 
-- Python 3.8+
-- Flask
-- PyGithub
-- OAuth2
-- Aider
-- Git
-- LiteLLM
-- Threading
+- Backend:
+  - Python 3.8+
+  - Flask
+  - PyGithub
+  - OAuth2
+  - Aider
+  - Git
+  - LiteLLM
+  - Threading
+
+- Frontend:
+  - HTML5
+  - CSS3
+  - JavaScript (ES6+)
+  - Bootstrap 5
+  - Font Awesome
+
+## JavaScript Architecture
+
+The frontend JavaScript is organized into two main modules:
+
+1. **index.js**:
+   - GitHub token management
+   - Repository selection and management
+   - Task creation and management
+   - Agent creation form handling
+   - Real-time repository data fetching
+
+2. **agent_view.js**:
+   - Real-time agent monitoring
+   - Output tracking and display
+   - Agent state management
+   - Agent deletion handling
+   - Keyboard shortcuts
+   - Auto-refresh functionality
+
+Best Practices:
+- Modular code organization
+- Event delegation for dynamic elements
+- Async/await for API calls
+- Error handling and user feedback
+- Clean separation of concerns
+- Performance optimization with debouncing
+- Memory leak prevention
+- Consistent error handling
+- Real-time updates with proper cleanup
 
 ## Contributing
 
