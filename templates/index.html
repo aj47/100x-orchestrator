@@ -82,9 +82,174 @@
         <div id="result" class="mt-4" style="display: none;">
             <div class="alert" role="alert"></div>
         </div>
+
+        <!-- GitHub Integration Section -->
+        <div class="card mt-4">
+            <div class="card-header">
+                <h5 class="mb-0"><i class="fab fa-github me-2"></i>GitHub Integration</h5>
+            </div>
+            <div class="card-body">
+                <!-- Repository List -->
+                <div class="mb-4">
+                    <h6>Your Repositories</h6>
+                    <select id="repoSelect" class="form-select">
+                        <option value="">Select a repository...</option>
+                    </select>
+                    <button id="refreshRepos" class="btn btn-secondary btn-sm mt-2">
+                        Refresh Repositories
+                    </button>
+                </div>
+
+                <!-- Recent Commits -->
+                <div class="mb-4">
+                    <h6>Recent Commits</h6>
+                    <div id="commitsList" class="list-group">
+                        <!-- Commits will be listed here -->
+                    </div>
+                </div>
+
+                <!-- Create Pull Request -->
+                <div>
+                    <h6>Create Pull Request</h6>
+                    <form id="prForm">
+                        <div class="mb-3">
+                            <label class="form-label">Title</label>
+                            <input type="text" class="form-control" id="prTitle" required>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">Head Branch</label>
+                            <input type="text" class="form-control" id="prHead" required>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">Base Branch</label>
+                            <input type="text" class="form-control" id="prBase" value="main">
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">Description</label>
+                            <textarea class="form-control" id="prBody" rows="3"></textarea>
+                        </div>
+                        <button type="submit" class="btn btn-primary">Create Pull Request</button>
+                    </form>
+                </div>
+            </div>
+        </div>
     </div>
 
     <script>
+        // GitHub Integration Functions
+        async function loadRepositories() {
+            try {
+                const response = await fetch('/github/repositories');
+                const data = await response.json();
+                
+                const select = document.getElementById('repoSelect');
+                select.innerHTML = '<option value="">Select a repository...</option>';
+                
+                if (data.repositories) {
+                    data.repositories.forEach(repo => {
+                        const option = document.createElement('option');
+                        option.value = repo.full_name;
+                        option.textContent = repo.full_name;
+                        select.appendChild(option);
+                    });
+                }
+            } catch (error) {
+                console.error('Error loading repositories:', error);
+                showAlert('Error loading repositories: ' + error.message, 'danger');
+            }
+        }
+
+        async function loadCommits(repoName) {
+            try {
+                const response = await fetch(`/github/commits/${repoName}`);
+                const data = await response.json();
+                
+                const commitsList = document.getElementById('commitsList');
+                commitsList.innerHTML = '';
+                
+                if (data.commits) {
+                    data.commits.forEach(commit => {
+                        const commitItem = document.createElement('div');
+                        commitItem.className = 'list-group-item';
+                        commitItem.innerHTML = `
+                            <div class="d-flex justify-content-between align-items-center">
+                                <div>
+                                    <h6 class="mb-1">${commit.message}</h6>
+                                    <small>by ${commit.author} on ${new Date(commit.date).toLocaleString()}</small>
+                                </div>
+                                <a href="${commit.url}" target="_blank" class="btn btn-sm btn-outline-secondary">View</a>
+                            </div>
+                        `;
+                        commitsList.appendChild(commitItem);
+                    });
+                }
+            } catch (error) {
+                console.error('Error loading commits:', error);
+                showAlert('Error loading commits: ' + error.message, 'danger');
+            }
+        }
+
+        function showAlert(message, type) {
+            const resultDiv = document.getElementById('result');
+            const alertDiv = resultDiv.querySelector('.alert');
+            resultDiv.style.display = 'block';
+            alertDiv.className = `alert alert-${type}`;
+            alertDiv.textContent = message;
+        }
+
+        document.addEventListener('DOMContentLoaded', async () => {
+            // Load initial GitHub repositories
+            await loadRepositories();
+
+            // Repository selection change handler
+            document.getElementById('repoSelect').addEventListener('change', (e) => {
+                if (e.target.value) {
+                    loadCommits(e.target.value);
+                }
+            });
+
+            // Refresh repositories button handler
+            document.getElementById('refreshRepos').addEventListener('click', loadRepositories);
+
+            // Pull request form submission
+            document.getElementById('prForm').addEventListener('submit', async (e) => {
+                e.preventDefault();
+                
+                const repoName = document.getElementById('repoSelect').value;
+                if (!repoName) {
+                    showAlert('Please select a repository first', 'warning');
+                    return;
+                }
+
+                try {
+                    const response = await fetch('/github/pull-request', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                        },
+                        body: JSON.stringify({
+                            repo_name: repoName,
+                            title: document.getElementById('prTitle').value,
+                            head: document.getElementById('prHead').value,
+                            base: document.getElementById('prBase').value,
+                            body: document.getElementById('prBody').value
+                        })
+                    });
+
+                    const data = await response.json();
+                    if (data.pull_request) {
+                        showAlert('Pull request created successfully!', 'success');
+                        // Clear form
+                        document.getElementById('prForm').reset();
+                    } else {
+                        showAlert(data.error || 'Failed to create pull request', 'danger');
+                    }
+                } catch (error) {
+                    console.error('Error creating pull request:', error);
+                    showAlert('Error creating pull request: ' + error.message, 'danger');
+                }
+            });
+
         // Function to update overview statistics
         async function updateOverview() {
             try {
