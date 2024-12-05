@@ -197,7 +197,14 @@
                 const data = await response.json();
                 if (data.valid) {
                     localStorage.setItem('github_token', token);
-                    window.location.reload();
+                    // Add token to request headers before reloading
+                    const headers = new Headers();
+                    headers.append('X-GitHub-Token', token);
+                    
+                    // Fetch the page with the token header
+                    const pageResponse = await fetch('/', { headers });
+                    const html = await pageResponse.text();
+                    document.documentElement.innerHTML = html;
                 } else {
                     alert('Invalid token. Please check your token and try again.');
                 }

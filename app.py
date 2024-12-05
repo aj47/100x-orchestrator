@@ -75,7 +75,9 @@ app.logger.addHandler(console_handler)
 
 @app.route('/')
 def index():
-    return render_template('index.html', authenticated=False)
+    token = request.headers.get('X-GitHub-Token')
+    authenticated = bool(token and get_github_client(token))
+    return render_template('index.html', authenticated=authenticated)
 
 @app.route('/verify_token', methods=['POST'])
 def verify_token():
