@@ -65,7 +65,7 @@
 
         <div id="agentList">
         {% for agent_id, agent in agents.items() %}
-        <div class="card agent-card" id="agent-{{ agent_id }}">
+        <div class="card agent-card" id="agent-{{ agent_id }}" data-agent-id="{{ agent_id }}">
             <div class="card-header d-flex justify-content-between align-items-center">
                 <div>
                     <h5 class="card-title mb-0">
@@ -80,7 +80,7 @@
                         </a>
                     </div>
                 </div>
-                <button class="btn btn-danger btn-sm delete-agent-btn" data-agent-id="{{ agent_id }}">
+                <button class="btn btn-danger btn-sm delete-agent-btn">
                     <i class="fas fa-trash-alt me-1"></i>Delete Agent
                 </button>
             </div>
@@ -151,13 +151,9 @@
         </div>
     </div>
 
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
-    <script>
-        // Keep track of last output lengths to detect changes
-        const lastOutputLengths = {};
-
-        // Helper function to get output length from debug info
-        function getOutputLength(debugElement) {
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js" integrity="sha384-ka7Sk0Gln4gmtz2MlQnikT1wXgYsOg+OMhuP+IlRH9sENBO0LRn5q+8nbTov4+1p" crossorigin="anonymous"></script>
+    <script src="/static/js/auth.js"></script>
+    <script src="/static/js/agent_view.js" defer></script>
             const lengthElement = debugElement.querySelector('.label');
             if (lengthElement && lengthElement.textContent.includes('Output Length')) {
                 const lengthText = lengthElement.parentElement.textContent;
