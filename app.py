@@ -420,20 +420,24 @@ def list_repositories():
 @login_required
 def get_commits(repo_name):
     """Get recent commits for a repository"""
-    if not github_client:
+    token = request.headers.get('X-GitHub-Token')
+    client = get_github_client(token)
+    if not client:
         return jsonify({'error': 'GitHub client not initialized'}), 500
         
     branch = request.args.get('branch', 'main')
     limit = int(request.args.get('limit', 10))
     
-    commits = github_client.get_recent_commits(repo_name, branch, limit)
+    commits = client.get_recent_commits(repo_name, branch, limit)
     return jsonify({'commits': commits})
 
 @app.route('/github/pull-request', methods=['POST'])
 @login_required
 def create_pull_request():
     """Create a new pull request"""
-    if not github_client:
+    token = request.headers.get('X-GitHub-Token')
+    client = get_github_client(token)
+    if not client:
         return jsonify({'error': 'GitHub client not initialized'}), 500
         
     data = request.get_json()
@@ -441,7 +445,7 @@ def create_pull_request():
     if not all(k in data for k in required):
         return jsonify({'error': 'Missing required fields'}), 400
         
-    pr = github_client.create_pull_request(
+    pr = client.create_pull_request(
         repo_name=data['repo_name'],
         title=data['title'],
         head=data['head'],
@@ -457,7 +461,9 @@ def create_pull_request():
 @login_required
 def get_repository_issues(repo_identifier):
     """Get issues from a GitHub repository"""
-    if not github_client:
+    token = request.headers.get('X-GitHub-Token')
+    client = get_github_client(token)
+    if not client:
         return jsonify({'error': 'GitHub client not initialized'}), 500
     
     try:
@@ -472,7 +478,7 @@ def get_repository_issues(repo_identifier):
             else:
                 return jsonify({'error': 'Invalid repository identifier'}), 400
         
-        issues = github_client.get_repository_issues(repo_identifier)
+        issues = client.get_repository_issues(repo_identifier)
         return jsonify({'issues': issues})
     except Exception as e:
         app.logger.error(f"Error getting repository issues: {e}")
