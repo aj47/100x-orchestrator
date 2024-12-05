@@ -1,5 +1,9 @@
 import logging
-from flask import Flask, render_template, request, jsonify, send_from_directory, session
+import os
+from functools import wraps
+from flask import Flask, render_template, request, jsonify, send_from_directory, session, redirect, url_for
+from requests_oauthlib import OAuth2Session
+from dotenv import load_dotenv
 from github_client import GitHubClient
 from orchestrator import (
     initialiseCodingAgent, 
@@ -17,8 +21,28 @@ import json
 from pathlib import Path
 import datetime
 
+# Load environment variables
+load_dotenv()
+
 app = Flask(__name__)
 app.secret_key = os.environ.get('FLASK_SECRET_KEY', 'dev')
+
+# GitHub OAuth config
+GITHUB_CLIENT_ID = os.environ.get('GITHUB_CLIENT_ID')
+GITHUB_CLIENT_SECRET = os.environ.get('GITHUB_CLIENT_SECRET')
+GITHUB_AUTHORIZE_URL = 'https://github.com/login/oauth/authorize'
+GITHUB_TOKEN_URL = 'https://github.com/login/oauth/access_token'
+
+if not all([GITHUB_CLIENT_ID, GITHUB_CLIENT_SECRET]):
+    logging.warning('GitHub OAuth credentials not set. Set GITHUB_CLIENT_ID and GITHUB_CLIENT_SECRET env variables.')
+
+def login_required(f):
+    @wraps(f)
+    def decorated_function(*args, **kwargs):
+        if 'github_token' not in session:
+            return redirect(url_for('login'))
+        return f(*args, **kwargs)
+    return decorated_function
 
 # Initialize GitHub client
 github_client = None
@@ -52,7 +76,38 @@ app.logger.addHandler(console_handler)
 
 @app.route('/')
 def index():
-    return render_template('index.html')
+    authenticated = 'github_token' in session
+    return render_template('index.html', authenticated=authenticated)
+
+@app.route('/login')
+def login():
+    """Initialize GitHub OAuth flow"""
+    github = OAuth2Session(GITHUB_CLIENT_ID)
+    authorization_url, state = github.authorization_url(GITHUB_AUTHORIZE_URL)
+    session['oauth_state'] = state
+    return redirect(authorization_url)
+
+@app.route('/logout')
+def logout():
+    """Clear session and logout"""
+    session.clear()
+    return redirect(url_for('index'))
+
+@app.route('/callback')
+def callback():
+    """Handle GitHub OAuth callback"""
+    github = OAuth2Session(GITHUB_CLIENT_ID, state=session.get('oauth_state'))
+    try:
+        token = github.fetch_token(
+            GITHUB_TOKEN_URL,
+            client_secret=GITHUB_CLIENT_SECRET,
+            authorization_response=request.url
+        )
+        session['github_token'] = token
+        return redirect(url_for('index'))
+    except Exception as e:
+        app.logger.error(f"OAuth callback error: {e}")
+        return redirect(url_for('index'))
 
 @app.route('/tasks/tasks.json')
 def serve_tasks_json():
@@ -361,6 +416,7 @@ def debug_validate_paths(agent_id):
         }), 500
 
 @app.route('/github/repositories')
+@login_required
 def list_repositories():
     """Get list of GitHub repositories"""
     if not github_client:
@@ -370,6 +426,7 @@ def list_repositories():
     return jsonify({'repositories': repos})
 
 @app.route('/github/commits/<path:repo_name>')
+@login_required
 def get_commits(repo_name):
     """Get recent commits for a repository"""
     if not github_client:
@@ -382,6 +439,7 @@ def get_commits(repo_name):
     return jsonify({'commits': commits})
 
 @app.route('/github/pull-request', methods=['POST'])
+@login_required
 def create_pull_request():
     """Create a new pull request"""
     if not github_client:
