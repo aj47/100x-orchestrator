@@ -153,16 +153,6 @@
 
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
     <script src="/static/js/agent_view.js"></script>
-            const lengthElement = debugElement.querySelector('.label');
-            if (lengthElement && lengthElement.textContent.includes('Output Length')) {
-                const lengthText = lengthElement.parentElement.textContent;
-                return parseInt(lengthText.split(':')[1].trim());
-            }
-            return 0;
-        }
-
-        // Countdown timer
-        function updateCountdown() {
             const countdownEl = document.getElementById('countdown');
             let timeLeft = parseInt(countdownEl.textContent);
             
