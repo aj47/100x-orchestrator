@@ -158,7 +158,12 @@ def save_tasks(tasks_data):
                 'created_at': agent_data.get('created_at'),
                 'last_updated': agent_data.get('last_updated'),
                 'aider_output': agent_data.get('aider_output', ''),
-                'last_critique': agent_data.get('last_critique')
+                'last_critique': agent_data.get('last_critique'),
+                # Add new fields for progress tracking
+                'progress': agent_data.get('progress', ''),
+                'thought': agent_data.get('thought', ''),
+                'future': agent_data.get('future', ''),
+                'last_action': agent_data.get('last_action', '')
             }
             
             # Log the normalized paths
@@ -338,7 +343,11 @@ def initialiseCodingAgent(repository_url: str = None, task_description: str = No
                 'status': 'pending',
                 'created_at': datetime.datetime.now().isoformat(),
                 'last_updated': datetime.datetime.now().isoformat(),
-                'aider_output': ''  # Initialize empty output
+                'aider_output': '',  # Initialize empty output
+                'progress': '',
+                'thought': '',
+                'future': '',
+                'last_action': ''
             }
             save_tasks(tasks_data)
             
@@ -437,9 +446,23 @@ def main_loop():
                                 session_logs
                             )
                                 
-                            # Store summary in agent data
-                            # tasks_data['agents'][agent_id]['last_critique'] = summary
-                            save_tasks(tasks_data)
+                            # Directly update tasks_data with follow_up_message details
+                            if agent_id in tasks_data['agents']:
+                                # Parse the follow_up_message JSON
+                                try:
+                                    follow_up_data = json.loads(follow_up_message)
+                                    tasks_data['agents'][agent_id].update({
+                                        'progress': follow_up_data.get('progress', ''),
+                                        'thought': follow_up_data.get('thought', ''),
+                                        'future': follow_up_data.get('future', ''),
+                                        'last_action': follow_up_data.get('action', ''),
+                                        'last_updated': datetime.datetime.now().isoformat()
+                                    })
+                                    
+                                    # Save the updated tasks data
+                                    save_tasks(tasks_data)
+                                except json.JSONDecodeError:
+                                    logging.error(f"Invalid JSON in follow_up_message: {follow_up_message}")
                             
                             if follow_up_message == "%%FINISHED%%":
                                 logging.info(f"Agent {agent_id} is finished. Stopping the process.")

@@ -175,12 +175,12 @@ class AgentSession:
                             message_buffer = []
                 
                 # Format the line using helper method
-                html_line = self._format_output_line(line)
+                # html_line = self._format_output_line(line)
                 
                 # Immediately write to buffer with lock
                 with self._buffer_lock:
                     self.output_buffer.seek(0, 2)  # Seek to end
-                    self.output_buffer.write(html_line)
+                    self.output_buffer.write(line)
                     logging.debug(f"[Session {self.session_id}] Added to buffer: {line.strip()}")
                     
                 # Flush the pipe to ensure we get output immediately
@@ -206,6 +206,7 @@ class AgentSession:
             return output
         except Exception as e:
             logging.error(f"[Session {self.session_id}] Error getting output: {e}", exc_info=True)
+
     def _echo_message(self, message: str) -> None:
         """
         Echo the sent message to the output buffer, simulating user input in the CLI.
@@ -292,7 +293,7 @@ class AgentSession:
                 logging.info(f"[Session {self.session_id}] 📤 {line}")
             
             # Sanitize and prepare message
-            self._echo_message(message)  # Echo message to output before sending
+            # self._echo_message(message)  # Echo message to output before sending
             
             sanitized_message = message.replace('"', '\\"')
             
