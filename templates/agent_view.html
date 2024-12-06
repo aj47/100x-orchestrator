@@ -152,12 +152,7 @@
     </div>
 
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
-    <script>
-        // Keep track of last output lengths to detect changes
-        const lastOutputLengths = {};
-
-        // Helper function to get output length from debug info
-        function getOutputLength(debugElement) {
+    <script src="/static/js/agent_view.js"></script>
             const lengthElement = debugElement.querySelector('.label');
             if (lengthElement && lengthElement.textContent.includes('Output Length')) {
                 const lengthText = lengthElement.parentElement.textContent;

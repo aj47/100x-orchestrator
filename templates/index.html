@@ -84,9 +84,7 @@
         </div>
     </div>
 
-    <script>
-        // Function to update overview statistics
-        async function updateOverview() {
+    <script src="/static/js/index.js"></script>
             try {
                 const response = await fetch('/tasks/tasks.json');
                 const data = await response.json();
