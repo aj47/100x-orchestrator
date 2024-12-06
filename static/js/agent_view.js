@@ -45,6 +45,8 @@ async function fetchUpdates() {
 
             // Update CLI output if it has changed
             const outputElement = agentCard.querySelector('.cli-output');
+            const thoughtElement = agentCard.querySelector(f"#thought-{agentId}");
+            thoughtElement.innerHTML = agentData.thought || '';
             if (outputElement && agentData.aider_output) {
                 const currentText = outputElement.textContent || '';
                 
