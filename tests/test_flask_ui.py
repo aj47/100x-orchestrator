@@ -42,3 +42,6 @@ class TestFlaskUI(TestCase):
         # Check that all expected elements are in the response
         for element in expected_elements:
             assert element in response_text, f"Should have {element}"
+        
+        # Also use snapshot for content verification
+        self.assertMatchSnapshot(response_text)
