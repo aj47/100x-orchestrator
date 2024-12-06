@@ -1,6 +1,7 @@
 import os, json, traceback, subprocess, sys, uuid
 from prompts import PROMPT_AIDER
 from litellm_client import LiteLLMClient
+from github_client import GitHubClient
 from prompt_processor import PromptProcessor
 from pathlib import Path
 import shutil
@@ -361,33 +362,19 @@ def initialiseCodingAgent(repository_url: str = None, task_description: str = No
         return None
 
 def cloneRepository(repository_url: str) -> bool:
-    """Clone git repository using subprocess.check_call."""
+    """Clone git repository using GitHub CLI."""
     try:
         if not repository_url:
             logging.error("No repository URL provided")
             return False
             
-        logging.info(f"Cloning repository: {repository_url}")
+        logging.info(f"Cloning repository using GitHub CLI: {repository_url}")
         
-        # Use --quiet to reduce output noise
-        result = subprocess.run(
-            f"git clone --quiet {repository_url}",
-            shell=True,
-            capture_output=True,
-            text=True
-        )
+        github_client = GitHubClient()
+        return github_client.clone_repository(repository_url)
         
-        if result.returncode != 0:
-            logging.error(f"Git clone failed: {result.stderr}")
-            return False
-            
-        return True
-        
-    except subprocess.SubprocessError as e:
-        logging.error(f"Git clone failed: {str(e)}", exc_info=True)
-        return False
     except Exception as e:
-        logging.error(f"Unexpected error during clone: {str(e)}", exc_info=True)
+        logging.error(f"Error during repository clone: {str(e)}", exc_info=True)
         return False
 
 def update_agent_output(agent_id):
