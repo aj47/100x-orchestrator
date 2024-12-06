@@ -27,6 +27,8 @@
 .agent-card { 
     margin-bottom: 1rem;
     animation: fadeIn 0.5s ease-in-out;
+    background-color: var(--card-bg);
+    border-color: var(--border-color);
 }
 
 .delete-agent-btn {
@@ -35,8 +37,8 @@
 
 /* CLI output styles */
 .cli-output {
-    background-color: #1e1e1e;
-    color: #ffffff;
+    background-color: var(--cli-bg);
+    color: var(--cli-text);
     padding: 1rem;
     border-radius: 5px;
     font-family: 'Courier New', Courier, monospace;
@@ -48,7 +50,7 @@
     line-height: 1.4;
     tab-size: 4;
     position: relative;
-    border: 1px solid #333;
+    border: 1px solid var(--border-color);
 }
 
 .cli-output:empty::before {
@@ -58,42 +60,42 @@
 }
 
 .cli-output:hover {
-    border-color: #495057;
+    border-color: var(--border-color);
 }
 
 /* Timer styles */
 .timer { 
     font-size: 1.2rem; 
     font-weight: bold; 
-    color: #007bff; 
+    color: var(--text-primary); 
     display: flex;
     align-items: center;
     justify-content: center;
     gap: 0.5rem;
-    background-color: #f8f9fa;
+    background-color: var(--bg-secondary);
     padding: 0.5rem 1rem;
     border-radius: 4px;
-    border: 1px solid #dee2e6;
+    border: 1px solid var(--border-color);
     box-shadow: 0 1px 3px rgba(0,0,0,0.1);
 }
 
 /* Debug info styles */
 .debug-info {
-    background-color: #f8f9fa;
+    background-color: var(--bg-secondary);
     padding: 0.8rem;
     border-radius: 4px;
     margin-top: 0.5rem;
     font-size: 0.85rem;
-    border: 1px solid #dee2e6;
+    border: 1px solid var(--border-color);
 }
 
 .debug-info:hover {
-    border-color: #adb5bd;
+    border-color: var(--border-color);
 }
 
 .debug-info .label {
     font-weight: bold;
-    color: #495057;
+    color: var(--text-primary);
     min-width: 100px;
     display: inline-block;
 }
@@ -107,7 +109,7 @@
 }
 
 .debug-links a {
-    color: #6c757d;
+    color: var(--text-secondary);
     text-decoration: none;
     display: flex;
     align-items: center;
@@ -115,7 +117,7 @@
 }
 
 .debug-links a:hover {
-    color: #495057;
+    color: var(--text-primary);
 }
 
 .debug-links i {
@@ -142,20 +144,20 @@
 
 .loader-spinner {
     font-size: 3rem;
-    color: #007bff;
+    color: var(--text-primary);
     margin-bottom: 1rem;
 }
 
 /* Toast styles */
 .toast {
-    background-color: #fff;
+    background-color: var(--bg-secondary);
     border: none;
     box-shadow: 0 0.5rem 1rem rgba(0, 0, 0, 0.15);
 }
 
 .toast-header {
     background-color: transparent;
-    border-bottom: 1px solid rgba(0, 0, 0, 0.05);
+    border-bottom: 1px solid var(--border-color);
 }
 
 .toast-body {
@@ -186,10 +188,10 @@
 
 /* Agent state styles */
 .agent-state {
-    background-color: #f8f9fa;
+    background-color: var(--bg-secondary);
     padding: 1rem;
     border-radius: 5px;
-    border: 1px solid #dee2e6;
+    border: 1px solid var(--border-color);
     margin-bottom: 1rem;
 }
 
@@ -202,7 +204,7 @@
 }
 
 .agent-state strong {
-    color: #495057;
+    color: var(--text-primary);
     margin-right: 0.5rem;
 }
 
@@ -215,7 +217,7 @@
 }
 
 .future-item {
-    color: #6c757d;
+    color: var(--text-secondary);
 }
 
 .action-item {
@@ -224,8 +226,8 @@
 
 /* CLI Output specific styles */
 .cli-output {
-    background-color: #1e1e1e;
-    color: #d4d4d4;
+    background-color: var(--cli-bg);
+    color: var(--cli-text);
     font-family: 'Consolas', 'Monaco', monospace;
     padding: 10px;
     border-radius: 5px;
@@ -249,7 +251,7 @@
 }
 
 .user-message {
-    color: #4ec9b0;
+    color: var(--text-primary);
     font-weight: bold;
 }
 
@@ -284,5 +286,125 @@
 
 /* User message style */
 .cli-output .user-message {
-    color: #007bff; /* OKBLUE */
+    color: var(--text-primary); /* OKBLUE */
+}
+
+/* Theme variables */
+:root[data-theme="light"] {
+    --bg-primary: #ffffff;
+    --bg-secondary: #f8f9fa;
+    --text-primary: #212529;
+    --text-secondary: #6c757d;
+    --border-color: #dee2e6;
+    --card-bg: #ffffff;
+    --btn-bg: #007bff;
+    --btn-text: #ffffff;
+    --cli-bg: #1e1e1e;
+    --cli-text: #ffffff;
+}
+
+:root[data-theme="dark"] {
+    --bg-primary: #1a1a1a;
+    --bg-secondary: #2d2d2d;
+    --text-primary: #e0e0e0;
+    --text-secondary: #a0a0a0;
+    --border-color: #404040;
+    --card-bg: #2d2d2d;
+    --btn-bg: #0056b3;
+    --btn-text: #ffffff;
+    --cli-bg: #000000;
+    --cli-text: #ffffff;
+}
+
+:root[data-theme="tf"] {
+    --bg-primary: #000000;
+    --bg-secondary: #0a0a0a;
+    --text-primary: #00ff00;
+    --text-secondary: #00cc00;
+    --border-color: #00ff00;
+    --card-bg: rgba(0, 20, 0, 0.9);
+    --btn-bg: #003300;
+    --btn-text: #00ff00;
+    --cli-bg: #000000;
+    --cli-text: #00ff00;
+    --accent-color: #00ff00;
+    --hover-color: #00cc00;
+    --tf-glow: 0 0 10px rgba(0, 255, 0, 0.5);
+    --danger-color: #ff0000;
+    --danger-hover: #cc0000;
+}
+
+/* Theme transition */
+* {
+    transition: background-color 0.3s ease, color 0.3s ease;
+}
+
+/* Apply theme colors */
+body {
+    background-color: var(--bg-primary);
+    color: var(--text-primary);
+}
+
+.card {
+    background-color: var(--card-bg);
+    border-color: var(--border-color);
+}
+
+.card-header {
+    background-color: var(--bg-secondary);
+    border-bottom-color: var(--border-color);
+}
+
+.btn-primary {
+    background-color: var(--btn-bg);
+    color: var(--btn-text);
+    border-color: var(--btn-bg);
+}
+
+/* Theme toggle button styles */
+#themeToggle {
+    padding: 0.5rem;
+    border-radius: 50%;
+    width: 40px;
+    height: 40px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background-color: transparent;
+    border: 1px solid var(--border-color);
+    color: var(--text-primary);
+    cursor: pointer;
+    transition: all 0.3s ease;
+}
+
+#themeToggle:hover {
+    background-color: var(--bg-secondary);
+}
+
+/* TF theme specific styles - only apply when tf theme is active */
+[data-theme="tf"] body {
+    font-family: 'Share Tech Mono', monospace;
+    background-image: 
+        linear-gradient(rgba(0, 255, 0, 0.03) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(0, 255, 0, 0.03) 1px, transparent 1px);
+    background-size: 20px 20px;
+}
+
+[data-theme="tf"] .card {
+    box-shadow: var(--tf-glow);
+    backdrop-filter: blur(5px);
+}
+
+[data-theme="tf"] .btn-primary {
+    text-shadow: 0 0 5px var(--text-primary);
+}
+
+[data-theme="tf"] .btn-primary:hover {
+    box-shadow: var(--tf-glow);
+    transform: translateY(-2px);
+}
+
+[data-theme="tf"] .cli-output {
+    box-shadow: var(--tf-glow);
+    font-family: 'Share Tech Mono', monospace;
 }
