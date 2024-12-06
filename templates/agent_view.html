@@ -54,7 +54,7 @@
                             <p>{{ agent.task }}</p>
 
                             <h6><i class="fas fa-brain me-2"></i>Agent State</h6>
-                            <div class="agent-state mb-3">
+                            <div class="agent-state mb-3" id="agent-state-{{ agent_id }}" style="display: {{ 'none' if not agent.thought else 'block' }}">
                                 <div class="progress-item">
                                     <strong>Progress:</strong> <span id="progress-{{ agent_id }}">{{ agent.progress }}</span>
                                 </div>
@@ -70,7 +70,7 @@
                             </div>
 
                             <h6><i class="fas fa-terminal me-2"></i>Aider Output</h6>
-                            <div class="cli-output">
+                            <div class="cli-output" id="output-{{ agent_id }}">
                                 {% if agent.aider_output %}
                                 <div class="output-container">
                                     {{ agent.aider_output|safe }}

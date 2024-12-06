@@ -44,13 +44,21 @@ async function fetchUpdates() {
             if (!agentCard) continue;
 
             // Update CLI output if it has changed
-            const outputElement = agentCard.querySelector('.cli-output');
+            const outputElement = document.getElementById(`output-${agentId}`);
             const thoughtElement = document.getElementById(`thought-${agentId}`);
             const progressElement = document.getElementById(`progress-${agentId}`);
             const futureElement = document.getElementById(`future-${agentId}`);
             const actionElement = document.getElementById(`action-${agentId}`);
 
-            if (thoughtElement) thoughtElement.innerHTML = agentData.thought || '';
+            // Update thought and toggle agent state visibility
+            if (thoughtElement) {
+                const newThought = agentData.thought || '';
+                thoughtElement.innerHTML = newThought;
+                const agentState = document.getElementById(`agent-state-${agentId}`);
+                if (agentState) {
+                    agentState.style.display = newThought ? 'block' : 'none';
+                }
+            }
             if (progressElement) progressElement.innerHTML = agentData.progress || '';
             if (futureElement) futureElement.innerHTML = agentData.future || '';
             if (actionElement) actionElement.innerHTML = agentData.last_action || '';
