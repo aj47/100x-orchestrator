@@ -5,16 +5,16 @@ from pathlib import Path
 # Add the project root to Python path
 sys.path.append(str(Path(__file__).parent.parent))
 
-from openrouter_client import OpenRouterClient
+from litellm_client import LiteLLMClient
 
-def test_openrouter_client_initialization():
-    """Test OpenRouterClient initialization."""
-    client = OpenRouterClient()
+def test_litellm_client_initialization():
+    """Test LiteLLMClient initialization."""
+    client = LiteLLMClient()
     assert client is not None
 
 def test_chat_completion():
     """Test chat completion method."""
-    client = OpenRouterClient()
+    client = LiteLLMClient()
     
     system_message = "You are a helpful coding assistant."
     user_message = "Write a simple Python function to calculate factorial."
