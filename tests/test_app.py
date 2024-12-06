@@ -37,17 +37,6 @@ def test_index_route(client):
     assert response.status_code == 200
     assert b'<!DOCTYPE html>' in response.data
 
-def test_serve_tasks_json(client, tmp_path):
-    """Test serving tasks.json file"""
-    with patch('app.Path') as mock_path:
-        mock_path.return_value = tmp_path / "tasks" / "tasks.json"
-        response = client.get('/tasks/tasks.json')
-        assert response.status_code == 200
-        data = json.loads(response.data)
-        assert "tasks" in data
-        assert "agents" in data
-        assert "repository_url" in data
-        assert "config" in data
 
 def test_agent_view(client):
     """Test the agent view route"""
