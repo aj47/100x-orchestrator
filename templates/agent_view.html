@@ -229,6 +229,10 @@
                     }
                 }
                 
+                // Create temporary div to parse HTML
+                const tempDiv = document.createElement('div');
+                tempDiv.innerHTML = await response.text();
+                
                 // Update each agent's output
                 const agents = document.querySelectorAll('.agent-card');
                 agents.forEach(agent => {
