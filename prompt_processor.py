@@ -62,7 +62,7 @@ class PromptProcessor:
             if action.startswith('/instruct '):
                 # Return just the instruction without the command
                 return action[10:].strip()
-            elif action in ['/ls', '/git', '/add', '/finish']:
+            elif action.startswith(('/ls', '/git', '/add', '/finish')):
                 # Return the full command for other actions
                 return action
             else:

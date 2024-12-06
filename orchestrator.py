@@ -432,7 +432,8 @@ def main_loop():
                     
                 # Check if agent session is ready
                 if agent_id in aider_sessions:
-                    agent_session = aider_sessions[agent_id]
+                    # cast as AgentSession
+                    agent_session: AgentSession = aider_sessions[agent_id]
                         
                     if agent_session.is_ready():
                         # Get current session output
@@ -464,27 +465,22 @@ def main_loop():
                                 except json.JSONDecodeError:
                                     logging.error(f"Invalid JSON in follow_up_message: {follow_up_message}")
                             
-                            if follow_up_message == "%%FINISHED%%":
-                                logging.info(f"Agent {agent_id} is finished. Stopping the process.")
-                                agent_session.stop()
-                                continue
-                            else:
-                                # Process the response through PromptProcessor
-                                if agent_id in prompt_processors:
-                                    processor = prompt_processors[agent_id]
-                                    action = processor.process_response(agent_id, follow_up_message)
-                                
-                                    if action:
-                                        # Send the processed action if the process is running
-                                        if agent_session.send_message(action):
-                                            logging.info(f"Agent {agent_id} is ready. Sending action: {action}")
-                                        else:
-                                            logging.error(f"Failed to send action to agent {agent_id}")
+                            # Process the response through PromptProcessor
+                            if agent_id in prompt_processors:
+                                processor = prompt_processors[agent_id]
+                                action = processor.process_response(agent_id, follow_up_message)
+                            
+                                if action:
+                                    # Send the processed action if the process is running
+                                    if agent_session.send_message(action):
+                                        logging.info(f"Agent {agent_id} is ready. Sending action: {action}")
                                     else:
-                                        logging.error(f"Failed to process response from OpenRouter")
+                                        logging.error(f"Failed to send action to agent {agent_id}")
                                 else:
-                                    logging.error(f"No prompt processor found for agent {agent_id}")
-                                    
+                                    logging.error(f"Failed to process response from OpenRouter")
+                            else:
+                                logging.error(f"No prompt processor found for agent {agent_id}")
+                                
                         except Exception as e:
                             logging.error(f"Error processing session summary: {e}")
                 
