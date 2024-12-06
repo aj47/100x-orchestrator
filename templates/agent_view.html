@@ -329,8 +329,8 @@
                 console.log(`Initialized agent ${agentId} output length:`, lastOutputLengths[agentId]);
             });
 
-            // Set up more frequent updates for CLI output
-            setInterval(forceUpdate, 1000); // Check for updates every second
+            // Set up updates for CLI output with a reasonable interval
+            setInterval(forceUpdate, 5000); // Check for updates every 5 seconds
         });
 
         // Hide loader when page is fully loaded

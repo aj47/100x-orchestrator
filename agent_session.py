@@ -138,6 +138,7 @@ class AgentSession:
         """Read output from a pipe and write directly to buffer"""
         try:
             logging.info(f"[Session {self.session_id}] Started reading from {pipe_name}")
+            message_buffer = []
             while not self._stop_event.is_set() and self.process and self.process.poll() is None:
                 line = pipe.readline()
                 if not line:
@@ -158,10 +159,20 @@ class AgentSession:
                     "Use /help"
                 ]):
                     continue
-                    
-                # Only log non-empty lines
+                
+                # Only process non-empty lines
                 if line.strip():
-                    logging.debug(f"CLI [{self.session_id}] {line.strip()}")
+                    # Log the received line
+                    logging.info(f"[Session {self.session_id}] 📥 {line.strip()}")
+                    message_buffer.append(line.strip())
+                    
+                    # If we see a prompt marker, log the complete message
+                    if '>' in line or '?' in line:
+                        if message_buffer:
+                            logging.info(f"[Session {self.session_id}] 🟣 COMPLETE MESSAGE:")
+                            for buffered_line in message_buffer:
+                                logging.info(f"[Session {self.session_id}] 📜 {buffered_line}")
+                            message_buffer = []
                 
                 # Format the line using helper method
                 html_line = self._format_output_line(line)
@@ -275,11 +286,15 @@ class AgentSession:
                     logging.error(f"[Session {self.session_id}] Failed to restart the process")
                     return False
             
+            # Log the outgoing message
+            logging.info(f"[Session {self.session_id}] 🔵 SENDING MESSAGE TO AIDER:")
+            for line in message.split('\n'):
+                logging.info(f"[Session {self.session_id}] 📤 {line}")
+            
             # Sanitize and prepare message
             self._echo_message(message)  # Echo message to output before sending
             
             sanitized_message = message.replace('"', '\\"')
-            logging.info(f"[Session {self.session_id}] Sending message to Aider: {sanitized_message}")
             
             # Send message via stdin
             try:
