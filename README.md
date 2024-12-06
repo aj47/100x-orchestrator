@@ -55,23 +55,47 @@ The 100x-orchestrator system consists of three key components:
 
 ## Installation
 
-1. Clone the repository:
-```bash
-git clone https://github.com/yourusername/100x-orchestrator.git
-cd 100x-orchestrator
-```
+1. Install GitHub CLI:
+   - Windows:
+   ```bash
+   winget install GitHub.cli
+   # Or with Chocolatey:
+   choco install gh
+   ```
+   - macOS:
+   ```bash
+   brew install gh
+   ```
+   - Linux (Debian/Ubuntu):
+   ```bash
+   curl -fsSL https://cli.github.com/packages/githubcli-archive-keyring.gpg | sudo dd of=/usr/share/keyrings/githubcli-archive-keyring.gpg
+   echo "deb [arch=$(dpkg --print-architecture) signed-by=/usr/share/keyrings/githubcli-archive-keyring.gpg] https://cli.github.com/packages stable main" | sudo tee /etc/apt/sources.list.d/github-cli.list > /dev/null
+   sudo apt update
+   sudo apt install gh
+   ```
 
-2. Create and activate a virtual environment:
-```bash
-python -m venv .venv
-.venv\Scripts\activate  # On Windows
-source .venv/bin/activate  # On Unix/MacOS
-```
+2. Authenticate with GitHub:
+   ```bash
+   gh auth login
+   ```
 
-3. Install dependencies:
-```bash
-pip install -r requirements.txt
-```
+3. Clone the repository:
+   ```bash
+   git clone https://github.com/yourusername/100x-orchestrator.git
+   cd 100x-orchestrator
+   ```
+
+4. Create and activate a virtual environment:
+   ```bash
+   python -m venv .venv
+   .venv\Scripts\activate  # On Windows
+   source .venv/bin/activate  # On Unix/MacOS
+   ```
+
+5. Install dependencies:
+   ```bash
+   pip install -r requirements.txt
+   ```
 
 ## Configuration
 

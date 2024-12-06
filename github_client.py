@@ -18,9 +18,21 @@ class GitHubClient:
                          capture_output=True, 
                          check=True)
         except subprocess.CalledProcessError:
-            raise RuntimeError("GitHub CLI (gh) not installed. Please install it first.")
+            raise RuntimeError(
+                "GitHub CLI (gh) not installed or not working properly.\n"
+                "Please install it following the instructions in README.md:\n"
+                "Windows: winget install GitHub.cli\n"
+                "macOS: brew install gh\n"
+                "Linux: See README.md for detailed instructions"
+            )
         except FileNotFoundError:
-            raise RuntimeError("GitHub CLI (gh) not found in PATH. Please install it first.")
+            raise RuntimeError(
+                "GitHub CLI (gh) not found in PATH.\n"
+                "Please install it following the instructions in README.md:\n"
+                "Windows: winget install GitHub.cli\n"
+                "macOS: brew install gh\n"
+                "Linux: See README.md for detailed instructions"
+            )
 
     def _ensure_auth(self):
         """Ensure gh CLI is authenticated"""
@@ -30,10 +42,18 @@ class GitHubClient:
                                   text=True)
             if result.returncode != 0:
                 logging.error("GitHub CLI not authenticated")
-                raise RuntimeError("Please authenticate with 'gh auth login' first")
+                raise RuntimeError(
+                    "GitHub CLI is not authenticated.\n"
+                    "Please run 'gh auth login' and follow the prompts to authenticate with GitHub.\n"
+                    "See README.md for detailed instructions."
+                )
         except subprocess.CalledProcessError as e:
             logging.error(f"Error checking auth status: {e}")
-            raise
+            raise RuntimeError(
+                "Failed to check GitHub authentication status.\n"
+                "Please ensure gh CLI is installed and run 'gh auth login' to authenticate.\n"
+                "See README.md for detailed instructions."
+            )
 
     def clone_repository(self, repo_url: str, target_dir: Optional[Path] = None) -> bool:
         """Clone a repository using gh cli"""
