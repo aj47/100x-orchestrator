@@ -188,6 +188,7 @@
         async function fetchUpdates() {
             try {
                 const response = await fetch('/tasks/tasks.json');
+                const responseClone = response.clone(); // Clone the response
                 const tasksData = await response.json();
                 
                 // Update each agent's output
@@ -231,7 +232,7 @@
                 
                 // Create temporary div to parse HTML
                 const tempDiv = document.createElement('div');
-                tempDiv.innerHTML = await response.text();
+                tempDiv.innerHTML = await responseClone.text(); // Use cloned response
                 
                 // Update each agent's output
                 const agents = document.querySelectorAll('.agent-card');
