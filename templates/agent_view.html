@@ -154,19 +154,6 @@
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/js/all.min.js"></script>
     <script src="/static/js/agent_view.js"></script>
-            } else {
-                // Instead of full page reload, fetch updates via AJAX
-                fetchUpdates();
-                // Reset countdown
-                countdownEl.textContent = "5"; // Reduced to 5 seconds for more frequent updates
-            }
-        }
-
-        // Update countdown every second
-        const countdownInterval = setInterval(updateCountdown, 1000);
-
-        // Function to fetch updates via AJAX
-        async function fetchUpdates() {
             try {
                 const response = await fetch('/tasks/tasks.json');
                 const responseClone = response.clone(); // Clone the response

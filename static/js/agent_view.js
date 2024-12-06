@@ -1,5 +1,7 @@
-// Keep track of last output lengths to detect changes
+// Global variables and state management
 const lastOutputLengths = {};
+let updateInterval;
+let countdownInterval;
 
 // Helper function to get output length from debug info
 function getOutputLength(debugElement) {
