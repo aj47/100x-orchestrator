@@ -8,13 +8,14 @@ import requests
 # Add the project root to Python path
 sys.path.append(str(Path(__file__).parent.parent))
 
-from orchestrator import AiderSession, cloneRepository, initialiseCodingAgent
+from agent_session import AgentSession
+from orchestrator import cloneRepository, initialiseCodingAgent
 from app import app
 
-def test_aider_session_initialization(tmp_path):
-    """Test AiderSession initialization."""
+def test_agent_session_initialization(tmp_path):
+    """Test AgentSession initialization."""
     workspace = str(tmp_path / "test_workspace")
-    session = AiderSession(workspace, "test task")
+    session = AgentSession(workspace, "test task")
     assert session.workspace_path == workspace
     assert session.task == "test task"
     assert session.process is None
