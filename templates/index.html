@@ -11,7 +11,12 @@
     <div class="container">
         <div class="d-flex justify-content-between align-items-center mb-4">
             <h1>100x Orchestrator</h1>
-            <a href="/agents" class="btn btn-primary">View Agents</a>
+            <div>
+                <span id="githubStatus" class="me-3">
+                    <i class="fas fa-circle-notch fa-spin"></i> Checking GitHub...
+                </span>
+                <a href="/agents" class="btn btn-primary">View Agents</a>
+            </div>
         </div>
         
         <!-- Agent Overview -->
@@ -48,8 +53,15 @@
                 <form id="agentForm">
                     <div class="form-group">
                         <label for="repoUrl">Git Repository URL</label>
-                        <input type="text" class="form-control" id="repoUrl" required
-                               placeholder="https://github.com/username/repo.git">
+                        <div class="input-group">
+                            <input type="text" class="form-control" id="repoUrl" required
+                                   placeholder="username/repository"
+                                   pattern="^[A-Za-z0-9_.-]+/[A-Za-z0-9_.-]+$">
+                            <button class="btn btn-outline-secondary" type="button" id="loadIssues">
+                                Load Issues
+                            </button>
+                        </div>
+                        <small class="form-text text-muted">Format: username/repository (e.g. octocat/Hello-World)</small>
                     </div>
                     
                     <div class="form-group">
@@ -84,7 +96,59 @@
         </div>
     </div>
 
+    <script src="https://kit.fontawesome.com/a076d05399.js"></script>
     <script>
+        // Check GitHub authentication status
+        async function checkGitHubAuth() {
+            try {
+                const response = await fetch('/api/github/auth-status');
+                const data = await response.json();
+                const statusElement = document.getElementById('githubStatus');
+                
+                if (data.authenticated) {
+                    statusElement.innerHTML = '<i class="fas fa-check-circle text-success"></i> GitHub Connected';
+                    document.getElementById('repoUrl').disabled = false;
+                    document.getElementById('loadIssues').disabled = false;
+                } else {
+                    statusElement.innerHTML = `<i class="fas fa-exclamation-circle text-danger"></i> ${data.error || 'GitHub Not Connected'}`;
+                    document.getElementById('repoUrl').disabled = true;
+                    document.getElementById('loadIssues').disabled = true;
+                }
+            } catch (error) {
+                console.error('Error checking GitHub auth:', error);
+                document.getElementById('githubStatus').innerHTML = 
+                    '<i class="fas fa-exclamation-circle text-danger"></i> Error Checking GitHub Status';
+            }
+        }
+
+        // Load repository issues
+        async function loadRepositoryIssues() {
+            const repoUrl = document.getElementById('repoUrl').value.trim();
+            if (!repoUrl) return;
+
+            try {
+                const response = await fetch(`/api/github/issues/${repoUrl}`);
+                const data = await response.json();
+                
+                if (data.success && data.issues.length > 0) {
+                    // Clear existing tasks
+                    const taskList = document.getElementById('taskList');
+                    taskList.innerHTML = '';
+                    
+                    // Add each issue as a task
+                    data.issues.forEach((issue, index) => {
+                        const taskDescription = `#${issue.number}: ${issue.title}\n${issue.body || ''}`;
+                        const taskItem = createTaskItem(taskDescription, index === 0);
+                        taskList.appendChild(taskItem);
+                    });
+                } else {
+                    alert('No issues found in repository');
+                }
+            } catch (error) {
+                console.error('Error loading issues:', error);
+                alert('Error loading repository issues');
+            }
+        }
         // Function to update overview statistics
         async function updateOverview() {
             try {
@@ -166,6 +230,12 @@
         });
 
         document.addEventListener('DOMContentLoaded', async () => {
+            // Check GitHub authentication status
+            await checkGitHubAuth();
+            
+            // Add event listener for loading issues
+            document.getElementById('loadIssues').addEventListener('click', loadRepositoryIssues);
+            
             // Initial overview update
             await updateOverview();
             

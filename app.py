@@ -1,4 +1,5 @@
-from flask import Flask, render_template, request, jsonify, send_from_directory
+from flask import Flask, render_template, request, jsonify, send_from_directory, Response
+from github_client import GitHubClient
 from orchestrator import (
     initialiseCodingAgent, 
     main_loop, 
@@ -44,6 +45,25 @@ app.logger.addHandler(console_handler)
 @app.route('/')
 def index():
     return render_template('index.html')
+
+@app.route('/api/github/auth-status')
+def github_auth_status():
+    """Check GitHub authentication status"""
+    try:
+        github_client = GitHubClient()
+        return jsonify({'authenticated': True})
+    except RuntimeError as e:
+        return jsonify({'authenticated': False, 'error': str(e)})
+
+@app.route('/api/github/issues/<path:repo>')
+def get_repo_issues(repo):
+    """Get issues from a GitHub repository"""
+    try:
+        github_client = GitHubClient()
+        issues = github_client.get_repository_issues(repo)
+        return jsonify({'success': True, 'issues': issues})
+    except Exception as e:
+        return jsonify({'success': False, 'error': str(e)})
 
 @app.route('/tasks/tasks.json')
 def serve_tasks_json():
