@@ -17,29 +17,14 @@ import datetime
 
 app = Flask(__name__)
 
-# Configure logging to be more verbose
-import logging
-from logging.handlers import RotatingFileHandler
-
-# Create a file handler
-file_handler = RotatingFileHandler('flask_debug.log', maxBytes=10000, backupCount=3)
-file_handler.setLevel(logging.DEBUG)
-
-# Create a console handler
-console_handler = logging.StreamHandler()
-console_handler.setLevel(logging.INFO)
-
-# Create a formatter and add it to the handlers
-formatter = logging.Formatter(
-    '%(asctime)s - %(name)s - %(levelname)s - %(message)s'
+# Configure basic logging
+logging.basicConfig(
+    level=logging.INFO,
+    format='%(asctime)s - %(message)s',
+    handlers=[
+        logging.StreamHandler()
+    ]
 )
-file_handler.setFormatter(formatter)
-console_handler.setFormatter(formatter)
-
-# Add the handlers to the app's logger
-app.logger.addHandler(file_handler)
-app.logger.addHandler(console_handler)
-# app.logger.setLevel(logging.DEBUG)
 
 @app.route('/')
 def index():

@@ -159,7 +159,9 @@ class AgentSession:
                 ]):
                     continue
                     
-                logging.debug(f"[Session {self.session_id}] {pipe_name} received: {line.strip()}")
+                # Only log non-empty lines
+                if line.strip():
+                    logging.debug(f"CLI [{self.session_id}] {line.strip()}")
                 
                 # Format the line using helper method
                 html_line = self._format_output_line(line)
@@ -295,6 +297,10 @@ class AgentSession:
 
     def _format_output_line(self, line: str) -> str:
         """Format a line of output for HTML display with proper escaping and styling"""
+        # Skip empty lines
+        if not line.strip():
+            return ''
+            
         # Escape HTML special characters
         formatted_line = (
             line.replace('&', '&amp;')
@@ -304,7 +310,15 @@ class AgentSession:
                 .replace(' ', '&nbsp;')
         )
         
-        return f'<div class="output-line">{formatted_line}</div>'
+        # Add special styling for different types of output
+        if line.startswith('>'):  # Agent responses
+            return f'<div class="output-line agent-response">{formatted_line}</div>'
+        elif line.startswith('?'):  # Questions/prompts
+            return f'<div class="output-line agent-question">{formatted_line}</div>'
+        elif 'Error:' in line:  # Error messages
+            return f'<div class="output-line error-message">{formatted_line}</div>'
+        else:  # Default output
+            return f'<div class="output-line">{formatted_line}</div>'
 
     def cleanup(self) -> None:
         """Clean up the aider session"""

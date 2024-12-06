@@ -17,15 +17,6 @@ import logging
 # Import the new AgentSession class
 from agent_session import AgentSession
 
-# Configure logging
-logging.basicConfig(
-    level=logging.DEBUG,
-    format='%(asctime)s - %(levelname)s - %(message)s',
-    handlers=[
-        logging.FileHandler('aider_debug.log'),
-        logging.StreamHandler()
-    ]
-)
 
 
 # Configuration
