@@ -71,31 +71,27 @@ def agent_view():
     tasks_data = load_tasks()
     agents = tasks_data.get('agents', {})
     
-    # Add debug URLs to each agent
-    for agent_id in agents:
-        agents[agent_id]['debug_urls'] = {
-            'info': f'/debug/agent/{agent_id}',
-            'validate': f'/debug/validate_paths/{agent_id}'
-        }
-    
     # Calculate time until next check (reduced to 30 seconds for more frequent updates)
     now = datetime.datetime.now()
     next_check = now + datetime.timedelta(seconds=30)
-    time_until_next_check = int((next_check - now).total_seconds())
     
-    # Ensure basic agent data exists
+    # Ensure basic agent data exists and add new fields if missing
     for agent_id, agent in list(agents.items()):
-        if 'aider_output' not in agent:
-            agent['aider_output'] = ''
-        if 'last_updated' not in agent:
-            agent['last_updated'] = None
+        # Ensure basic fields exist
+        agent.setdefault('aider_output', '')
+        agent.setdefault('last_updated', None)
+        
+        # Add new fields for progress tracking
+        agent.setdefault('progress', '')
+        agent.setdefault('thought', '')
+        agent.setdefault('future', '')
+        agent.setdefault('last_action', '')
     
     # Save updated tasks data
     save_tasks(tasks_data)
     
     return render_template('agent_view.html', 
-                           agents=agents, 
-                           time_until_next_check=time_until_next_check)
+                           agents=agents)
 
 @app.route('/create_agent', methods=['POST'])
 def create_agent():
@@ -155,7 +151,12 @@ def create_agent():
                 'status': 'pending',
                 'created_at': datetime.datetime.now().isoformat(),
                 'last_updated': datetime.datetime.now().isoformat(),
-                'aider_output': ''
+                'aider_output': '',
+                # Add new fields for progress tracking
+                'progress': '',
+                'thought': '',
+                'future': '',
+                'last_action': ''
             }
         
         # Save updated tasks
@@ -283,7 +284,12 @@ def debug_agent(agent_id):
                 'created_at': agent_data.get('created_at'),
                 'last_updated': agent_data.get('last_updated'),
                 'aider_output_length': len(agent_data.get('aider_output', '')),
-                'task': agent_data.get('task')
+                'task': agent_data.get('task'),
+                # Add new fields for progress tracking
+                'progress': agent_data.get('progress', ''),
+                'thought': agent_data.get('thought', ''),
+                'future': agent_data.get('future', ''),
+                'last_action': agent_data.get('last_action', '')
             }
         }
         
