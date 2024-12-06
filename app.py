@@ -1,5 +1,12 @@
 import logging
 from flask import Flask, render_template, request, jsonify, send_from_directory
+from werkzeug.serving import WSGIRequestHandler
+
+# Custom log filter to suppress specific log messages
+class TasksJsonLogFilter(logging.Filter):
+    def filter(self, record):
+        # Suppress log messages for tasks.json requests
+        return not ('/tasks/tasks.json' in record.getMessage())
 from orchestrator import (
     initialiseCodingAgent, 
     main_loop, 
@@ -26,6 +33,10 @@ logging.basicConfig(
         logging.StreamHandler()
     ]
 )
+
+# Add filter to suppress tasks.json log messages
+for handler in logging.getLogger().handlers:
+    handler.addFilter(TasksJsonLogFilter())
 
 @app.route('/')
 def index():
