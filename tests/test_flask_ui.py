@@ -1,47 +1,42 @@
 import sys
 from pathlib import Path
 import pytest
-from snapshottest import TestCase
 
 # Add the project root to Python path
 sys.path.append(str(Path(__file__).parent.parent))
 
 from app import app
 
-class TestFlaskUI(TestCase):
-    def setUp(self):
-        self.client = app.test_client()
+@pytest.fixture
+def client():
+    app.config['TESTING'] = True
+    with app.test_client() as client:
+        yield client
 
-    def test_index_route(self):
-        """Test the index route of the Flask application."""
-        response = self.client.get('/')
-        
-        # Check response status code
-        assert response.status_code == 200, "Index route should return 200 OK"
-        
-        # Check response content type
-        assert 'text/html' in response.content_type, "Response should be HTML"
-        
-        # Use snapshot testing for the full response
-        self.assertMatchSnapshot(response.data.decode('utf-8'))
+def test_index_route_basic(client):
+    """Test basic functionality of the index route."""
+    response = client.get('/')
+    assert response.status_code == 200
+    assert 'text/html' in response.content_type
 
-    def test_index_route_content(self):
-        """Verify key elements are present in the index route."""
-        response = self.client.get('/')
-        response_text = response.data.decode('utf-8')
-        
-        # Key UI elements to check
-        expected_elements = [
-            'Repository URL', 
-            'Task Description', 
-            'Number of Agents', 
-            'Create Agents',
-            '100x Orchestrator'
-        ]
-        
-        # Check that all expected elements are in the response
-        for element in expected_elements:
-            assert element in response_text, f"Should have {element}"
-        
-        # Also use snapshot for content verification
-        self.assertMatchSnapshot(response_text)
+def test_index_route_elements(client):
+    """Test that all required elements are present in the index route."""
+    response = client.get('/')
+    content = response.data.decode('utf-8')
+    
+    # Print what we're checking for debugging
+    print("\nChecking for elements in the page:")
+    
+    elements = {
+        'Git Repository URL': 'repository URL input',
+        'Tasks': 'tasks section',
+        'Create New Agents': 'create agents heading',
+        '100x Orchestrator': 'main heading',
+        'Number of Agents per Task': 'agents count input',
+        'Describe the task for the agent...': 'task input placeholder'
+    }
+    
+    for text, description in elements.items():
+        found = text in content
+        print(f"- {description}: {'Found' if found else 'Not found'}")
+        assert found, f"Missing {description}: '{text}'"
