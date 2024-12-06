@@ -121,6 +121,44 @@
             }
         }
 
+        // Function to create a task item
+        function createTaskItem(initialValue = '', isFirst = false) {
+            const taskItem = document.createElement('div');
+            taskItem.classList.add('task-item');
+            
+            const input = document.createElement('input');
+            input.type = 'text';
+            input.classList.add('form-control', 'task-description');
+            input.placeholder = 'Describe the task for the agent...';
+            input.required = true;
+            input.value = initialValue;
+            
+            const removeButton = document.createElement('button');
+            removeButton.type = 'button';
+            removeButton.classList.add('btn', 'btn-danger', 'remove-task');
+            removeButton.textContent = '-';
+            removeButton.style.display = isFirst ? 'none' : 'inline-block';
+            
+            // Remove task functionality
+            removeButton.addEventListener('click', (e) => {
+                const taskItems = taskList.querySelectorAll('.task-item');
+                if (taskItems.length > 1) {
+                    e.target.closest('.task-item').remove();
+                    
+                    // Hide remove button for first task if only one remains
+                    const remainingTaskItems = taskList.querySelectorAll('.task-item');
+                    if (remainingTaskItems.length === 1) {
+                        remainingTaskItems[0].querySelector('.remove-task').style.display = 'none';
+                    }
+                }
+            });
+            
+            taskItem.appendChild(input);
+            taskItem.appendChild(removeButton);
+            
+            return taskItem;
+        }
+
         // Load repository issues
         async function loadRepositoryIssues() {
             const repoUrl = document.getElementById('repoUrl').value.trim();
@@ -259,43 +297,6 @@
                 console.error('Error fetching tasks:', error);
             }
             
-            // Function to create a task item
-            function createTaskItem(initialValue = '', isFirst = false) {
-                const taskItem = document.createElement('div');
-                taskItem.classList.add('task-item');
-                
-                const input = document.createElement('input');
-                input.type = 'text';
-                input.classList.add('form-control', 'task-description');
-                input.placeholder = 'Describe the task for the agent...';
-                input.required = true;
-                input.value = initialValue;
-                
-                const removeButton = document.createElement('button');
-                removeButton.type = 'button';
-                removeButton.classList.add('btn', 'btn-danger', 'remove-task');
-                removeButton.textContent = '-';
-                removeButton.style.display = isFirst ? 'none' : 'inline-block';
-                
-                // Remove task functionality
-                removeButton.addEventListener('click', (e) => {
-                    const taskItems = taskList.querySelectorAll('.task-item');
-                    if (taskItems.length > 1) {
-                        e.target.closest('.task-item').remove();
-                        
-                        // Hide remove button for first task if only one remains
-                        const remainingTaskItems = taskList.querySelectorAll('.task-item');
-                        if (remainingTaskItems.length === 1) {
-                            remainingTaskItems[0].querySelector('.remove-task').style.display = 'none';
-                        }
-                    }
-                });
-                
-                taskItem.appendChild(input);
-                taskItem.appendChild(removeButton);
-                
-                return taskItem;
-            }
             
             // Add task button functionality
             addTaskButton.addEventListener('click', () => {
