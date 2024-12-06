@@ -40,3 +40,9 @@ def test_index_route_elements(client):
         found = text in content
         print(f"- {description}: {'Found' if found else 'Not found'}")
         assert found, f"Missing {description}: '{text}'"
+
+def test_index_route_snapshot(client, snapshot):
+    """Test the index route using snapshot testing."""
+    response = client.get('/')
+    assert response.status_code == 200
+    snapshot.assert_match(response.data.decode('utf-8'), 'index_page_content')
