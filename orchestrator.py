@@ -1,6 +1,6 @@
 import os, json, traceback, subprocess, sys, uuid
 from prompts import PROMPT_AIDER
-from openrouter_client import OpenRouterClient
+from litellm_client import LiteLLMClient
 from prompt_processor import PromptProcessor
 from pathlib import Path
 import shutil
@@ -440,8 +440,8 @@ def main_loop():
                             
                         # Get summary from OpenRouter
                         try:
-                            openrouter = OpenRouterClient()
-                            follow_up_message = openrouter.chat_completion(
+                            litellm_client = LiteLLMClient()
+                            follow_up_message = litellm_client.chat_completion(
                                 PROMPT_AIDER(agent_session.task),
                                 session_logs
                             )
