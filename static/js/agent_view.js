@@ -29,7 +29,7 @@ function updateCountdown() {
 }
 
 // Update countdown every second
-const countdownInterval = setInterval(updateCountdown, 1000);
+setInterval(updateCountdown, 1000);
 
 // Function to fetch updates via AJAX
 async function fetchUpdates() {
