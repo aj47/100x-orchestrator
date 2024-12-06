@@ -84,12 +84,8 @@
         </div>
     </div>
 
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
     <script src="/static/js/index.js"></script>
-            try {
-                const response = await fetch('/tasks/tasks.json');
-                const data = await response.json();
-                const agents = data.agents || {};
-                const agentCount = Object.keys(agents).length;
                 
                 // Update statistics
                 document.getElementById('totalAgents').textContent = agentCount;
