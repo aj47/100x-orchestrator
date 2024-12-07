@@ -13,3 +13,14 @@ The response should be in this JSON schema:
     "future": "one sentence prediction",
 }
 """
+
+def PROMPT_PR() -> str:
+    return """Generate a pull request description based on the changes made.
+The response should be in this JSON schema:
+{
+    "title": "Brief, descriptive PR title",
+    "description": "Detailed description of changes made",
+    "labels": ["list", "of", "relevant", "labels"],
+    "reviewers": ["list", "of", "suggested", "reviewers"]
+}
+"""

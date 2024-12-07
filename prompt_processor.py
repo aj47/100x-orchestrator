@@ -3,6 +3,7 @@ import logging
 from typing import Dict, List, Optional
 from dataclasses import dataclass, field
 from datetime import datetime
+from github import Github
 
 @dataclass
 class AgentResponse:
@@ -59,10 +60,36 @@ class PromptProcessor:
             
             # Process action
             action = agent_response.action.strip()
-            if action.startswith('/instruct '):
+            if action == '/finish':
+                # Generate PR info using LiteLLM
+                from litellm_client import LiteLLMClient
+                from prompts import PROMPT_PR
+                
+                client = LiteLLMClient()
+                # Get full history of responses for context
+                history = "\n".join([
+                    f"Progress: {r.progress}\nThought: {r.thought}\nAction: {r.action}\nFuture: {r.future}\n"
+                    for r in self.response_history[agent_id]
+                ])
+                
+                pr_info = client.chat_completion(
+                    system_message=PROMPT_PR(),
+                    user_message=f"Agent history:\n{history}"
+                )
+                
+                try:
+                    pr_data = json.loads(pr_info)
+                    # Store PR info in agent state
+                    self.agent_states[agent_id]['pr_info'] = pr_data
+                except json.JSONDecodeError:
+                    logging.error(f"Invalid PR info JSON: {pr_info}")
+                
+                return action
+                
+            elif action.startswith('/instruct '):
                 # Return just the instruction without the command
                 return action[10:].strip()
-            elif action.startswith(('/ls', '/git', '/add', '/finish')):
+            elif action.startswith(('/ls', '/git', '/add')):
                 # Return the full command for other actions
                 return action
             else:
