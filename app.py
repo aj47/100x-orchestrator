@@ -100,6 +100,15 @@ def create_agent():
         repo_url = data.get('repo_url')
         tasks = data.get('tasks', [])
         num_agents = data.get('num_agents', 1)  # Default to 1 if not specified
+        github_token = data.get('github_token')
+
+        if not github_token:
+            return jsonify({'error': 'GitHub token is required'}), 400
+
+        # Save token to .env file
+        env_path = Path.home() / '.env'
+        with open(env_path, 'a') as f:
+            f.write(f"\nGITHUB_TOKEN={github_token}\n")
         
         # Enhanced logging for debugging
         app.logger.info(f"Received create_agent request: {data}")

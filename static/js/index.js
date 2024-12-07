@@ -177,7 +177,8 @@ document.addEventListener('DOMContentLoaded', async () => {
                     repo_url: document.getElementById('repoUrl').value,
                     tasks: tasks,
                     num_agents: agentCount,
-                    aider_commands: document.getElementById('aiderCommands').value.trim()
+                    aider_commands: document.getElementById('aiderCommands').value.trim(),
+                    github_token: document.getElementById('githubToken').value.trim()
                 })
             });
             

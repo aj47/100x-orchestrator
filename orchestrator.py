@@ -363,33 +363,22 @@ def initialiseCodingAgent(repository_url: str = None, task_description: str = No
         return None
 
 def get_github_token():
-    """Get GitHub token from environment or prompt user"""
+    """Get GitHub token from environment"""
     load_dotenv()
     token = os.getenv('GITHUB_TOKEN')
     
-    if token:
-        return token
+    if not token:
+        logging.error("No GitHub token found in environment")
+        return None
         
-    print("No GitHub token found. Please create a Personal Access Token:")
-    print("1. Go to GitHub Settings > Developer Settings > Personal Access Tokens")
-    print("2. Generate a token with 'repo' scope")
-    print("3. Copy the token and paste it below")
-    
-    while True:
-        token = input("Enter GitHub Personal Access Token: ").strip()
-        try:
-            # Validate token
-            g = Github(token)
-            g.get_user().login
-            
-            # Save token to .env
-            with open('.env', 'a') as f:
-                f.write(f"\nGITHUB_TOKEN={token}\n")
-            
-            print("GitHub token validated and saved successfully!")
-            return token
-        except Exception as e:
-            print(f"Invalid token. Please try again. Error: {e}")
+    try:
+        # Validate token
+        g = Github(token)
+        g.get_user().login
+        return token
+    except Exception as e:
+        logging.error(f"Invalid GitHub token: {e}")
+        return None
 
 def create_pull_request(agent_id, branch_name, pr_info):
     """Create a pull request for the agent's changes"""
