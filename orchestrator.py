@@ -469,8 +469,10 @@ def main_loop():
                             if agent_id in prompt_processors:
                                 processor = prompt_processors[agent_id]
                                 action = processor.process_response(agent_id, follow_up_message)
-                            
-                                if action:
+                                if action is "/finish":
+                                    # Send the PR info to the agent
+                                    print("hi")
+                                elif action:
                                     # Send the processed action if the process is running
                                     if agent_session.send_message(action):
                                         logging.info(f"Agent {agent_id} is ready. Sending action: {action}")
