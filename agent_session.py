@@ -162,8 +162,10 @@ class AgentSession:
                 
                 # Only process non-empty lines
                 if line.strip():
-                    # Log the received line
-                    logging.info(f"[Session {self.session_id}] 📥 {line.strip()}")
+                    # Log the received line immediately with precise timestamp
+                    log_time = datetime.datetime.now().isoformat()
+                    logging.info(f"[Session {self.session_id}] {pipe_name} ({log_time}): {line.strip()}")
+                    
                     message_buffer.append(line.strip())
                     
                     # If we see a prompt marker, log the complete message
@@ -181,7 +183,7 @@ class AgentSession:
                 with self._buffer_lock:
                     self.output_buffer.seek(0, 2)  # Seek to end
                     self.output_buffer.write(line)
-                    logging.debug(f"[Session {self.session_id}] Added to buffer: {line.strip()}")
+                    # logging.debug(f"[Session {self.session_id}] Added to buffer: {line.strip()}")
                     
                 # Flush the pipe to ensure we get output immediately
                 pipe.flush()
