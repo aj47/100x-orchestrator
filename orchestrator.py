@@ -13,6 +13,8 @@ import queue
 import io
 import errno
 import logging
+from github import Github
+from dotenv import load_dotenv
 
 # Import the new AgentSession class
 from agent_session import AgentSession
@@ -360,6 +362,79 @@ def initialiseCodingAgent(repository_url: str = None, task_description: str = No
         logging.error(f"Error initializing coding agents: {e}", exc_info=True)
         return None
 
+def get_github_token():
+    """Get GitHub token from environment or prompt user"""
+    load_dotenv()
+    token = os.getenv('GITHUB_TOKEN')
+    
+    if token:
+        return token
+        
+    print("No GitHub token found. Please create a Personal Access Token:")
+    print("1. Go to GitHub Settings > Developer Settings > Personal Access Tokens")
+    print("2. Generate a token with 'repo' scope")
+    print("3. Copy the token and paste it below")
+    
+    while True:
+        token = input("Enter GitHub Personal Access Token: ").strip()
+        try:
+            # Validate token
+            g = Github(token)
+            g.get_user().login
+            
+            # Save token to .env
+            with open('.env', 'a') as f:
+                f.write(f"\nGITHUB_TOKEN={token}\n")
+            
+            print("GitHub token validated and saved successfully!")
+            return token
+        except Exception as e:
+            print(f"Invalid token. Please try again. Error: {e}")
+
+def create_pull_request(agent_id, branch_name, pr_info):
+    """Create a pull request for the agent's changes"""
+    try:
+        token = get_github_token()
+        if not token:
+            return None
+            
+        g = Github(token)
+        
+        # Get repository name from tasks data
+        tasks_data = load_tasks()
+        repo_url = tasks_data.get('repository_url', '')
+        if not repo_url:
+            logging.error("No repository URL found")
+            return None
+            
+        # Extract owner/repo from URL
+        repo_parts = repo_url.rstrip('/').split('/')
+        repo_name = '/'.join(repo_parts[-2:]).replace('.git', '')
+        
+        repo = g.get_repo(repo_name)
+        
+        # Create pull request
+        pr = repo.create_pull(
+            title=pr_info.get('title', f'Changes by Agent {agent_id}'),
+            body=pr_info.get('description', 'Automated changes'),
+            head=branch_name,
+            base='main'
+        )
+        
+        # Add labels if specified
+        if pr_info.get('labels'):
+            pr.add_to_labels(*pr_info['labels'])
+        
+        # Request reviewers if specified
+        if pr_info.get('reviewers'):
+            pr.create_review_request(reviewers=pr_info['reviewers'])
+        
+        return pr
+        
+    except Exception as e:
+        logging.error(f"Error creating pull request: {e}")
+        return None
+
 def cloneRepository(repository_url: str) -> bool:
     """Clone git repository using subprocess.check_call."""
     try:
@@ -469,9 +544,26 @@ def main_loop():
                             if agent_id in prompt_processors:
                                 processor = prompt_processors[agent_id]
                                 action = processor.process_response(agent_id, follow_up_message)
-                                if action is "/finish":
-                                    # Send the PR info to the agent
-                                    print("hi")
+                                if action == "/finish":
+                                    # Get PR info from agent state
+                                    pr_info = processor.get_agent_state(agent_id).get('pr_info')
+                                    if pr_info:
+                                        try:
+                                            # Create pull request
+                                            branch_name = f"agent-{agent_id[:8]}"
+                                            pr = create_pull_request(agent_id, branch_name, pr_info)
+                                            if pr:
+                                                logging.info(f"Created PR: {pr.html_url}")
+                                                # Update agent state with PR URL
+                                                tasks_data['agents'][agent_id]['pr_url'] = pr.html_url
+                                                tasks_data['agents'][agent_id]['status'] = 'completed'
+                                                save_tasks(tasks_data)
+                                            else:
+                                                logging.error("Failed to create PR")
+                                        except Exception as e:
+                                            logging.error(f"Error creating PR: {e}")
+                                    else:
+                                        logging.error("No PR info found in agent state")
                                 elif action:
                                     # Send the processed action if the process is running
                                     if agent_session.send_message(action):
