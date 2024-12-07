@@ -389,17 +389,48 @@ def create_pull_request(agent_id, branch_name, pr_info):
             
         g = Github(token)
         
-        # Get repository name from tasks data
+        # Get repository name and workspace from tasks data
         tasks_data = load_tasks()
         repo_url = tasks_data.get('repository_url', '')
         if not repo_url:
             logging.error("No repository URL found")
+            return None
+
+        agent_data = tasks_data['agents'].get(agent_id)
+        if not agent_data:
+            logging.error(f"No agent data found for {agent_id}")
+            return None
+
+        repo_path = agent_data.get('repo_path')
+        if not repo_path:
+            logging.error("No repo path found for agent")
             return None
             
         # Extract owner/repo from URL
         repo_parts = repo_url.rstrip('/').split('/')
         repo_name = '/'.join(repo_parts[-2:]).replace('.git', '')
         
+        # Push changes to remote
+        current_dir = os.getcwd()
+        try:
+            os.chdir(repo_path)
+            # Configure git with token
+            subprocess.run(["git", "config", "user.name", "GitHub Actions"], check=True)
+            subprocess.run(["git", "config", "user.email", "actions@github.com"], check=True)
+            
+            # Add all changes
+            subprocess.run(["git", "add", "."], check=True)
+            subprocess.run(["git", "commit", "-m", f"Changes by Agent {agent_id}"], check=False)  # Don't check as it may fail if no changes
+            
+            # Set remote URL with token
+            remote_url = f"https://x-access-token:{token}@github.com/{repo_name}.git"
+            subprocess.run(["git", "remote", "set-url", "origin", remote_url], check=True)
+            
+            # Push to remote
+            subprocess.run(["git", "push", "-u", "origin", branch_name], check=True)
+        finally:
+            os.chdir(current_dir)
+
         repo = g.get_repo(repo_name)
         
         # Create pull request
