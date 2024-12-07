@@ -26,9 +26,6 @@ body {
 .task-item input { 
     flex-grow: 1; 
     margin-right: 0.5rem; 
-    background-color: #1e1e1e;
-    color: #e0e0e0;
-    border-color: #333;
 }
 
 /* Agent card styles */
@@ -41,12 +38,18 @@ body {
     box-shadow: 0 4px 6px rgba(0,0,0,0.1);
 }
 
-.agent-card .card-body {
+.card-body {
     background-color: #1e1e1e;
     color: #e0e0e0;
 }
 
-.agent-card .card-header {
+
+.card-body input {
+    background-color: #1e1e1e;
+    color: #e0e0e0;
+}
+
+.card-header {
     background-color: #1e1e1e;  /* Darker header */
     border-bottom: 1px solid #444;
     color: #e0e0e0;  /* Slightly softer white */
