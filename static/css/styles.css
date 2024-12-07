@@ -35,10 +35,15 @@ body {
 .agent-card { 
     margin-bottom: 1rem;
     animation: fadeIn 0.5s ease-in-out;
-    background-color: #2c2c2c;  /* Slightly lighter dark background for better contrast */
+    background-color: #2c2c2c;
     border-color: #444;
     color: #e0e0e0;
-    box-shadow: 0 4px 6px rgba(0,0,0,0.1);  /* Add subtle shadow for depth */
+    box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+}
+
+.agent-card .card-body {
+    background-color: #1e1e1e;
+    color: #e0e0e0;
 }
 
 .agent-card .card-header {
