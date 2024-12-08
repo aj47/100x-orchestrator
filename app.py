@@ -148,27 +148,6 @@ def create_agent():
             except Exception as task_error:
                 app.logger.error(f"Error initializing agent for task {task_description}: {task_error}", exc_info=True)
         
-        # Update tasks.json with repo URL and agents
-        tasks_data['repository_url'] = repo_url
-        tasks_data['agents'] = tasks_data.get('agents', {})
-        for agent_id in created_agents:
-            tasks_data['agents'][agent_id] = {
-                'task': tasks_data['tasks'][-1],
-                'repo_url': repo_url,
-                'status': 'pending',
-                'created_at': datetime.datetime.now().isoformat(),
-                'last_updated': datetime.datetime.now().isoformat(),
-                'aider_output': '',
-                # Add new fields for progress tracking
-                'progress': '',
-                'thought': '',
-                'future': '',
-                'last_action': ''
-            }
-        
-        # Save updated tasks
-        save_tasks(tasks_data)
-        
         # Start main loop in a separate thread if not already running
         def check_and_start_main_loop():
             # Check if main loop thread is already running

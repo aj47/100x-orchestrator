@@ -303,6 +303,7 @@ def initialiseCodingAgent(repository_url: str = None, task_description: str = No
                 'future': '',
                 'last_action': ''
             }
+            tasks_data['repository_url'] = repository_url
             save_tasks(tasks_data)
             
             logging.info(f"Successfully initialized agent {agent_id}")
