@@ -281,6 +281,8 @@ body {
     border-radius: 5px;
     max-height: 400px;
     overflow-y: auto;
+    white-space: pre-wrap; /* Ensure text wraps */
+    word-wrap: break-word; /* Break long words */
 }
 
 .output-container {
