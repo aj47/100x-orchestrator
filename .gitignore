@@ -7,3 +7,6 @@ workspaces
 ./tasks/tasks.json
 tasks/tasks.json
 aider_debug.log
+orchestrator_debug.log
+app_debug.log
+config.json
