@@ -95,6 +95,10 @@ body {
     tab-size: 4;
     position: relative;
     border: 1px solid #333;
+    -webkit-user-select: text;
+    -moz-user-select: text;
+    -ms-user-select: text;
+    user-select: text;
 }
 
 .cli-output:empty::before {

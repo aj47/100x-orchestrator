@@ -73,7 +73,7 @@
                             <div class="cli-output" id="output-{{ agent_id }}">
                                 {% if agent.aider_output %}
                                 <div class="output-container">
-                                    {{ agent.aider_output|e }}
+                                    {{ agent.aider_output|e|replace('<', '&lt;')|replace('>', '&gt;') }}
                                 </div>
                                 {% else %}
                                 <span class="text-muted">No output available yet...</span>
