@@ -1,663 +1,244 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <!-- Meta Tags -->
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Coding Agent Manager</title>
-    
-    <!-- CSS Libraries -->
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
-    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+{% extends "base.html" %}
 
-    <!-- Socket.IO -->
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/4.6.1/socket.io.min.js"></script>
+{% block title %}Create Agents - Agent Dashboard{% endblock %}
 
-    <!-- Custom Styles -->
-    <style>
-        /* Global Styles */
-        body {
-            background-color: #f5f7fa;
-            font-family: 'Inter', sans-serif;
-        }
-
-        h1, h5, h6, label {
-            color: #34495e;
-        }
-
-        /* Container */
-        .container {
-            max-width: 800px;
-            margin-top: 2rem;
-        }
-
-        /* Card Styles */
-        .card {
-            border: none;
-            border-radius: 12px;
-            box-shadow: 0 8px 20px rgba(0, 0, 0, 0.05);
-            transition: transform 0.3s ease, box-shadow 0.3s ease;
-        }
-
-        .card:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 12px 24px rgba(0, 0, 0, 0.1);
-        }
-
-        /* Form Elements */
-        .form-control {
-            border-radius: 8px;
-            padding: 0.75rem 1rem;
-        }
-
-        .form-group label {
-            font-weight: 600;
-            margin-bottom: 0.5rem;
-        }
-
-        .form-text {
-            font-size: 0.875rem;
-            color: #7f8c8d;
-        }
-
-        /* Task List */
-        #taskList {
-            margin-bottom: 1rem;
-            max-height: 400px;
-            overflow-y: auto;
-            padding-right: 1rem;
-        }
-
-        .task-item {
-            display: flex;
-            margin-bottom: 0.8rem;
-            gap: 0.5rem;
-            animation: slideIn 0.3s ease-out;
-        }
-
-        .task-item input {
-            flex-grow: 1;
-            border-radius: 8px;
-            border: 1px solid #ced4da;
-            padding: 0.75rem 1rem;
-            transition: all 0.3s ease;
-        }
-
-        .task-item input:focus {
-            border-color: #86b7fe;
-            box-shadow: 0 0 0 0.25rem rgba(52, 152, 219, 0.25);
-        }
-
-        .btn-remove-task {
-            width: 44px;
-            height: 44px;
-            padding: 0;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            border-radius: 8px;
-        }
-
-        /* Buttons */
-        .btn {
-            transition: all 0.3s ease;
-            border-radius: 8px;
-        }
-
-        .btn:hover {
-            transform: translateY(-1px);
-            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
-        }
-
-        /* Connection Status */
-        .connection-status {
-            position: fixed;
-            top: 1rem;
-            right: 1rem;
-            padding: 0.5rem 1rem;
-            border-radius: 50px;
-            font-size: 0.875rem;
-            display: flex;
-            align-items: center;
-            gap: 0.5rem;
-            z-index: 1000;
-            background-color: #eaf2f8;
-            color: #3498db;
-            animation: slideInTop 0.3s ease-out;
-        }
-
-        .connection-status.connected {
-            background-color: #eafaf1;
-            color: #2ecc71;
-        }
-
-        .connection-status.disconnected {
-            background-color: #fdecea;
-            color: #e74c3c;
-        }
-
-        /* Status Icon */
-        .status-icon {
-            width: 8px;
-            height: 8px;
-            border-radius: 50%;
-        }
-
-        .status-icon.connected {
-            background-color: #2ecc71;
-            box-shadow: 0 0 0 3px rgba(46, 204, 113, 0.2);
-        }
-
-        .status-icon.disconnected {
-            background-color: #e74c3c;
-            box-shadow: 0 0 0 3px rgba(231, 76, 60, 0.2);
-        }
-
-        /* Toast Notification */
-        .toast {
-            position: fixed;
-            bottom: 1rem;
-            right: 1rem;
-            min-width: 250px;
-            z-index: 1050;
-            border: none;
-            border-radius: 12px;
-            box-shadow: 0 8px 20px rgba(0, 0, 0, 0.1);
-            animation: slideInRight 0.3s ease-out;
-        }
-
-        .toast-body {
-            font-size: 0.9rem;
-            display: flex;
-            align-items: center;
-        }
-
-        .toast-body.success {
-            background-color: #eafaf1;
-            color: #2ecc71;
-        }
-
-        .toast-body.error {
-            background-color: #fdecea;
-            color: #e74c3c;
-        }
-
-        .toast-body.info {
-            background-color: #eaf2f8;
-            color: #3498db;
-        }
-
-        /* Modal Styles */
-        .modal-header {
-            border-bottom: none;
-        }
-
-        .modal-footer {
-            border-top: none;
-        }
-
-        /* Animations */
-        @keyframes slideIn {
-            from {
-                opacity: 0;
-                transform: translateX(-10px);
-            }
-            to {
-                opacity: 1;
-                transform: translateX(0);
-            }
-        }
-
-        @keyframes slideInTop {
-            from {
-                transform: translateY(-100%);
-                opacity: 0;
-            }
-            to {
-                transform: translateY(0);
-                opacity: 1;
-            }
-        }
-
-        @keyframes slideInRight {
-            from {
-                transform: translateX(100%);
-                opacity: 0;
-            }
-            to {
-                transform: translateX(0);
-                opacity: 1;
-            }
-        }
-
-        /* Additional Styles */
-        /* Add any additional styles here */
-    </style>
-</head>
-<body>
-    <!-- Connection Status -->
-    <div class="connection-status">
-        <i class="fas fa-circle-notch fa-spin me-2"></i>
-        <span class="status-text">Connecting...</span>
+{% block content %}
+<div class="container my-5">
+    {% if missing_vars and missing_vars|length > 0 %}
+    <div class="alert alert-danger mb-4">
+        <h5 class="alert-heading mb-3">
+            <i class="fas fa-exclamation-triangle me-2"></i>Configuration Issues Detected
+        </h5>
+        <ul class="list-unstyled mb-3">
+        {% for var in missing_vars %}
+            <li><i class="fas fa-times-circle me-2"></i>{{ var }}</li>
+        {% endfor %}
+        </ul>
+        <hr>
+        <p class="mb-0">
+            <i class="fas fa-info-circle me-2"></i>Please resolve these issues before creating agents:
+            <ul class="mb-0 mt-2">
+                <li>For missing <code>aider</code>: Run <code>pip install aider-chat</code></li>
+                <li>For API key: Set your <code>OPENAI_API_KEY</code> in environment variables</li>
+            </ul>
+        </p>
     </div>
+    {% endif %}
 
-    <!-- Main Container -->
-    <div class="container">
-        <!-- Header -->
-        <div class="d-flex justify-content-between align-items-center mb-4">
-            <h1><i class="fas fa-robot me-2"></i>Coding Agent Manager</h1>
-            <div class="d-flex gap-2">
-                <button type="button" class="btn btn-outline-secondary" id="helpBtn">
-                    <i class="fas fa-keyboard me-1"></i>Shortcuts
-                </button>
-                <a href="/agents" class="btn btn-secondary">
-                    <i class="fas fa-list me-1"></i>View Agents
-                </a>
-            </div>
-        </div>
-        
-        <!-- Agent Form -->
-        <div class="card">
-            <div class="card-body">
-                <form id="agentForm">
-                    <!-- Git Repository URL -->
-                    <div class="form-group">
-                        <label for="repoUrl">
-                            <i class="fab fa-github me-1"></i>Git Repository URL
-                        </label>
-                        <input type="text" class="form-control" id="repoUrl" required
-                               pattern="^https?:\/\/(?:www\.)?github\.com\/[\w-]+\/[\w-]+(?:\.git)?$"
-                               placeholder="https://github.com/username/repo">
-                        <div class="form-text">
-                            Enter the complete URL of the Git repository you want to work with
-                        </div>
-                    </div>
-                    
-                    <!-- Number of Agents -->
-                    <div class="form-group">
-                        <label for="agentCount">
-                            <i class="fas fa-users me-1"></i>Number of Agents per Task
-                        </label>
-                        <input type="number" class="form-control" id="agentCount" 
-                               min="1" max="10" value="1" 
-                               placeholder="Number of agents to create for each task">
-                        <div class="form-text">
-                            Multiple agents can work on the same task independently
-                        </div>
-                    </div>
-                    
-                    <!-- Tasks -->
-                    <div class="form-group">
-                        <label>
-                            <i class="fas fa-tasks me-1"></i>Tasks
-                        </label>
-                        <div id="taskList" class="border rounded p-3 bg-light">
-                            <!-- Tasks will be dynamically populated here -->
-                        </div>
-                        <button type="button" id="addTask" class="btn btn-outline-primary mt-2">
-                            <i class="fas fa-plus me-1"></i>Add Task
-                        </button>
-                    </div>
-                    
-                    <!-- Submit Button -->
-                    <div class="d-grid gap-2">
-                        <button type="submit" class="btn btn-primary btn-lg">
-                            <i class="fas fa-robot me-1"></i>Create Agents
-                        </button>
-                    </div>
-                </form>
-            </div>
-        </div>
-        
-        <!-- Result Alert -->
-        <div id="result" class="mt-4" style="display: none;">
-            <div class="alert" role="alert"></div>
+    <div class="dashboard-header mb-4">
+        <div class="d-flex justify-content-between align-items-center flex-wrap gap-3">
+            <h1 class="display-6 mb-0">
+                <i class="fas fa-code-branch me-2"></i>Create New Agents
+            </h1>
+            <a href="/agents" class="btn btn-primary">
+                <i class="fas fa-eye me-2"></i>View Active Agents
+            </a>
         </div>
     </div>
 
-    <!-- Help Modal -->
-    <div class="modal fade" id="helpModal" tabindex="-1">
-        <div class="modal-dialog">
-            <div class="modal-content">
-                <div class="modal-header">
-                    <h5><i class="fas fa-keyboard me-2"></i>Keyboard Shortcuts</h5>
-                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+    <div class="card main-card">
+        <div class="card-body">
+            <form id="agentForm" class="needs-validation" novalidate>
+                <div class="form-group mb-4">
+                    <label for="repoUrl" class="form-label">
+                        <i class="fas fa-link me-2"></i>Git Repository URL
+                    </label>
+                    <div class="input-group">
+                        <span class="input-group-text">
+                            <i class="fab fa-github"></i>
+                        </span>
+                        <input type="url" 
+                               class="form-control" 
+                               id="repoUrl" 
+                               required 
+                               placeholder="https://github.com/username/repo.git">
+                        <div class="invalid-feedback">
+                            Please provide a valid repository URL
+                        </div>
+                    </div>
                 </div>
-                <div class="modal-body">
-                    <ul class="list-group list-group-flush">
-                        <li class="list-group-item">
-                            <kbd>?</kbd> - Show help
-                        </li>
-                        <li class="list-group-item">
-                            <kbd>Esc</kbd> - Close modals
-                        </li>
-                        <!-- Add more shortcuts as needed -->
-                    </ul>
+
+                <div class="form-group mb-4">
+                    <label for="agentCount" class="form-label">
+                        <i class="fas fa-users me-2"></i>Number of Agents per Task
+                    </label>
+                    <div class="input-group">
+                        <input type="number" 
+                               class="form-control" 
+                               id="agentCount" 
+                               min="1" 
+                               max="10" 
+                               value="1"
+                               required>
+                        <span class="input-group-text">agents</span>
+                    </div>
+                    <div class="form-text">Maximum of 10 agents per task recommended</div>
                 </div>
-            </div>
+
+                <div class="form-group mb-4">
+                    <label class="form-label">
+                        <i class="fas fa-tasks me-2"></i>Tasks
+                    </label>
+                    <div id="taskList" class="task-list mb-3"></div>
+                    <button type="button" id="addTask" class="btn btn-outline-secondary">
+                        <i class="fas fa-plus me-2"></i>Add Another Task
+                    </button>
+                </div>
+
+                <div class="form-actions">
+                    <button type="submit" class="btn btn-primary" {% if missing_vars and missing_vars|length > 0 %}disabled{% endif %}>
+                        <i class="fas fa-rocket me-2"></i>Create Agents
+                    </button>
+                    <div id="loadingIndicator" class="loading-indicator" style="display:none;">
+                        <div class="spinner-border spinner-border-sm text-primary me-2" role="status">
+                            <span class="visually-hidden">Loading...</span>
+                        </div>
+                        Creating agents...
+                    </div>
+                </div>
+            </form>
         </div>
     </div>
 
-    <!-- Toast Notification -->
-    <div class="toast" role="alert" aria-live="assertive" aria-atomic="true">
-        <div class="toast-body"></div>
+    <div id="result" class="mt-4" style="display: none;">
+        <div class="alert" role="alert"></div>
     </div>
+</div>
+{% endblock %}
 
-    <!-- Bootstrap JS and Dependencies -->
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
-    
-    <!-- Custom Script -->
-    <script>
-        document.addEventListener('DOMContentLoaded', async () => {
-            const socket = io();
-            const taskList = document.getElementById('taskList');
-            const addTaskButton = document.getElementById('addTask');
-            const connectionStatus = document.querySelector('.connection-status');
-            const statusText = connectionStatus.querySelector('.status-text');
-            const helpButton = document.getElementById('helpBtn');
-            let reconnectAttempts = 0;
-            
-            // Connection Status Updates
-            socket.on('connect', () => {
-                connectionStatus.classList.add('connected');
-                connectionStatus.classList.remove('disconnected');
-                connectionStatus.innerHTML = '<i class="fas fa-check-circle me-2"></i>Connected';
-                showToast('Connected to server', 'success');
-                reconnectAttempts = 0;
-            });
-    
-            socket.on('disconnect', () => {
-                connectionStatus.classList.add('disconnected');
-                connectionStatus.classList.remove('connected');
-                connectionStatus.innerHTML = '<i class="fas fa-exclamation-circle me-2"></i>Disconnected';
-                showToast('Lost connection to server', 'error');
-            });
-            
-            socket.on('connect_error', () => {
-                reconnectAttempts++;
-                if (reconnectAttempts <= 5) {
-                    showToast(`Connection attempt ${reconnectAttempts} failed. Retrying...`, 'error');
-                } else {
-                    showToast('Could not connect to server. Please check your connection.', 'error');
-                }
-            });
-            
-            socket.on('error', (error) => {
-                showToast(`WebSocket error: ${error}`, 'error');
-            });
-            
-            // Fetch Existing Tasks
-            try {
-                const tasksResponse = await fetch('/tasks/tasks.json');
-                const tasksData = await tasksResponse.json();
-                
-                if (tasksData.tasks.length === 0) {
-                    createTaskItem('', true);
-                } else {
-                    tasksData.tasks.forEach((taskDescription, index) => {
-                        createTaskItem(taskDescription, index === 0);
-                    });
-                }
-            } catch (error) {
-                console.error('Error fetching tasks:', error);
-                createTaskItem('', true);
-                showToast('Error loading existing tasks', 'error');
-            }
-            
-            // Create Task Item Function
-            function createTaskItem(initialValue = '', isFirst = false) {
-                const taskItem = document.createElement('div');
-                taskItem.classList.add('task-item');
-                
-                const input = document.createElement('input');
-                input.type = 'text';
-                input.classList.add('form-control', 'task-description');
-                input.placeholder = 'Describe the task for the agent...';
-                input.required = true;
-                input.value = initialValue;
-                
-                input.addEventListener('input', () => {
-                    input.classList.remove('error');
-                });
-                
-                const removeButton = document.createElement('button');
-                removeButton.type = 'button';
-                removeButton.classList.add('btn', 'btn-outline-danger', 'btn-remove-task');
-                removeButton.innerHTML = '<i class="fas fa-times"></i>';
-                removeButton.style.display = isFirst ? 'none' : 'inline-flex';
-                
-                removeButton.addEventListener('click', () => {
-                    const taskItems = taskList.querySelectorAll('.task-item');
-                    if (taskItems.length > 1) {
-                        taskItem.style.opacity = '0';
-                        taskItem.style.transform = 'translateX(-10px)';
-                        setTimeout(() => {
-                            taskItem.remove();
-                            const remainingTasks = taskList.querySelectorAll('.task-item');
-                            if (remainingTasks.length === 1) {
-                                remainingTasks[0].querySelector('.btn-remove-task').style.display = 'none';
-                            }
-                        }, 300);
-                    }
-                });
-                
-                taskItem.appendChild(input);
-                taskItem.appendChild(removeButton);
-                taskList.appendChild(taskItem);
-                if (isFirst) {
-                    input.focus();
-                }
-                return taskItem;
-            }
-            
-            // Add Task Button Event
-            addTaskButton.addEventListener('click', () => {
-                const taskItems = taskList.querySelectorAll('.task-item');
-                taskItems.forEach(item => {
-                    const removeBtn = item.querySelector('.btn-remove-task');
-                    if (removeBtn) {
-                        removeBtn.style.display = 'inline-flex';
-                    }
-                });
-                
-                createTaskItem();
-            });
-            
-            // Show Result Function
-            function showResult(message, type = 'success') {
-                const resultDiv = document.getElementById('result');
-                const alertDiv = resultDiv.querySelector('.alert');
-                
-                resultDiv.style.display = 'block';
-                alertDiv.className = `alert alert-${type}`;
-                alertDiv.innerHTML = `<i class="fas fa-${type === 'success' ? 'check-circle' : 'exclamation-circle'} me-2"></i>${message}`;
-                
-                resultDiv.scrollIntoView({ behavior: 'smooth' });
-            }
-            
-            // Validate Form Function
-            function validateForm() {
-                const repoUrl = document.getElementById('repoUrl').value.trim();
-                const tasks = Array.from(document.querySelectorAll('.task-description'))
-                    .map(input => input.value.trim());
-                
-                let isValid = true;
-                
-                const githubUrlPattern = /^https?:\/\/(?:www\.)?github\.com\/[\w-]+\/[\w-]+(?:\.git)?$/;
-                if (!githubUrlPattern.test(repoUrl)) {
-                    document.getElementById('repoUrl').classList.add('error');
-                    showToast('Please enter a valid GitHub repository URL', 'error');
-                    isValid = false;
-                }
-                
-                tasks.forEach((task, index) => {
-                    if (!task) {
-                        const inputs = document.querySelectorAll('.task-description');
-                        inputs[index].classList.add('error');
-                        isValid = false;
-                    }
-                });
-                
-                if (!isValid) {
-                    showToast('Please fill in all required fields', 'error');
-                }
-                
-                return isValid;
-            }
-    
-            // Handle Agent Creation Function
-            async function handleAgentCreation(formData) {
-                const submitButton = document.querySelector('button[type="submit"]');
-                submitButton.disabled = true;
-                submitButton.innerHTML = '<i class="fas fa-spinner fa-spin me-1"></i>Creating Agents...';
-    
-                try {
-                    const response = await fetch('/create_agent', {
-                        method: 'POST',
-                        headers: {
-                            'Content-Type': 'application/json',
-                        },
-                        body: JSON.stringify(formData)
-                    });
-                    
-                    const data = await response.json();
-                    
-                    if (data.needs_installation) {
-                        const result = await showInstallationPrompt(data.error);
-                        if (result === 'retry') {
-                            submitButton.disabled = false;
-                            submitButton.innerHTML = '<i class="fas fa-robot me-1"></i>Create Agents';
-                            return handleAgentCreation(formData);
-                        }
-                    } else if (data.success) {
-                        showToast('Agents created successfully! Redirecting...', 'success');
-                        showResult('Agents created successfully! Redirecting...', 'success');
-                        
-                        socket.emit('agents_created', {
-                            agent_ids: data.agent_ids,
-                            timestamp: new Date().toISOString()
-                        });
-                        
-                        setTimeout(() => {
-                            window.location.href = '/agents';
-                        }, 1500);
-                    } else {
-                        showToast(data.error || 'Failed to create agents', 'error');
-                        showResult(data.error || 'Failed to create agents', 'danger');
-                    }
-                } catch (error) {
-                    showToast(error.message || 'An error occurred', 'error');
-                    showResult(error.message || 'An error occurred', 'danger');
-                } finally {
-                    submitButton.disabled = false;
-                    submitButton.innerHTML = '<i class="fas fa-robot me-1"></i>Create Agents';
-                }
-            }
-            
-            // Show Installation Prompt Function
-            function showInstallationPrompt(errorMessage) {
-                return new Promise((resolve) => {
-                    const modal = document.createElement('div');
-                    modal.className = 'modal fade';
-                    modal.innerHTML = `
-                        <div class="modal-dialog">
-                            <div class="modal-content">
-                                <div class="modal-header">
-                                    <h5 class="modal-title">Installation Required</h5>
-                                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
-                                </div>
-                                <div class="modal-body">
-                                    <p>${errorMessage}</p>
-                                    <p>Would you like to install Aider now?</p>
-                                </div>
-                                <div class="modal-footer">
-                                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
-                                    <button type="button" class="btn btn-primary" id="installButton">
-                                        Install and Retry
-                                    </button>
-                                </div>
-                            </div>
-                        </div>
-                    `;
-                    
-                    document.body.appendChild(modal);
-                    const modalInstance = new bootstrap.Modal(modal);
-                    
-                    modal.querySelector('#installButton').addEventListener('click', () => {
-                        modalInstance.hide();
-                        resolve('retry');
-                    });
-                    
-                    modal.addEventListener('hidden.bs.modal', () => {
-                        modal.remove();
-                        resolve('cancel');
-                    });
-                    
-                    modalInstance.show();
-                });
-            }
-            
-            // Form Submission Event
-            document.getElementById('agentForm').addEventListener('submit', async (e) => {
-                e.preventDefault();
-                
-                if (!validateForm()) {
-                    return;
-                }
-                
-                const formData = {
-                    repo_url: document.getElementById('repoUrl').value.trim(),
-                    tasks: Array.from(document.querySelectorAll('.task-description'))
-                        .map(input => input.value.trim())
-                        .filter(task => task !== ''),
-                    num_agents: parseInt(document.getElementById('agentCount').value, 10)
-                };
-                
-                await handleAgentCreation(formData);
-            });
-    
-            // Show Toast Function
-            function showToast(message, type = 'info') {
-                const toast = document.querySelector('.toast');
-                const toastBody = toast.querySelector('.toast-body');
-    
-                toastBody.className = `toast-body ${type}`;
-                toastBody.innerHTML = `
-                    <i class="fas ${type === 'success' ? 'fa-check-circle' : type === 'error' ? 'fa-exclamation-circle' : 'fa-info-circle'} me-2"></i>
-                    ${message}
-                `;
-    
-                const bsToast = new bootstrap.Toast(toast, {
-                    animation: true,
-                    autohide: true,
-                    delay: 3000
-                });
-                bsToast.show();
-            }
-    
-            // Help Button Event
-            helpButton.addEventListener('click', () => {
-                const helpModal = new bootstrap.Modal(document.getElementById('helpModal'));
-                helpModal.show();
-            });
-    
-            // Keyboard Shortcuts
-            document.addEventListener('keydown', (e) => {
-                if (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA') return;
-                
-                if (e.key === '?' || (e.key === '/' && !e.shiftKey)) {
-                    e.preventDefault();
-                    const helpModal = new bootstrap.Modal(document.getElementById('helpModal'));
-                    helpModal.show();
-                } else if (e.key === 'Escape') {
-                    const modals = document.querySelectorAll('.modal.show');
-                    modals.forEach(modal => {
-                        const modalInstance = bootstrap.Modal.getInstance(modal);
-                        modalInstance.hide();
-                    });
-                }
-            });
+{% block extra_js %}
+<script>
+document.addEventListener('DOMContentLoaded', async () => {
+    const taskList = document.getElementById('taskList');
+    const addTaskButton = document.getElementById('addTask');
+    const loadingIndicator = document.getElementById('loadingIndicator');
+
+    try {
+        const tasksResponse = await fetch('/tasks/tasks.json');
+        const tasksData = await tasksResponse.json();
+        tasksData.tasks.forEach((taskDescription, index) => {
+            const taskItem = createTaskItem(taskDescription, index === 0);
+            taskList.appendChild(taskItem);
         });
-    </script>
-</body>
-</html>
+    } catch (error) {
+        console.error('Error fetching tasks:', error);
+        showEnhancedToast('Failed to load task templates', 'error');
+    }
+
+    function createTaskItem(initialValue = '', isFirst = false) {
+        const taskItem = document.createElement('div');
+        taskItem.classList.add('task-item', 'mb-3');
+        
+        taskItem.innerHTML = `
+            <div class="input-group">
+                <span class="input-group-text">
+                    <i class="fas fa-code"></i>
+                </span>
+                <input type="text" 
+                       class="form-control task-description" 
+                       placeholder="Describe the task..." 
+                       required 
+                       value="${initialValue}">
+                <button type="button" 
+                        class="btn btn-outline-danger remove-task" 
+                        style="display: ${isFirst ? 'none' : 'block'}">
+                    <i class="fas fa-trash-alt"></i>
+                </button>
+            </div>
+        `;
+
+        const removeButton = taskItem.querySelector('.remove-task');
+        removeButton.addEventListener('click', () => {
+            const taskItems = taskList.querySelectorAll('.task-item');
+            if (taskItems.length > 1) {
+                taskItem.remove();
+                updateRemoveButtons();
+            }
+        });
+
+        return taskItem;
+    }
+
+    function updateRemoveButtons() {
+        const taskItems = taskList.querySelectorAll('.task-item');
+        taskItems.forEach((item, index) => {
+            const removeBtn = item.querySelector('.remove-task');
+            removeBtn.style.display = taskItems.length === 1 ? 'none' : 'block';
+        });
+    }
+
+    addTaskButton.addEventListener('click', () => {
+        const taskItem = createTaskItem('', false);
+        taskList.appendChild(taskItem);
+        updateRemoveButtons();
+    });
+
+    document.getElementById('agentForm').addEventListener('submit', async (e) => {
+        e.preventDefault();
+        
+        const form = e.target;
+        if (!form.checkValidity()) {
+            e.stopPropagation();
+            form.classList.add('was-validated');
+            return;
+        }
+
+        const resultDiv = document.getElementById('result');
+        const alertDiv = resultDiv.querySelector('.alert');
+        
+        loadingIndicator.style.display = 'inline-flex';
+        
+        try {
+            const tasks = Array.from(document.querySelectorAll('.task-description'))
+                .map(input => input.value.trim())
+                .filter(task => task !== '');
+                
+            const response = await fetch('/create_agent', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    repo_url: document.getElementById('repoUrl').value,
+                    tasks: tasks,
+                    num_agents: parseInt(document.getElementById('agentCount').value, 10)
+                })
+            });
+            
+            const data = await response.json();
+            resultDiv.style.display = 'block';
+            
+            if (data.success) {
+                showEnhancedToast('Agents created successfully!', 'success');
+                setTimeout(() => {
+                    window.location.href = '/agents';
+                }, 1500);
+            } else {
+                showEnhancedToast(data.error || 'Failed to create agents', 'error');
+            }
+        } catch (error) {
+            showEnhancedToast(`Error: ${error.message}`, 'error');
+        } finally {
+            loadingIndicator.style.display = 'none';
+        }
+    });
+});
+
+function showEnhancedToast(message, type = 'success') {
+    const resultDiv = document.getElementById('result');
+    const alertDiv = resultDiv.querySelector('.alert');
+    
+    resultDiv.style.display = 'block';
+    alertDiv.className = `alert alert-${type} d-flex align-items-center`;
+    
+    const icons = {
+        success: 'check-circle',
+        error: 'exclamation-circle',
+        warning: 'exclamation-triangle'
+    };
+    
+    alertDiv.innerHTML = `
+        <i class="fas fa-${icons[type]} me-2"></i>
+        <div>${message}</div>
+    `;
+}
+</script>
+{% endblock %}
