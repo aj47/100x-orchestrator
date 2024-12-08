@@ -1,0 +1,301 @@
+{% extends "base.html" %}
+
+{% block title %}Agent Progress - Agent Dashboard{% endblock %}
+
+{% block extra_css %}
+<style>
+    .page-loader {
+        position: fixed;
+        inset: 0;
+        background: var(--background);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        z-index: 9999;
+        backdrop-filter: blur(8px);
+    }
+    
+    .loader-content {
+        background: var(--surface);
+        padding: 2rem;
+        border-radius: var(--card-border-radius);
+        box-shadow: var(--card-shadow-hover);
+        text-align: center;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+    <div class="page-loader">
+        <div class="loader-content">
+            <div class="spinner-border text-primary mb-3" role="status">
+                <span class="visually-hidden">Loading...</span>
+            </div>
+            <h4 class="mb-2">Loading Agents...</h4>
+            <p class="text-muted">Please wait while we connect to the server</p>
+        </div>
+    </div>
+
+    <div class="main-content">
+        <div class="dashboard-header">
+            <div class="header-left">
+                <div class="d-flex align-items-center gap-3">
+                    <h1 class="display-6 mb-0">
+                        <i class="fas fa-robot me-2"></i>Agent Progress
+                    </h1>
+                    <span class="badge bg-primary px-3 py-2" id="activeAgentCount">
+                        <i class="fas fa-users me-2"></i>
+                        {{ agents|length }} Active Agent{{ 's' if agents|length != 1 else '' }}
+                    </span>
+                </div>
+            </div>
+            <div class="header-right">
+                <div class="d-flex gap-3 align-items-center">
+                    <div class="search-container">
+                        <i class="fas fa-search"></i>
+                        <input type="text" 
+                               id="agentSearch" 
+                               placeholder="Search agents by ID or task...">
+                    </div>
+                    <a href="/" class="btn btn-outline-primary">
+                        <i class="fas fa-plus me-2"></i>New Agent
+                    </a>
+                    <button id="helpButton" 
+                            class="btn btn-outline-info" 
+                            data-bs-toggle="modal" 
+                            data-bs-target="#helpModal">
+                        <i class="fas fa-question-circle"></i>
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        {% if agents|length == 0 %}
+        <div class="empty-state">
+            <i class="fas fa-robot fa-4x mb-4 text-muted"></i>
+            <h3 class="mb-3">No Active Agents</h3>
+            <p class="text-muted mb-4">Start by creating your first agent to handle tasks.</p>
+            <a href="/" class="btn btn-primary btn-lg">
+                <i class="fas fa-plus me-2"></i>Create Your First Agent
+            </a>
+        </div>
+        {% else %}
+        <div id="agentList" class="agent-grid">
+            {% for agent_id, agent in agents.items() %}
+            <div class="agent-wrapper">
+                <div class="agent-card" 
+                     id="agent-{{ agent_id }}" 
+                     data-agent-id="{{ agent_id }}"
+                     data-task="{{ agent.task|lower }}" 
+                     data-id="{{ agent_id|lower }}">
+                    <div class="card-header">
+                        <div class="agent-identifier">
+                            <i class="fas fa-robot"></i>
+                            <span>{{ agent_id }}</span>
+                            {% if agent_id == 'orchestrator' %}
+                            <span class="orchestrator-badge" data-bs-toggle="tooltip" title="Orchestrator Agent">
+                                <i class="fas fa-crown me-1"></i>Orchestrator
+                            </span>
+                            {% endif %}
+                        </div>
+                        
+                        <div class="d-flex justify-content-between align-items-start mt-2">
+                            <div class="task-info">
+                                <h3 class="agent-title mb-2">{{ agent.task }}</h3>
+                                <span class="badge status-badge 
+                                    {% if agent.status == 'in_progress' %}bg-primary
+                                    {% elif agent.status == 'pending' %}bg-warning
+                                    {% elif agent.status == 'error' %}bg-danger
+                                    {% elif agent.status == 'completed' %}bg-success
+                                    {% elif agent.status == 'abandoned' %}bg-dark
+                                    {% else %}bg-secondary{% endif %}">
+                                    <i class="fas 
+                                        {% if agent.status == 'in_progress' %}fa-spinner fa-spin
+                                        {% elif agent.status == 'pending' %}fa-clock
+                                        {% elif agent.status == 'error' %}fa-exclamation-circle
+                                        {% elif agent.status == 'completed' %}fa-check
+                                        {% elif agent.status == 'abandoned' %}fa-question-circle
+                                        {% else %}fa-info-circle{% endif %}">
+                                    </i>
+                                    <span class="status-text">
+                                        {{ agent.status|title if agent.status != 'abandoned' else 'Abandoned' }}
+                                    </span>
+                                </span>
+                            </div>
+                            {% if agent_id != 'orchestrator' %}
+                            <button class="btn-icon btn-danger delete-agent-btn" 
+                                    data-agent-id="{{ agent_id }}" 
+                                    data-bs-toggle="tooltip" 
+                                    title="Delete Agent">
+                                <i class="fas fa-trash-alt"></i>
+                            </button>
+                            {% endif %}
+                        </div>
+                    </div>
+
+                    <div class="card-content">
+                        <div class="output-section">
+                            <h6 class="section-title">
+                                <i class="fas fa-terminal me-2"></i>Output Log
+                            </h6>
+                            <pre class="cli-output" id="output-{{ agent_id }}">{% if agent_id == 'orchestrator' %}The orchestrator agent doesn't produce its own output.{% else %}{% if agent.last_error and agent.status == 'error' %}Error: {{ agent.last_error }}{% elif agent.aider_output %}{{ agent.aider_output }}{% else %}No output available yet...{% endif %}{% endif %}</pre>
+                        </div>
+
+                        <div class="debug-section">
+                            <div class="debug-header" data-bs-toggle="collapse" data-bs-target="#debug-{{ agent_id }}">
+                                <div class="d-flex align-items-center">
+                                    <i class="fas fa-bug me-2"></i>
+                                    <span>Debug Information</span>
+                                </div>
+                                <i class="fas fa-chevron-down transition-transform"></i>
+                            </div>
+                            <div class="collapse" id="debug-{{ agent_id }}">
+                                <div class="debug-content">
+                                    <div class="debug-grid">
+                                        <div class="debug-item">
+                                            <span class="debug-label">Output Length</span>
+                                            <span class="debug-value">{{ agent.aider_output|length }}</span>
+                                        </div>
+                                        <div class="debug-item">
+                                            <span class="debug-label">Last Updated</span>
+                                            <span class="debug-value last-updated">
+                                                {{ agent.last_updated or 'Never' }}
+                                            </span>
+                                        </div>
+                                        <div class="debug-item">
+                                            <span class="debug-label">Workspace</span>
+                                            <span class="debug-value">{{ agent.workspace or 'Not set' }}</span>
+                                        </div>
+                                        <div class="debug-item">
+                                            <span class="debug-label">Repo Path</span>
+                                            <span class="debug-value">{{ agent.repo_path or 'Not set' }}</span>
+                                        </div>
+                                        {% if agent.last_error %}
+                                        <div class="debug-item error">
+                                            <span class="debug-label">Error</span>
+                                            <span class="debug-value text-danger">{{ agent.last_error }}</span>
+                                        </div>
+                                        {% endif %}
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="card-footer">
+                        <div class="footer-timestamps">
+                            <span class="timestamp">
+                                <i class="fas fa-calendar-alt me-2"></i>
+                                Created: {{ agent.created_at or 'Unknown' }}
+                            </span>
+                            <span class="timestamp">
+                                <i class="fas fa-clock me-2"></i>
+                                Updated: <span class="last-updated">{{ agent.last_updated or 'Never' }}</span>
+                            </span>
+                        </div>
+                        <div class="action-buttons">
+                            <a href="{{ agent.debug_urls.info }}" 
+                               class="btn-icon" 
+                               target="_blank" 
+                               data-bs-toggle="tooltip" 
+                               title="Debug Info">
+                                <i class="fas fa-bug"></i>
+                            </a>
+                            <a href="{{ agent.debug_urls.validate }}" 
+                               class="btn-icon" 
+                               target="_blank" 
+                               data-bs-toggle="tooltip" 
+                               title="Validate Paths">
+                                <i class="fas fa-check-circle"></i>
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+        {% endif %}
+    </div>
+
+    <!-- Help Modal -->
+    <div class="modal fade" id="helpModal" tabindex="-1" aria-labelledby="helpModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="helpModalLabel">
+                        <i class="fas fa-question-circle me-2"></i>Help & Information
+                    </h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="help-section mb-4">
+                        <h5><i class="fas fa-info-circle me-2"></i>Agent Status Guide</h5>
+                        <div class="status-grid">
+                            <div class="status-item">
+                                <span class="badge bg-warning">
+                                    <i class="fas fa-clock me-1"></i>Pending
+                                </span>
+                                <span>Agent created, awaiting start</span>
+                            </div>
+                            <div class="status-item">
+                                <span class="badge bg-primary">
+                                    <i class="fas fa-spinner me-1"></i>In Progress
+                                </span>
+                                <span>Agent actively working</span>
+                            </div>
+                            <div class="status-item">
+                                <span class="badge bg-success">
+                                    <i class="fas fa-check me-1"></i>Completed
+                                </span>
+                                <span>Task finished successfully</span>
+                            </div>
+                            <div class="status-item">
+                                <span class="badge bg-danger">
+                                    <i class="fas fa-exclamation-circle me-1"></i>Error
+                                </span>
+                                <span>Agent encountered an error</span>
+                            </div>
+                            <div class="status-item">
+                                <span class="badge bg-dark">
+                                    <i class="fas fa-question-circle me-1"></i>Abandoned
+                                </span>
+                                <span>Session lost or terminated</span>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="help-section">
+                        <h5><i class="fas fa-lightbulb me-2"></i>Tips</h5>
+                        <ul class="tips-list">
+                            <li>Use the search bar to quickly filter agents</li>
+                            <li>Click the debug section to view detailed information</li>
+                            <li>Output logs auto-scroll to show new content</li>
+                            <li>Hover over icons for additional information</li>
+                            <li>You can delete non-orchestrator agents if needed</li>
+                        </ul>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Toast Container -->
+    <div class="toast-container position-fixed bottom-0 end-0 p-3">
+        <div id="deleteToast" class="toast" role="alert" aria-live="assertive" aria-atomic="true">
+            <div class="toast-header">
+                <i class="fas fa-info-circle me-2"></i>
+                <strong class="me-auto">Agent Status</strong>
+                <small>just now</small>
+                <button type="button" class="btn-close" data-bs-dismiss="toast" aria-label="Close"></button>
+            </div>
+            <div class="toast-body"></div>
+        </div>
+    </div>
+{% endblock %}
+
+{% block extra_js %}
+<script src="/static/js/agents.js"></script>
+{% endblock %}
