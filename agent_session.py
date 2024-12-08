@@ -70,6 +70,7 @@ class AgentSession:
                 'aider',
                 '--map-tokens', '1024',
                 '--no-show-model-warnings',
+                '--yes',
                 '--model', 'openrouter/google/gemini-flash-1.5',
                 '--no-pretty'
             ]

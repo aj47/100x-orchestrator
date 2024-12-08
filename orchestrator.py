@@ -17,7 +17,7 @@ from github import Github
 from dotenv import load_dotenv
 
 # Import the new AgentSession class
-from agent_session import AgentSession
+from agent_session import AgentSession, normalize_path
 
 
 
@@ -35,56 +35,6 @@ CHECK_INTERVAL = 5  # Reduced to 30 seconds for more frequent updates
 # Global dictionaries to store sessions and processors
 aider_sessions = {}
 prompt_processors = {}
-
-def normalize_path(path_str):
-    """Normalize a path string to absolute path with forward slashes."""
-    if not path_str:
-        return None
-    try:
-        # Convert to Path object and resolve to absolute path
-        path = Path(path_str).resolve()
-        # Convert to string with forward slashes
-        normalized = str(path).replace('\\', '/')
-        # Log both the input and output paths
-        logging.debug(f"Path normalization: {path_str} -> {normalized}")
-        return normalized
-    except Exception as e:
-        logging.error(f"Error normalizing path {path_str}: {e}")
-        return None
-
-def validate_agent_paths(agent_id, workspace_path):
-    """Validate that an agent's paths match the given workspace path."""
-    try:
-        tasks_data = load_tasks()
-        agent_data = tasks_data['agents'].get(agent_id)
-        
-        if not agent_data:
-            logging.error(f"No agent found with ID {agent_id}")
-            return False
-            
-        # Normalize all paths for comparison
-        workspace_path = normalize_path(workspace_path)
-        agent_workspace = normalize_path(agent_data.get('workspace'))
-        agent_repo_path = normalize_path(agent_data.get('repo_path'))
-        
-        logging.info(f"Validating paths for agent {agent_id}:")
-        logging.info(f"  Workspace path: {workspace_path}")
-        logging.info(f"  Agent workspace: {agent_workspace}")
-        logging.info(f"  Agent repo path: {agent_repo_path}")
-        
-        # Check if paths match
-        matches_workspace = workspace_path == agent_workspace
-        matches_repo = workspace_path == agent_repo_path
-        
-        logging.info(f"Path validation results for agent {agent_id}:")
-        logging.info(f"  Matches workspace: {matches_workspace}")
-        logging.info(f"  Matches repo path: {matches_repo}")
-        
-        return matches_workspace or matches_repo
-        
-    except Exception as e:
-        logging.error(f"Error validating agent paths: {e}", exc_info=True)
-        return False
 
 def load_tasks():
     """Load config from tasks.json."""
@@ -150,11 +100,13 @@ def save_tasks(tasks_data):
             "repository_url": tasks_data.get("repository_url", "")
         }
         
+        
         # Copy agent data without the session object and normalize paths
         for agent_id, agent_data in tasks_data.get("agents", {}).items():
+            repo_path = normalize_path(agent_data.get('repo_path'))
             data_to_save["agents"][agent_id] = {
                 'workspace': normalize_path(agent_data.get('workspace')),
-                'repo_path': normalize_path(agent_data.get('repo_path')),
+                'repo_path': repo_path,
                 'task': agent_data.get('task'),
                 'status': agent_data.get('status'),
                 'created_at': agent_data.get('created_at'),
