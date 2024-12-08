@@ -13,8 +13,6 @@ from orchestrator import (
     load_tasks, 
     save_tasks, 
     delete_agent,
-    normalize_path,
-    validate_agent_paths,
     aider_sessions  # Add this import
 )
 import os
@@ -241,125 +239,6 @@ def remove_agent(agent_id):
     except Exception as e:
         return jsonify({
             'success': False,
-            'error': str(e)
-        }), 500
-
-@app.route('/debug/agent/<agent_id>')
-def debug_agent(agent_id):
-    """Debug endpoint to show agent details and path information."""
-    try:
-        tasks_data = load_tasks()
-        agent_data = tasks_data['agents'].get(agent_id)
-        
-        if not agent_data:
-            return jsonify({
-                'error': f'Agent {agent_id} not found'
-            }), 404
-            
-        # Get normalized paths
-        workspace_path = normalize_path(agent_data.get('workspace'))
-        repo_path = normalize_path(agent_data.get('repo_path'))
-        
-        # Get aider session info if it exists
-        aider_session = aider_sessions.get(agent_id)
-        aider_workspace = normalize_path(aider_session.workspace_path) if aider_session else None
-        
-        debug_info = {
-            'agent_id': agent_id,
-            'paths': {
-                'workspace': {
-                    'raw': agent_data.get('workspace'),
-                    'normalized': workspace_path,
-                    'exists': os.path.exists(workspace_path) if workspace_path else False
-                },
-                'repo_path': {
-                    'raw': agent_data.get('repo_path'),
-                    'normalized': repo_path,
-                    'exists': os.path.exists(repo_path) if repo_path else False
-                },
-                'aider_workspace': {
-                    'raw': aider_session.workspace_path if aider_session else None,
-                    'normalized': aider_workspace,
-                    'exists': os.path.exists(aider_workspace) if aider_workspace else False
-                }
-            },
-            'aider_session': {
-                'exists': aider_session is not None,
-                'output_buffer_length': len(aider_session.get_output()) if aider_session else 0,
-                'session_id': aider_session.session_id if aider_session else None
-            },
-            'agent_data': {
-                'status': agent_data.get('status'),
-                'created_at': agent_data.get('created_at'),
-                'last_updated': agent_data.get('last_updated'),
-                'aider_output_length': len(agent_data.get('aider_output', '')),
-                'task': agent_data.get('task'),
-                # Add new fields for progress tracking
-                'progress': agent_data.get('progress', ''),
-                'thought': agent_data.get('thought', ''),
-                'future': agent_data.get('future', ''),
-                'last_action': agent_data.get('last_action', '')
-            }
-        }
-        
-        return jsonify(debug_info)
-        
-    except Exception as e:
-        app.logger.error(f"Error in debug endpoint: {str(e)}", exc_info=True)
-        return jsonify({
-            'error': str(e)
-        }), 500
-
-@app.route('/debug/validate_paths/<agent_id>')
-def debug_validate_paths(agent_id):
-    """Debug endpoint to validate path matching for an agent."""
-    try:
-        tasks_data = load_tasks()
-        agent_data = tasks_data['agents'].get(agent_id)
-        
-        if not agent_data:
-            return jsonify({
-                'error': f'Agent {agent_id} not found'
-            }), 404
-        
-        # Get aider session
-        aider_session = aider_sessions.get(agent_id)
-        
-        validation_results = {
-            'agent_id': agent_id,
-            'paths': {
-                'workspace': {
-                    'raw': agent_data.get('workspace'),
-                    'normalized': normalize_path(agent_data.get('workspace'))
-                },
-                'repo_path': {
-                    'raw': agent_data.get('repo_path'),
-                    'normalized': normalize_path(agent_data.get('repo_path'))
-                },
-                'aider_workspace': {
-                    'raw': aider_session.workspace_path if aider_session else None,
-                    'normalized': normalize_path(aider_session.workspace_path) if aider_session else None
-                }
-            },
-            'validation': {
-                'has_aider_session': aider_session is not None
-            }
-        }
-        
-        if aider_session:
-            # Validate paths
-            validation_results['validation']['path_match'] = validate_agent_paths(
-                agent_id, 
-                aider_session.workspace_path
-            )
-            validation_results['validation']['output_length'] = len(aider_session.get_output())
-            validation_results['validation']['stored_output_length'] = len(agent_data.get('aider_output', ''))
-        
-        return jsonify(validation_results)
-        
-    except Exception as e:
-        app.logger.error(f"Error in path validation debug endpoint: {str(e)}", exc_info=True)
-        return jsonify({
             'error': str(e)
         }), 500
 
