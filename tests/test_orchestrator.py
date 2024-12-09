@@ -1,5 +1,6 @@
 import pytest
 import os
+import json #Import missing json module
 from unittest.mock import patch, MagicMock
 from orchestrator import (
     initialiseCodingAgent,
