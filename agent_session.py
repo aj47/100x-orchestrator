@@ -29,6 +29,7 @@ class AgentSession:
     def __init__(self, workspace_path, task, config=None, aider_commands=None):
         self.workspace_path = normalize_path(workspace_path)
         self.task = task
+        self.aider_commands = aider_commands # Store aider commands
         self.output_buffer = io.StringIO()
         self.process = None
         self._stop_event = threading.Event()
@@ -72,8 +73,10 @@ class AgentSession:
                 '--no-show-model-warnings',
                 '--yes',
                 '--model', 'openrouter/google/gemini-flash-1.5',
-                '--no-pretty'
+                '--no-pretty',
             ]
+            if self.aider_commands:
+                cmd.extend(self.aider_commands.split())
             
             # Add custom commands if provided
             if self.aider_commands:

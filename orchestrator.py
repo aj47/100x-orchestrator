@@ -171,7 +171,7 @@ def delete_agent(agent_id):
         logging.error(f"Error deleting agent: {e}", exc_info=True)
         return False
 
-def initialiseCodingAgent(repository_url: str = None, task_description: str = None, num_agents: int = None):
+def initialiseCodingAgent(repository_url: str = None, task_description: str = None, num_agents: int = None, aider_commands: str = None):
     """Initialise coding agents with configurable agent count."""
     logging.info("Starting agent initialization")
     logging.debug(f"Parameters: repo_url={repository_url}, task={task_description}, num_agents={num_agents}")
@@ -272,7 +272,7 @@ def initialiseCodingAgent(repository_url: str = None, task_description: str = No
 
                 # Initialize aider session and prompt processor
                 logging.info("Initializing aider session and prompt processor")
-                aider_session = AgentSession(str(full_repo_path), task_description, agent_config)
+                aider_session = AgentSession(str(full_repo_path), task_description, agent_config, aider_commands=aider_commands)
                 prompt_processor = PromptProcessor()
                 
                 if not aider_session.start():

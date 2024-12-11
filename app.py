@@ -98,6 +98,7 @@ def create_agent():
         repo_url = data.get('repo_url')
         tasks = data.get('tasks', [])
         num_agents = data.get('num_agents', 1)  # Default to 1 if not specified
+        aider_commands = data.get('aider_commands') # Get aider commands
         github_token = data.get('github_token')
 
         if not github_token:
@@ -134,8 +135,9 @@ def create_agent():
             try:
                 agent_ids = initialiseCodingAgent(
                     repository_url=repo_url, 
-                    task_description=task_description, 
-                    num_agents=num_agents
+                    task_description=task_description,
+                    num_agents=num_agents,
+                    aider_commands=aider_commands # Pass aider commands
                 )
                 
                 if agent_ids:
