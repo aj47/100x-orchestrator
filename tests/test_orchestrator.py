@@ -18,6 +18,7 @@ from orchestrator import (
     create_pull_request,
     get_github_token
 )
+from agent_session import AgentSession # Added import statement
 
 # Mock functions for testing
 @patch('orchestrator.initialiseCodingAgent')
