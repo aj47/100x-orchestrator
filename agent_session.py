@@ -72,8 +72,10 @@ class AgentSession:
                 '--no-show-model-warnings',
                 '--yes',
                 '--model', 'openrouter/google/gemini-flash-1.5',
-                '--no-pretty'
+                '--no-pretty',
             ]
+            if self.aider_commands:
+                cmd.extend(self.aider_commands.split())
             
             # Add custom commands if provided
             if self.aider_commands:
