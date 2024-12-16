@@ -1,6 +1,6 @@
 import pytest
 from unittest.mock import patch, MagicMock
-from agent_session import AgentSession
+from agent_session import AgentSession, normalize_path # Import normalize_path
 import io
 import os
 import tempfile
