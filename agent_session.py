@@ -120,9 +120,6 @@ class AgentSession:
 
             # Wait briefly for startup
             time.sleep(2)
-            # Send initial task
-            if self.task:
-                self.send_message(self.task)
             
             logging.info(f"[Session {self.session_id}] Started output processing threads")
 
