@@ -116,6 +116,8 @@ def save_tasks(tasks_data):
                 # Add new fields for progress tracking
                 'progress': agent_data.get('progress', ''),
                 'thought': agent_data.get('thought', ''),
+                'progress_history': agent_data.get('progress_history', []),
+                'thought_history': agent_data.get('thought_history', []),
                 'future': agent_data.get('future', ''),
                 'last_action': agent_data.get('last_action', '')
             }
