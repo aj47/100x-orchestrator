@@ -210,6 +210,15 @@ function showToast(message, type = 'success') {
 
 // DOM Ready handlers
 document.addEventListener('DOMContentLoaded', () => {
+    // Handle collapse icon rotation
+    document.querySelectorAll('.card-header[data-bs-toggle="collapse"]').forEach(header => {
+        header.addEventListener('click', () => {
+            const icon = header.querySelector('.collapse-icon');
+            const isCollapsed = header.classList.contains('collapsed');
+            icon.style.transform = isCollapsed ? 'rotate(0deg)' : 'rotate(-90deg)';
+        });
+    });
+
     // Initial scroll to bottom
     const outputs = document.querySelectorAll('.cli-output');
     outputs.forEach(output => {
