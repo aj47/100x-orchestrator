@@ -22,13 +22,13 @@
     </div>
 
     <div class="container mt-5">
-        <div class="d-flex justify-content-between align-items-center mb-4">
-            <h1><i class="fas fa-robot me-2"></i>Agent Progress Dashboard</h1>
+        <div class="d-flex justify-content-between align-items-center mb-3">
+            <h4><i class="fas fa-robot me-2"></i>Agent Progress Dashboard</h4>
             <div>
-                <button id="deleteAllAgents" class="btn btn-danger me-2">
+                <button id="deleteAllAgents" class="btn btn-sm btn-danger me-2">
                     <i class="fas fa-trash-alt me-1"></i>Delete All Agents
                 </button>
-                <a href="/" class="btn btn-secondary">
+                <a href="/" class="btn btn-sm btn-secondary">
                     <i class="fas fa-arrow-left me-1"></i>Back to Agent Creation
                 </a>
             </div>
@@ -41,7 +41,7 @@
                     <div class="d-flex align-items-center">
                         <i class="fas fa-chevron-right me-2 collapse-icon"></i>
                         <span class="text-muted small me-2">Agent {{ agent_id }}</span>
-                        <span class="current-progress text-truncate">{{ agent.progress }}</span>
+                        <span class="current-progress text-truncate" style="max-width: 400px;">{{ agent.progress if agent.progress else 'Initializing...' }}</span>
                     </div>
                     <button class="btn btn-sm btn-outline-danger delete-agent-btn" data-agent-id="{{ agent_id }}">
                         <i class="fas fa-times"></i>
