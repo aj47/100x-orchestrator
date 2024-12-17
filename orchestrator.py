@@ -517,6 +517,12 @@ def main_loop():
                             if agent_id in prompt_processors:
                                 processor = prompt_processors[agent_id]
                                 action = processor.process_response(agent_id, follow_up_message)
+                                
+                                # Add the action to the aider output buffer
+                                if agent_id in aider_sessions:
+                                    action_message = f"\n[AGENT ACTION]: {action}\n"
+                                    aider_sessions[agent_id].output_buffer.write(action_message)
+                                
                                 if action == "/finish":
                                     # Get PR info from agent state
                                     pr_info = processor.get_agent_state(agent_id).get('pr_info')
