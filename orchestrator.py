@@ -518,9 +518,9 @@ def main_loop():
                                 processor = prompt_processors[agent_id]
                                 action = processor.process_response(agent_id, follow_up_message)
                                 
-                                # Add the action to the aider output buffer
+                                # Add the action to the aider output buffer with HTML formatting
                                 if agent_id in aider_sessions:
-                                    action_message = f"\n[AGENT ACTION]: {action}\n"
+                                    action_message = f'<div class="output-line agent-action"><strong>[AGENT ACTION]:</strong> {action}</div>'
                                     aider_sessions[agent_id].output_buffer.write(action_message)
                                 
                                 if action == "/finish":
