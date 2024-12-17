@@ -503,6 +503,12 @@ def main_loop():
                                     # Get current timestamp
                                     current_time = datetime.datetime.now().isoformat()
                                     
+                                    # Initialize history arrays if they don't exist
+                                    if 'progress_history' not in tasks_data['agents'][agent_id]:
+                                        tasks_data['agents'][agent_id]['progress_history'] = []
+                                    if 'thought_history' not in tasks_data['agents'][agent_id]:
+                                        tasks_data['agents'][agent_id]['thought_history'] = []
+                                    
                                     # Append new progress and thought entries with timestamps
                                     if follow_up_data.get('progress'):
                                         tasks_data['agents'][agent_id]['progress_history'].append({
