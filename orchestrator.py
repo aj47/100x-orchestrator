@@ -298,6 +298,8 @@ def initialiseCodingAgent(repository_url: str = None, task_description: str = No
                 'created_at': datetime.datetime.now().isoformat(),
                 'last_updated': datetime.datetime.now().isoformat(),
                 'aider_output': '',  # Initialize empty output
+                'progress': '',  # Current progress string
+                'thought': '',   # Current thought string
                 'progress_history': [],  # Array to store progress history
                 'thought_history': [],   # Array to store thought history
                 'future': '',
@@ -509,14 +511,21 @@ def main_loop():
                                     if 'thought_history' not in tasks_data['agents'][agent_id]:
                                         tasks_data['agents'][agent_id]['thought_history'] = []
                                     
-                                    # Append new progress and thought entries with timestamps
+                                    # Update both current strings and history arrays for progress
                                     if follow_up_data.get('progress'):
+                                        # Update current progress string
+                                        tasks_data['agents'][agent_id]['progress'] = follow_up_data['progress']
+                                        # Add to history
                                         tasks_data['agents'][agent_id]['progress_history'].append({
                                             'timestamp': current_time,
                                             'content': follow_up_data['progress']
                                         })
                                     
+                                    # Update both current strings and history arrays for thought
                                     if follow_up_data.get('thought'):
+                                        # Update current thought string
+                                        tasks_data['agents'][agent_id]['thought'] = follow_up_data['thought']
+                                        # Add to history
                                         tasks_data['agents'][agent_id]['thought_history'].append({
                                             'timestamp': current_time,
                                             'content': follow_up_data['thought']
