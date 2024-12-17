@@ -75,13 +75,14 @@ pip install -r requirements.txt
 
 ## Configuration
 
-1. Set up your environment variables:
+1. Set up your environment variables:  (e.g., `LITELLM_MODEL`, `GITHUB_TOKEN`)
+   - You'll need to set environment variables like `LITELLM_MODEL` (specifying your LLM) and `GITHUB_TOKEN` (for GitHub interaction).  The `.env` file is a convenient way to manage these.
 ```bash
 set LITELLM_MODEL=anthropic/claude-3-5-sonnet-20240620  # On Windows
 # export LITELLM_MODEL=anthropic/claude-3-5-sonnet-20240620  # On Unix/MacOS
 ```
 
-2. The system uses tasks.json for configuration:
+2. The system uses `tasks.json` for configuration:
 ```json
 {
     "tasks": [],
@@ -89,6 +90,14 @@ set LITELLM_MODEL=anthropic/claude-3-5-sonnet-20240620  # On Windows
     "repository_url": ""
 }
 ```
+
+## Running the Project
+
+1. **Start the web server:** This command runs the Flask application, making the web interface accessible.
+```bash
+python app.py
+```
+2. **Access the web interface:** Open your web browser and go to `http://localhost:5000` to interact with the application.
 
 ## Usage
 
@@ -163,4 +172,3 @@ Python Coding Standards
 ## License
 
 [MIT License](LICENSE)
-
