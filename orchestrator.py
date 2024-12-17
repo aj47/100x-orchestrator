@@ -298,8 +298,8 @@ def initialiseCodingAgent(repository_url: str = None, task_description: str = No
                 'created_at': datetime.datetime.now().isoformat(),
                 'last_updated': datetime.datetime.now().isoformat(),
                 'aider_output': '',  # Initialize empty output
-                'progress': '',
-                'thought': '',
+                'progress_history': [],  # Array to store progress history
+                'thought_history': [],   # Array to store thought history
                 'future': '',
                 'last_action': ''
             }
@@ -500,12 +500,27 @@ def main_loop():
                                 # Parse the follow_up_message JSON
                                 try:
                                     follow_up_data = json.loads(follow_up_message)
+                                    # Get current timestamp
+                                    current_time = datetime.datetime.now().isoformat()
+                                    
+                                    # Append new progress and thought entries with timestamps
+                                    if follow_up_data.get('progress'):
+                                        tasks_data['agents'][agent_id]['progress_history'].append({
+                                            'timestamp': current_time,
+                                            'content': follow_up_data['progress']
+                                        })
+                                    
+                                    if follow_up_data.get('thought'):
+                                        tasks_data['agents'][agent_id]['thought_history'].append({
+                                            'timestamp': current_time,
+                                            'content': follow_up_data['thought']
+                                        })
+                                    
+                                    # Update other fields
                                     tasks_data['agents'][agent_id].update({
-                                        'progress': follow_up_data.get('progress', ''),
-                                        'thought': follow_up_data.get('thought', ''),
                                         'future': follow_up_data.get('future', ''),
                                         'last_action': follow_up_data.get('action', ''),
-                                        'last_updated': datetime.datetime.now().isoformat()
+                                        'last_updated': current_time
                                     })
                                     
                                     # Save the updated tasks data
