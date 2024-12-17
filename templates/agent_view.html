@@ -82,7 +82,7 @@
                                 </style>
                                 {% if agent.aider_output %}
                                 <div class="output-container">
-                                    {{ agent.aider_output|e|replace('<', '&lt;')|replace('>', '&gt;') }}
+                                    {{ agent.aider_output|safe }}
                                 </div>
                                 {% else %}
                                 <span class="text-muted">No output available yet...</span>
