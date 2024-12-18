@@ -176,7 +176,7 @@ document.addEventListener('DOMContentLoaded', async () => {
             const [, owner, repo] = match;
 
             // Fetch issues from GitHub API
-            const response = await fetch(`https://api.github.com/repos/${owner}/${repo}/issues`, {
+            const response = await fetch(`https://api.github.com/repos/${owner}/${repo}/issues?state=open`, {
                 headers: {
                     'Authorization': `token ${githubToken}`,
                     'Accept': 'application/vnd.github.v3+json'
@@ -193,8 +193,9 @@ document.addEventListener('DOMContentLoaded', async () => {
             const taskList = document.getElementById('taskList');
             taskList.innerHTML = '';
 
-            // Add each issue as a task
-            issues.forEach((issue, index) => {
+            // Filter out pull requests and add each issue as a task
+            const openIssues = issues.filter(issue => !issue.pull_request);
+            openIssues.forEach((issue, index) => {
                 const taskItem = createTaskItem(`${issue.title}: ${issue.body}`, index === 0);
                 taskList.appendChild(taskItem);
             });
