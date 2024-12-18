@@ -54,18 +54,18 @@
                             <p>{{ agent.task }}</p>
 
                             <h6><i class="fas fa-brain me-2"></i>Agent State</h6>
-                            <div class="agent-state mb-3" id="agent-state-{{ agent_id }}" style="display: {{ 'none' if not agent.thought else 'block' }}">
+                            <div class="agent-state mb-3" data-agent-id="{{ agent_id }}" style="display: {{ 'none' if not agent.thought else 'block' }}">
                                 <div class="progress-item">
-                                    <strong>Progress:</strong> <span id="progress-{{ agent_id }}">{{ agent.progress }}</span>
+                                    <strong>Progress:</strong> <span data-field="progress">{{ agent.progress }}</span>
                                 </div>
                                 <div class="thought-item">
-                                    <strong>Thought:</strong> <span id="thought-{{ agent_id }}">{{ agent.thought }}</span>
+                                    <strong>Thought:</strong> <span data-field="thought">{{ agent.thought }}</span>
                                 </div>
                                 <div class="future-item">
-                                    <strong>Future:</strong> <span id="future-{{ agent_id }}">{{ agent.future }}</span>
+                                    <strong>Future:</strong> <span data-field="future">{{ agent.future }}</span>
                                 </div>
                                 <div class="action-item">
-                                    <strong>Last Action:</strong> <span id="action-{{ agent_id }}">{{ agent.last_action }}</span>
+                                    <strong>Last Action:</strong> <span data-field="action">{{ agent.last_action }}</span>
                                 </div>
                             </div>
 

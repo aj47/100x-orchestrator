@@ -24,25 +24,31 @@ async function fetchUpdates() {
             const agentCard = document.getElementById(`agent-${agentId}`);
             if (!agentCard) continue;
 
-            // Update CLI output if it has changed
-            const outputElement = document.getElementById(`output-${agentId}`);
-            const thoughtElement = document.getElementById(`thought-${agentId}`);
-            const progressElement = document.getElementById(`progress-${agentId}`);
-            const futureElement = document.getElementById(`future-${agentId}`);
-            const actionElement = document.getElementById(`action-${agentId}`);
+            // Find agent state container
+            const agentState = agentCard.querySelector('.agent-state');
+            if (agentState) {
+                // Update all fields using data attributes
+                const fields = {
+                    'thought': agentData.thought || '',
+                    'progress': agentData.progress || '',
+                    'future': agentData.future || '',
+                    'action': agentData.last_action || ''
+                };
 
-            // Update thought and toggle agent state visibility
-            if (thoughtElement) {
-                const newThought = agentData.thought || '';
-                thoughtElement.innerHTML = newThought;
-                const agentState = document.getElementById(`agent-state-${agentId}`);
-                if (agentState) {
-                    agentState.style.display = newThought ? 'block' : 'none';
-                }
+                // Update each field
+                Object.entries(fields).forEach(([field, value]) => {
+                    const element = agentState.querySelector(`[data-field="${field}"]`);
+                    if (element) {
+                        element.innerHTML = value;
+                    }
+                });
+
+                // Toggle visibility based on thought
+                agentState.style.display = agentData.thought ? 'block' : 'none';
             }
-            if (progressElement) progressElement.innerHTML = agentData.progress || '';
-            if (futureElement) futureElement.innerHTML = agentData.future || '';
-            if (actionElement) actionElement.innerHTML = agentData.last_action || '';
+
+            // Update CLI output if it has changed
+            const outputElement = agentCard.querySelector('.cli-output');
 
             if (outputElement && agentData.aider_output) {
                 const currentText = outputElement.textContent || '';
