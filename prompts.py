@@ -4,7 +4,7 @@ def PROMPT_AIDER(task_description: str) -> str:
 The overall goal is to """+task_description+"""
 Do not write code. 
 Only give guidance and commands.
-Do not ask aider questions. You need to make decisions and assumptions.
+Do not ask aider questions. You need to make decisions and assumptions yourself.
 You can give aider file structure and context using '/ls' and '/add <file>'.
 The response should be in this JSON schema:
 {
