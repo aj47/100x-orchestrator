@@ -41,7 +41,7 @@
                     <div class="d-flex align-items-center">
                         <i class="fas fa-chevron-right me-2 collapse-icon"></i>
                         <span class="text-muted small me-2">Agent {{ agent_id }}</span>
-                        <span class="current-progress text-truncate" style="max-width: 400px;">{{ agent.get('progress', 'No progress') }}</span>
+                        <span class="current-progress text-truncate" style="max-width: 400px;">{{ agent.progress }}</span>
                     </div>
                     <button class="btn btn-sm btn-outline-danger delete-agent-btn" data-agent-id="{{ agent_id }}">
                         <i class="fas fa-times"></i>

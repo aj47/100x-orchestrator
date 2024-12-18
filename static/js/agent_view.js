@@ -1,7 +1,6 @@
 // Global variables and state management
 const lastOutputLengths = {};
 let updateInterval;
-let countdownInterval;
 
 // Helper function to get output length from debug info
 function getOutputLength(debugElement) {
@@ -12,24 +11,6 @@ function getOutputLength(debugElement) {
     }
     return 0;
 }
-
-// Countdown timer
-function updateCountdown() {
-    const countdownEl = document.getElementById('countdown');
-    let timeLeft = parseInt(countdownEl.textContent);
-    
-    if (timeLeft > 0) {
-        countdownEl.textContent = timeLeft - 1;
-    } else {
-        // Instead of full page reload, fetch updates via AJAX
-        fetchUpdates();
-        // Reset countdown
-        countdownEl.textContent = "5"; // Reduced to 5 seconds for more frequent updates
-    }
-}
-
-// Update countdown every second
-setInterval(updateCountdown, 1000);
 
 // Function to fetch updates via AJAX
 async function fetchUpdates() {
