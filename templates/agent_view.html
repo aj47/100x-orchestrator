@@ -103,12 +103,12 @@
                         </div>
                     </div>
                 </div>
-                <div class="card-footer text-muted d-flex justify-content-between align-items-center">
-                    <div>
-                        <i class="fas fa-calendar-alt me-1"></i>Created: {{ agent.created_at or 'Unknown' }}
+                <div class="card-footer text-muted">
+                    <div class="mb-1">
+                        <i class="fas fa-brain me-1"></i>Thought: <span class="text-truncate d-inline-block" style="max-width: 90%;">{{ agent.thought or 'Thinking...' }}</span>
                     </div>
                     <div>
-                        <i class="fas fa-clock me-1"></i>Last Updated: {{ agent.last_updated or 'Never' }}
+                        <i class="fas fa-forward me-1"></i>Future: <span class="text-truncate d-inline-block" style="max-width: 90%;">{{ agent.future or 'Planning...' }}</span>
                     </div>
                 </div>
             </div>
