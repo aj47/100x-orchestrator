@@ -37,9 +37,18 @@ async function fetchUpdates() {
 
                 // Update each field
                 Object.entries(fields).forEach(([field, value]) => {
+                    // Update fields in agent state
                     const element = agentState.querySelector(`[data-field="${field}"]`);
                     if (element) {
                         element.innerHTML = value;
+                    }
+                    
+                    // Also update header progress if this is the progress field
+                    if (field === 'progress') {
+                        const headerProgress = agentCard.querySelector('[data-field="header-progress"]');
+                        if (headerProgress) {
+                            headerProgress.innerHTML = value;
+                        }
                     }
                 });
 
