@@ -104,11 +104,13 @@
                     </div>
                 </div>
                 <div class="card-footer text-muted">
-                    <div class="mb-1">
-                        <i class="fas fa-brain me-1"></i>Thought: <span class="text-truncate d-inline-block" style="max-width: 90%;">{{ agent.thought or 'Thinking...' }}</span>
+                    <div class="d-flex align-items-center mb-1">
+                        <i class="fas fa-brain me-1"></i>
+                        <span class="text-truncate" data-field="thought">{{ agent.thought or 'Thinking...' }}</span>
                     </div>
-                    <div>
-                        <i class="fas fa-forward me-1"></i>Future: <span class="text-truncate d-inline-block" style="max-width: 90%;">{{ agent.future or 'Planning...' }}</span>
+                    <div class="d-flex align-items-center">
+                        <i class="fas fa-forward me-1"></i>
+                        <span class="text-truncate" data-field="future">{{ agent.future or 'Planning...' }}</span>
                     </div>
                 </div>
             </div>
