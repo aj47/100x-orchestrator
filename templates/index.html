@@ -77,10 +77,13 @@
                     
                     <div class="form-group">
                         <label>Tasks</label>
+                        <div class="d-flex gap-2 mb-2">
+                            <button type="button" id="addTask" class="btn btn-secondary btn-sm">+ Add Another Task</button>
+                            <button type="button" id="fetchIssues" class="btn btn-info btn-sm">Load GitHub Issues</button>
+                        </div>
                         <div id="taskList">
                             <!-- Tasks will be dynamically populated here -->
                         </div>
-                        <button type="button" id="addTask" class="btn btn-secondary btn-sm mb-2">+ Add Another Task</button>
                     </div>
                     
                     <button type="submit" class="btn btn-primary">Create Agents</button>

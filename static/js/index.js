@@ -153,6 +153,68 @@ document.addEventListener('DOMContentLoaded', async () => {
         taskList.appendChild(newTaskItem);
     });
     
+    // Fetch GitHub issues
+    document.getElementById('fetchIssues').addEventListener('click', async () => {
+        const repoUrl = document.getElementById('repoUrl').value;
+        const githubToken = document.getElementById('githubToken').value;
+        
+        if (!repoUrl || !githubToken) {
+            const resultDiv = document.getElementById('result');
+            const alertDiv = resultDiv.querySelector('.alert');
+            resultDiv.style.display = 'block';
+            alertDiv.className = 'alert alert-danger';
+            alertDiv.textContent = 'Please enter both repository URL and GitHub token';
+            return;
+        }
+
+        try {
+            // Extract owner and repo from URL
+            const match = repoUrl.match(/github\.com\/([^\/]+)\/([^\/\.]+)/);
+            if (!match) {
+                throw new Error('Invalid GitHub repository URL');
+            }
+            const [, owner, repo] = match;
+
+            // Fetch issues from GitHub API
+            const response = await fetch(`https://api.github.com/repos/${owner}/${repo}/issues`, {
+                headers: {
+                    'Authorization': `token ${githubToken}`,
+                    'Accept': 'application/vnd.github.v3+json'
+                }
+            });
+
+            if (!response.ok) {
+                throw new Error('Failed to fetch GitHub issues');
+            }
+
+            const issues = await response.json();
+            
+            // Clear existing tasks
+            const taskList = document.getElementById('taskList');
+            taskList.innerHTML = '';
+
+            // Add each issue as a task
+            issues.forEach((issue, index) => {
+                const taskItem = createTaskItem(`${issue.title}: ${issue.body}`, index === 0);
+                taskList.appendChild(taskItem);
+            });
+
+            // Show success message
+            const resultDiv = document.getElementById('result');
+            const alertDiv = resultDiv.querySelector('.alert');
+            resultDiv.style.display = 'block';
+            alertDiv.className = 'alert alert-success';
+            alertDiv.textContent = `Loaded ${issues.length} issues from GitHub`;
+
+        } catch (error) {
+            const resultDiv = document.getElementById('result');
+            const alertDiv = resultDiv.querySelector('.alert');
+            resultDiv.style.display = 'block';
+            alertDiv.className = 'alert alert-danger';
+            alertDiv.textContent = `Error loading GitHub issues: ${error.message}`;
+        }
+    });
+
     // Form submission
     document.getElementById('agentForm').addEventListener('submit', async (e) => {
         e.preventDefault();
