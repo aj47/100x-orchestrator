@@ -127,18 +127,18 @@ document.addEventListener('DOMContentLoaded', async () => {
         removeButton.type = 'button';
         removeButton.classList.add('btn', 'btn-danger', 'remove-task');
         removeButton.textContent = '-';
-        removeButton.style.display = isFirst ? 'none' : 'inline-block';
+        removeButton.style.display = 'inline-block';
         
         // Remove task functionality
         removeButton.addEventListener('click', (e) => {
             const taskItems = taskList.querySelectorAll('.task-item');
-            if (taskItems.length > 1) {
+            if (taskItems.length > 0) {
                 e.target.closest('.task-item').remove();
                 
-                // Hide remove button for first task if only one remains
-                const remainingTaskItems = taskList.querySelectorAll('.task-item');
-                if (remainingTaskItems.length === 1) {
-                    remainingTaskItems[0].querySelector('.remove-task').style.display = 'none';
+                // Ensure there's always at least one task
+                if (taskItems.length === 1) {
+                    const newTaskItem = createTaskItem();
+                    taskList.appendChild(newTaskItem);
                 }
             }
         });
