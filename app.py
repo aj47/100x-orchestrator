@@ -1,4 +1,9 @@
 from flask import Flask, render_template, request, jsonify, send_from_directory
+import logging
+from logging_config import configure_logging
+
+# Initialize logging
+configure_logging()
 from orchestrator import (
     initialiseCodingAgent, 
     main_loop, 

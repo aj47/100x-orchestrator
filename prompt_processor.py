@@ -1,5 +1,9 @@
 import json
 import logging
+from logging_config import configure_logging
+
+# Initialize logging
+configure_logging()
 from typing import Dict, List, Optional
 from dataclasses import dataclass, field
 from datetime import datetime

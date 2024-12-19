@@ -1,5 +1,9 @@
 import os
 import logging
+from logging_config import configure_logging
+
+# Initialize logging
+configure_logging()
 from pathlib import Path
 from dotenv import load_dotenv
 from litellm import completion

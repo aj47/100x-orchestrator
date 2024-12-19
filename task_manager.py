@@ -1,5 +1,9 @@
 import json
 import logging
+from logging_config import configure_logging
+
+# Initialize logging
+configure_logging()
 from pathlib import Path
 
 CONFIG_FILE = Path("tasks/tasks.json")

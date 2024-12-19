@@ -6,13 +6,10 @@ import io
 import logging
 from pathlib import Path
 import time
+from logging_config import configure_logging
 
-# Configure logging
-logging.basicConfig(
-    level=logging.INFO,
-    format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
-    handlers=[logging.StreamHandler()]
-)
+# Initialize logging
+configure_logging()
 
 def normalize_path(path_str):
     """Normalize a path string to absolute path with forward slashes."""
