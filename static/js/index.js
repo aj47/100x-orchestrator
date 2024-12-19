@@ -88,6 +88,13 @@ document.addEventListener('DOMContentLoaded', async () => {
     const repoUrl = document.getElementById('repoUrl');
     const addTaskButton = document.getElementById('addTask');
     
+    // Load saved values from localStorage
+    const githubToken = document.getElementById('githubToken');
+    const acceptanceCriteria = document.getElementById('acceptanceCriteria');
+    
+    githubToken.value = localStorage.getItem('githubToken') || '';
+    acceptanceCriteria.value = localStorage.getItem('acceptanceCriteria') || '';
+    
     // Fetch initial tasks from tasks.json
     try {
         const tasksResponse = await fetch('/tasks/tasks.json');
@@ -250,6 +257,10 @@ document.addEventListener('DOMContentLoaded', async () => {
             
             const agentCount = parseInt(document.getElementById('agentCount').value, 10);
             
+            // Save values to localStorage
+            localStorage.setItem('githubToken', document.getElementById('githubToken').value.trim());
+            localStorage.setItem('acceptanceCriteria', document.getElementById('acceptanceCriteria').value.trim());
+
             const response = await fetch('/create_agent', {
                 method: 'POST',
                 headers: {
