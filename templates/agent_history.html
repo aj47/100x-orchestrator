@@ -1,0 +1,37 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Agent History</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet">
+</head>
+<body class="bg-dark text-light">
+    <div class="container mt-5">
+        <h2>Agent History for Agent {{ agent_id }}</h2>
+        
+        <h4>Progress Messages</h4>
+        <ul>
+          {% for entry in progress_history %}
+            <li><strong>{{ entry.timestamp }}:</strong> {{ entry.content }}</li>
+          {% endfor %}
+        </ul>
+        
+        <h4>Thought Messages</h4>
+        <ul>
+          {% for entry in thought_history %}
+            <li><strong>{{ entry.timestamp }}:</strong> {{ entry.content }}</li>
+          {% endfor %}
+        </ul>
+
+        <h4>Feedback Messages</h4>
+        <ul>
+          {% for entry in feedback_history %}
+            <li><strong>{{ entry.timestamp }}:</strong> {{ entry.content }}</li>
+          {% endfor %}
+        </ul>
+        
+        <a href="/agents" class="btn btn-secondary">Back to Agents</a>
+    </div>
+</body>
+</html>

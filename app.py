@@ -59,6 +59,23 @@ def agent_view():
     
     return render_template('agent_view.html', agents=agents)
 
+@app.route('/agents/<agent_id>/history')
+def agent_history(agent_id):
+    tasks_data = load_tasks()
+    agent = tasks_data["agents"].get(agent_id)
+    if not agent:
+        return jsonify({"error": "Agent not found"}), 404
+    progress_history = agent.get("progress_history", [])
+    thought_history  = agent.get("thought_history", [])
+    feedback_history = agent.get("feedback_history", [])
+    return render_template(
+        'agent_history.html',
+        agent_id=agent_id,
+        progress_history=progress_history,
+        thought_history=thought_history,
+        feedback_history=feedback_history
+    )
+
 @app.route('/create_agent', methods=['POST'])
 def create_agent():
     try:

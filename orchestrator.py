@@ -169,7 +169,8 @@ def initialiseCodingAgent(repository_url: str = None, task_description: str = No
                 'thought_history': [],
                 'future': '',
                 'last_action': '',
-                'acceptance_criteria': acceptance_criteria
+                'acceptance_criteria': acceptance_criteria,
+                'feedback_history': []  # <--- Add this line
             }
             tasks_data['repository_url'] = repository_url
             save_tasks(tasks_data)
@@ -365,6 +366,15 @@ def main_loop():
                                     save_tasks(tasks_data)
                                 except json.JSONDecodeError:
                                     pass
+
+                            # Handle feedback history
+                            if follow_up_data.get('feedback'):
+                                if 'feedback_history' not in tasks_data['agents'][agent_id]:
+                                    tasks_data['agents'][agent_id]['feedback_history'] = []
+                                tasks_data['agents'][agent_id]['feedback_history'].append({
+                                    'timestamp': current_time,
+                                    'content': follow_up_data['feedback']
+                                })
                             
                             if agent_id in prompt_processors:
                                 processor = prompt_processors[agent_id]
