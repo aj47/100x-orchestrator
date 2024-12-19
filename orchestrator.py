@@ -1,4 +1,4 @@
-import os, json, traceback, subprocess, sys, uuid
+import os, json, traceback, subprocess, sys, uuid, logging
 from prompts import PROMPT_AIDER
 from litellm_client import LiteLLMClient
 from prompt_processor import PromptProcessor
