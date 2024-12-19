@@ -305,7 +305,8 @@ def initialiseCodingAgent(repository_url: str = None, task_description: str = No
                 'progress_history': [],  # Array to store progress history
                 'thought_history': [],   # Array to store thought history
                 'future': '',
-                'last_action': ''
+                'last_action': '',
+                'acceptance_criteria': task_description.get('acceptance_criteria', '')  # Store acceptance criteria
             }
             tasks_data['repository_url'] = repository_url
             save_tasks(tasks_data)
@@ -548,7 +549,9 @@ def main_loop():
                             # Process the response through PromptProcessor
                             if agent_id in prompt_processors:
                                 processor = prompt_processors[agent_id]
-                                action = processor.process_response(agent_id, follow_up_message)
+                                # Pass acceptance criteria from agent state
+                                acceptance_criteria = tasks_data['agents'][agent_id].get('acceptance_criteria', '')
+                                action = processor.process_response(agent_id, follow_up_message, acceptance_criteria)
                                 
                                 # Add the action to the aider output buffer with HTML formatting
                                 if agent_id in aider_sessions:

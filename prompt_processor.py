@@ -23,7 +23,7 @@ class PromptProcessor:
         self.response_history: Dict[str, List[AgentResponse]] = {}
         self.critique_handler = CritiqueHandler()
         
-    def process_response(self, agent_id: str, response: str) -> Optional[str]:
+    def process_response(self, agent_id: str, response: str, acceptance_criteria: str = '') -> Optional[str]:
         """Process a JSON response and return the action to execute"""
         try:
             # Parse JSON response
@@ -63,10 +63,9 @@ class PromptProcessor:
             # Process action
             action = agent_response.action.strip()
             if action == '/finish':
-                # Get acceptance criteria from agent state
-                acceptance_criteria = self.agent_states[agent_id].get('acceptance_criteria', '')
+                # Use provided acceptance criteria
                 if not acceptance_criteria:
-                    logging.warning(f"No acceptance criteria found for agent {agent_id}")
+                    logging.warning(f"No acceptance criteria provided for agent {agent_id}")
                     return None
 
                 # Get session logs and code diff
