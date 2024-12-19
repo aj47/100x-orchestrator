@@ -18,14 +18,13 @@ class LiteLLMClient:
         if not self.api_key:
             raise ValueError(f"OPENROUTER_API_KEY not found in {env_path}")
         
-    def chat_completion(self, system_message: str = "", user_message: str = "", model="openrouter/google/gemini-flash-1.5"):
+    def chat_completion(self, prompt: str = "", model="openrouter/google/gemini-flash-1.5"):
         """Get a summary of the coding session logs using JSON mode"""
         try:
             response = completion(
                 model=model,
                 messages=[
-                    {"role": "system", "content": system_message},
-                    {"role": "user", "content": user_message}
+                    {"role": "user", "content": prompt}
                 ],
                 api_key=self.api_key,
                 response_format={"type": "json_object"}
