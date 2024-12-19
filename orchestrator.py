@@ -13,7 +13,6 @@ import datetime
 import queue
 import io
 import errno
-import logging
 from github import Github
 from dotenv import load_dotenv
 from agent_session import AgentSession, normalize_path
