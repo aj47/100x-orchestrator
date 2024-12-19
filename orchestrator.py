@@ -187,77 +187,77 @@ def initialiseCodingAgent(repository_url: str = None, task_description: str = No
         traceback.print_exc()
         return None
 
-                repo_name = repository_url.rstrip('/').split('/')[-1]
-                if repo_name.endswith('.git'):
-                    repo_name = repo_name[:-4]
-                
-                if not cloneRepository(repository_url):
-                    shutil.rmtree(agent_workspace)
-                    continue
-                
-                if not os.path.exists(repo_name) or not os.path.isdir(os.path.join(repo_name, '.git')):
-                    shutil.rmtree(agent_workspace)
-                    continue
-                
-                repo_dir = repo_name
-                full_repo_path = workspace_dirs["repo"] / repo_dir
-                full_repo_path = full_repo_path.resolve()
-                
-                os.chdir(full_repo_path)
-                
-                branch_name = f"agent-{agent_id[:8]}"
-                try:
-                    subprocess.check_call(f"git checkout -b {branch_name}", shell=True)
-                except subprocess.CalledProcessError:
-                    shutil.rmtree(agent_workspace)
-                    continue
+            repo_name = repository_url.rstrip('/').split('/')[-1]
+            if repo_name.endswith('.git'):
+                repo_name = repo_name[:-4]
 
-                aider_session = AgentSession(str(full_repo_path), task_description, agent_config, aider_commands=aider_commands)
-                prompt_processor = PromptProcessor()
-                
-                if not aider_session.start():
-                    shutil.rmtree(agent_workspace)
-                    continue
+            if not cloneRepository(repository_url):
+                shutil.rmtree(agent_workspace)
+                continue
 
-                aider_sessions[agent_id] = aider_session
-                prompt_processors[agent_id] = prompt_processor
+            if not os.path.exists(repo_name) or not os.path.isdir(os.path.join(repo_name, '.git')):
+                shutil.rmtree(agent_workspace)
+                continue
 
-            finally:
-                os.chdir(original_dir)
-            
-            tasks_data['agents'][agent_id] = {
-                'workspace': normalize_path(agent_workspace),
-                'repo_path': normalize_path(full_repo_path) if full_repo_path else None,
-                'task': task_description,
-                'status': 'pending',
-                'created_at': datetime.datetime.now().isoformat(),
-                'last_updated': datetime.datetime.now().isoformat(),
-                'aider_output': '',
-                'progress': '',
-                'thought': '',
-                'progress_history': [],
-                'thought_history': [],
-                'future': '',
-                'last_action': '',
-                'acceptance_criteria': acceptance_criteria  # Use structured format
-            }
-            tasks_data['repository_url'] = repository_url
-            save_tasks(tasks_data)
-            
-            created_agent_ids.append(agent_id)
-        
-        return created_agent_ids if created_agent_ids else None
-        
+            repo_dir = repo_name
+            full_repo_path = workspace_dirs["repo"] / repo_dir
+            full_repo_path = full_repo_path.resolve()
+
+            os.chdir(full_repo_path)
+
+            branch_name = f"agent-{agent_id[:8]}"
+            try:
+                subprocess.check_call(f"git checkout -b {branch_name}", shell=True)
+            except subprocess.CalledProcessError:
+                shutil.rmtree(agent_workspace)
+                continue
+
+            aider_session = AgentSession(str(full_repo_path), task_description, agent_config, aider_commands=aider_commands)
+            prompt_processor = PromptProcessor()
+
+            if not aider_session.start():
+                shutil.rmtree(agent_workspace)
+                continue
+
+            aider_sessions[agent_id] = aider_session
+            prompt_processors[agent_id] = prompt_processor
+
+        finally:
+            os.chdir(original_dir)
+
+        tasks_data['agents'][agent_id] = {
+            'workspace': normalize_path(agent_workspace),
+            'repo_path': normalize_path(full_repo_path) if full_repo_path else None,
+            'task': task_description,
+            'status': 'pending',
+            'created_at': datetime.datetime.now().isoformat(),
+            'last_updated': datetime.datetime.now().isoformat(),
+            'aider_output': '',
+            'progress': '',
+            'thought': '',
+            'progress_history': [],
+            'thought_history': [],
+            'future': '',
+            'last_action': '',
+            'acceptance_criteria': acceptance_criteria  # Use structured format
+        }
+        tasks_data['repository_url'] = repository_url
+        save_tasks(tasks_data)
+
+        created_agent_ids.append(agent_id)
+
+    return created_agent_ids if created_agent_ids else None
+
     except Exception:
         return None
 
 def get_github_token():
     load_dotenv()
     token = os.getenv('GITHUB_TOKEN')
-    
+
     if not token:
         return None
-        
+
     try:
         g = Github(token)
         g.get_user().login
