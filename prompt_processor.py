@@ -4,6 +4,7 @@ from typing import Dict, List, Optional
 from dataclasses import dataclass, field
 from datetime import datetime
 from github import Github
+from critique_handler import CritiqueHandler
 
 @dataclass
 class AgentResponse:
