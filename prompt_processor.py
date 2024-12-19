@@ -77,7 +77,8 @@ class PromptProcessor:
 
                 # TODO: Get actual git diff from workspace
                 # For now using placeholder
-                code_diff = "TODO: Get actual git diff"
+                # code_diff = "TODO: Get actual git diff"
+                code_diff = ""
 
                 # Validate against acceptance criteria
                 meets_criteria, feedback = self.critique_handler.validate_submission(
