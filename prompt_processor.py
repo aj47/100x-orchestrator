@@ -63,9 +63,11 @@ class PromptProcessor:
             # Process action
             action = agent_response.action.strip()
             if action == '/finish':
-                # Use provided acceptance criteria
+                # Get acceptance criteria from tasks data
+                tasks_data = load_tasks()
+                acceptance_criteria = tasks_data.get('acceptance_criteria', '')
                 if not acceptance_criteria:
-                    logging.warning(f"No acceptance criteria provided for agent {agent_id}")
+                    logging.warning(f"No acceptance criteria found in tasks data")
                     return None
 
                 # Get session logs and code diff
