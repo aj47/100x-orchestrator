@@ -1,6 +1,4 @@
 import json
-from logging_config import configure_logging
-configure_logging()
 from typing import Dict, List, Optional
 from dataclasses import dataclass, field
 from datetime import datetime
