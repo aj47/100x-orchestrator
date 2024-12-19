@@ -107,12 +107,21 @@ document.addEventListener('DOMContentLoaded', async () => {
         const taskItem = document.createElement('div');
         taskItem.classList.add('task-item');
         
-        const input = document.createElement('input');
-        input.type = 'text';
-        input.classList.add('form-control', 'task-description');
-        input.placeholder = 'Describe the task for the agent...';
-        input.required = true;
-        input.value = initialValue;
+        const taskContainer = document.createElement('div');
+        taskContainer.classList.add('mb-2');
+
+        const titleInput = document.createElement('input');
+        titleInput.type = 'text';
+        titleInput.classList.add('form-control', 'task-title', 'mb-2');
+        titleInput.placeholder = 'Task title...';
+        titleInput.required = true;
+        titleInput.value = initialValue.title || initialValue;
+
+        const descriptionInput = document.createElement('textarea');
+        descriptionInput.classList.add('form-control', 'task-description', 'mb-2');
+        descriptionInput.placeholder = 'Detailed task description...';
+        descriptionInput.rows = 3;
+        descriptionInput.value = initialValue.description || '';
         
         const removeButton = document.createElement('button');
         removeButton.type = 'button';
@@ -134,8 +143,10 @@ document.addEventListener('DOMContentLoaded', async () => {
             }
         });
         
-        taskItem.appendChild(input);
-        taskItem.appendChild(removeButton);
+        taskContainer.appendChild(titleInput);
+        taskContainer.appendChild(descriptionInput);
+        taskContainer.appendChild(removeButton);
+        taskItem.appendChild(taskContainer);
         
         return taskItem;
     }
@@ -196,7 +207,10 @@ document.addEventListener('DOMContentLoaded', async () => {
             // Filter out pull requests and add each issue as a task
             const openIssues = issues.filter(issue => !issue.pull_request);
             openIssues.forEach((issue, index) => {
-                const taskItem = createTaskItem(`${issue.title}: ${issue.body}`, index === 0);
+                const taskItem = createTaskItem({
+                    title: issue.title,
+                    description: issue.body || ''
+                }, index === 0);
                 taskList.appendChild(taskItem);
             });
 
@@ -225,9 +239,14 @@ document.addEventListener('DOMContentLoaded', async () => {
         
         try {
             // Collect tasks
-            const tasks = Array.from(document.querySelectorAll('.task-description'))
-                .map(input => input.value.trim())
-                .filter(task => task !== '');
+            const tasks = Array.from(document.querySelectorAll('.task-item')).map(item => {
+                const title = item.querySelector('.task-title').value.trim();
+                const description = item.querySelector('.task-description').value.trim();
+                return {
+                    title: title,
+                    description: description
+                };
+            }).filter(task => task.title !== '');
             
             const agentCount = parseInt(document.getElementById('agentCount').value, 10);
             

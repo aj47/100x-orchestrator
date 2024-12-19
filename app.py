@@ -133,9 +133,10 @@ def create_agent():
             
             # Initialize agent with specified number of agents per task
             try:
+                task_text = f"{task_description['title']}\n\nDetails:\n{task_description['description']}"
                 agent_ids = initialiseCodingAgent(
                     repository_url=repo_url, 
-                    task_description=task_description,
+                    task_description=task_text,
                     num_agents=num_agents,
                     aider_commands=aider_commands # Pass aider commands
                 )
