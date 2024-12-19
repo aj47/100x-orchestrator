@@ -107,35 +107,46 @@ document.addEventListener('DOMContentLoaded', async () => {
         const taskItem = document.createElement('div');
         taskItem.classList.add('task-item');
         
-        const input = document.createElement('input');
-        input.type = 'text';
-        input.classList.add('form-control', 'task-description');
-        input.placeholder = 'Describe the task for the agent...';
-        input.required = true;
-        input.value = initialValue;
+        const taskContainer = document.createElement('div');
+        taskContainer.classList.add('mb-2');
+
+        const titleInput = document.createElement('input');
+        titleInput.type = 'text';
+        titleInput.classList.add('form-control', 'task-title', 'mb-2');
+        titleInput.placeholder = 'Task title...';
+        titleInput.required = true;
+        titleInput.value = initialValue.title || initialValue;
+
+        const descriptionInput = document.createElement('textarea');
+        descriptionInput.classList.add('form-control', 'task-description', 'mb-2');
+        descriptionInput.placeholder = 'Detailed task description...';
+        descriptionInput.rows = 3;
+        descriptionInput.value = initialValue.description || '';
         
         const removeButton = document.createElement('button');
         removeButton.type = 'button';
         removeButton.classList.add('btn', 'btn-danger', 'remove-task');
         removeButton.textContent = '-';
-        removeButton.style.display = isFirst ? 'none' : 'inline-block';
+        removeButton.style.display = 'inline-block';
         
         // Remove task functionality
         removeButton.addEventListener('click', (e) => {
             const taskItems = taskList.querySelectorAll('.task-item');
-            if (taskItems.length > 1) {
+            if (taskItems.length > 0) {
                 e.target.closest('.task-item').remove();
                 
-                // Hide remove button for first task if only one remains
-                const remainingTaskItems = taskList.querySelectorAll('.task-item');
-                if (remainingTaskItems.length === 1) {
-                    remainingTaskItems[0].querySelector('.remove-task').style.display = 'none';
+                // Ensure there's always at least one task
+                if (taskItems.length === 1) {
+                    const newTaskItem = createTaskItem();
+                    taskList.appendChild(newTaskItem);
                 }
             }
         });
         
-        taskItem.appendChild(input);
-        taskItem.appendChild(removeButton);
+        taskContainer.appendChild(titleInput);
+        taskContainer.appendChild(descriptionInput);
+        taskContainer.appendChild(removeButton);
+        taskItem.appendChild(taskContainer);
         
         return taskItem;
     }
@@ -153,6 +164,72 @@ document.addEventListener('DOMContentLoaded', async () => {
         taskList.appendChild(newTaskItem);
     });
     
+    // Fetch GitHub issues
+    document.getElementById('fetchIssues').addEventListener('click', async () => {
+        const repoUrl = document.getElementById('repoUrl').value;
+        const githubToken = document.getElementById('githubToken').value;
+        
+        if (!repoUrl || !githubToken) {
+            const resultDiv = document.getElementById('result');
+            const alertDiv = resultDiv.querySelector('.alert');
+            resultDiv.style.display = 'block';
+            alertDiv.className = 'alert alert-danger';
+            alertDiv.textContent = 'Please enter both repository URL and GitHub token';
+            return;
+        }
+
+        try {
+            // Extract owner and repo from URL
+            const match = repoUrl.match(/github\.com\/([^\/]+)\/([^\/\.]+)/);
+            if (!match) {
+                throw new Error('Invalid GitHub repository URL');
+            }
+            const [, owner, repo] = match;
+
+            // Fetch issues from GitHub API
+            const response = await fetch(`https://api.github.com/repos/${owner}/${repo}/issues?state=open`, {
+                headers: {
+                    'Authorization': `token ${githubToken}`,
+                    'Accept': 'application/vnd.github.v3+json'
+                }
+            });
+
+            if (!response.ok) {
+                throw new Error('Failed to fetch GitHub issues');
+            }
+
+            const issues = await response.json();
+            
+            // Clear existing tasks
+            const taskList = document.getElementById('taskList');
+            taskList.innerHTML = '';
+
+            // Filter out pull requests and add each issue as a task
+            const openIssues = issues.filter(issue => !issue.pull_request);
+            openIssues.forEach((issue, index) => {
+                const taskItem = createTaskItem({
+                    title: issue.title,
+                    description: issue.body || ''
+                }, index === 0);
+                taskList.appendChild(taskItem);
+            });
+
+            // Show success message
+            const resultDiv = document.getElementById('result');
+            const alertDiv = resultDiv.querySelector('.alert');
+            resultDiv.style.display = 'block';
+            alertDiv.className = 'alert alert-success';
+            alertDiv.textContent = `Loaded ${issues.length} issues from GitHub`;
+
+        } catch (error) {
+            const resultDiv = document.getElementById('result');
+            const alertDiv = resultDiv.querySelector('.alert');
+            resultDiv.style.display = 'block';
+            alertDiv.className = 'alert alert-danger';
+            alertDiv.textContent = `Error loading GitHub issues: ${error.message}`;
+        }
+    });
+
     // Form submission
     document.getElementById('agentForm').addEventListener('submit', async (e) => {
         e.preventDefault();
@@ -162,9 +239,14 @@ document.addEventListener('DOMContentLoaded', async () => {
         
         try {
             // Collect tasks
-            const tasks = Array.from(document.querySelectorAll('.task-description'))
-                .map(input => input.value.trim())
-                .filter(task => task !== '');
+            const tasks = Array.from(document.querySelectorAll('.task-item')).map(item => {
+                const title = item.querySelector('.task-title').value.trim();
+                const description = item.querySelector('.task-description').value.trim();
+                return {
+                    title: title,
+                    description: description
+                };
+            }).filter(task => task.title !== '');
             
             const agentCount = parseInt(document.getElementById('agentCount').value, 10);
             

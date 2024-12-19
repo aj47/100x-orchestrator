@@ -1,7 +1,6 @@
 // Global variables and state management
 const lastOutputLengths = {};
 let updateInterval;
-let countdownInterval;
 
 // Helper function to get output length from debug info
 function getOutputLength(debugElement) {
@@ -12,24 +11,6 @@ function getOutputLength(debugElement) {
     }
     return 0;
 }
-
-// Countdown timer
-function updateCountdown() {
-    const countdownEl = document.getElementById('countdown');
-    let timeLeft = parseInt(countdownEl.textContent);
-    
-    if (timeLeft > 0) {
-        countdownEl.textContent = timeLeft - 1;
-    } else {
-        // Instead of full page reload, fetch updates via AJAX
-        fetchUpdates();
-        // Reset countdown
-        countdownEl.textContent = "5"; // Reduced to 5 seconds for more frequent updates
-    }
-}
-
-// Update countdown every second
-setInterval(updateCountdown, 1000);
 
 // Function to fetch updates via AJAX
 async function fetchUpdates() {
@@ -43,25 +24,40 @@ async function fetchUpdates() {
             const agentCard = document.getElementById(`agent-${agentId}`);
             if (!agentCard) continue;
 
-            // Update CLI output if it has changed
-            const outputElement = document.getElementById(`output-${agentId}`);
-            const thoughtElement = document.getElementById(`thought-${agentId}`);
-            const progressElement = document.getElementById(`progress-${agentId}`);
-            const futureElement = document.getElementById(`future-${agentId}`);
-            const actionElement = document.getElementById(`action-${agentId}`);
+            // Find agent state container
+            const agentState = agentCard.querySelector('.agent-state');
+            if (agentState) {
+                // Update all fields using data attributes
+                const fields = {
+                    'thought': agentData.thought || '',
+                    'progress': agentData.progress || '',
+                    'future': agentData.future || '',
+                    'action': agentData.last_action || ''
+                };
 
-            // Update thought and toggle agent state visibility
-            if (thoughtElement) {
-                const newThought = agentData.thought || '';
-                thoughtElement.innerHTML = newThought;
-                const agentState = document.getElementById(`agent-state-${agentId}`);
-                if (agentState) {
-                    agentState.style.display = newThought ? 'block' : 'none';
-                }
+                // Update each field
+                Object.entries(fields).forEach(([field, value]) => {
+                    // Update all elements with this data-field, both in agent state and footer
+                    const elements = agentCard.querySelectorAll(`[data-field="${field}"]`);
+                    elements.forEach(element => {
+                        element.innerHTML = value || (field === 'thought' ? 'Thinking...' : 'Planning...');
+                    });
+                
+                    // Also update header progress if this is the progress field
+                    if (field === 'progress') {
+                        const headerProgress = agentCard.querySelector('[data-field="header-progress"]');
+                        if (headerProgress) {
+                            headerProgress.innerHTML = value;
+                        }
+                    }
+                });
+
+                // Toggle visibility based on thought
+                agentState.style.display = agentData.thought ? 'block' : 'none';
             }
-            if (progressElement) progressElement.innerHTML = agentData.progress || '';
-            if (futureElement) futureElement.innerHTML = agentData.future || '';
-            if (actionElement) actionElement.innerHTML = agentData.last_action || '';
+
+            // Update CLI output if it has changed
+            const outputElement = agentCard.querySelector('.cli-output');
 
             if (outputElement && agentData.aider_output) {
                 const currentText = outputElement.textContent || '';
@@ -210,6 +206,15 @@ function showToast(message, type = 'success') {
 
 // DOM Ready handlers
 document.addEventListener('DOMContentLoaded', () => {
+    // Handle collapse icon rotation
+    document.querySelectorAll('.card-header[data-bs-toggle="collapse"]').forEach(header => {
+        header.addEventListener('click', () => {
+            const icon = header.querySelector('.collapse-icon');
+            const isCollapsed = header.classList.contains('collapsed');
+            icon.style.transform = isCollapsed ? 'rotate(0deg)' : 'rotate(-90deg)';
+        });
+    });
+
     // Initial scroll to bottom
     const outputs = document.querySelectorAll('.cli-output');
     outputs.forEach(output => {
