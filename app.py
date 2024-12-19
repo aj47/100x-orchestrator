@@ -69,6 +69,12 @@ def create_agent():
         aider_commands = data.get('aider_commands')
         github_token = data.get('github_token')
 
+        # Add these two lines to read and save acceptance_criteria
+        acceptance_criteria = data.get('acceptance_criteria', "")
+        tasks_data = load_tasks()
+        tasks_data['acceptance_criteria'] = acceptance_criteria
+        save_tasks(tasks_data)
+
         if not github_token:
             return jsonify({'error': 'GitHub token is required'}), 400
 
