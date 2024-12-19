@@ -153,10 +153,12 @@ class AgentSession:
                     "Newer aider version",
                     "Run this command to update:",
                     "python.exe -m pip install aider",
+                    "python.exe -m pip install --upgrade --upgrade-strategy only-if-needed aider-chat"
                     "Aider v",
                     "Model:",
                     "Git repo:",
                     "Repo-map:",
+                    "cmd.exe?",
                     "Use /help"
                 ]):
                     continue
