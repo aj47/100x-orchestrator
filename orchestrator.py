@@ -238,11 +238,7 @@ def create_pull_request(agent_id, branch_name, pr_info):
             
             # Include acceptance criteria status in commit message
             commit_msg = f"Changes by Agent {agent_id}\n\nAcceptance Criteria Status:\n"
-            criteria = agent_data.get('acceptance_criteria', {})
-            for category, items in criteria.items():
-                commit_msg += f"\n{category.replace('_', ' ').title()}:\n"
-                for item in items:
-                    commit_msg += f"- {item}\n"
+            commit_msg += agent_data.get('acceptance_criteria', "")
             
             subprocess.run(["git", "commit", "-m", commit_msg], check=False)
             
@@ -257,10 +253,7 @@ def create_pull_request(agent_id, branch_name, pr_info):
         
         # Include acceptance criteria in PR description
         pr_description = pr_info.get('description', 'Automated changes') + "\n\n## Acceptance Criteria Status\n"
-        for category, items in criteria.items():
-            pr_description += f"\n### {category.replace('_', ' ').title()}\n"
-            for item in items:
-                pr_description += f"- [ ] {item}\n"
+        pr_description += str(agent_data.get('acceptance_criteria', ""))
         
         pr = repo.create_pull(
             title=pr_info.get('title', f'Changes by Agent {agent_id}'),
@@ -379,11 +372,7 @@ def main_loop():
                             
                             if agent_id in prompt_processors:
                                 processor = prompt_processors[agent_id]
-                                acceptance_criteria = tasks_data['agents'][agent_id].get('acceptance_criteria', {
-                                    "code_quality": [],
-                                    "testing": [],
-                                    "architecture": []
-                                })
+                                acceptance_criteria = tasks_data['agents'][agent_id].get('acceptance_criteria', "")
                                 action = processor.process_response(
                                     agent_id, 
                                     follow_up_message, 

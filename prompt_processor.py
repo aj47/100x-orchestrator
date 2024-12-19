@@ -66,12 +66,7 @@ class PromptProcessor:
                 if not acceptance_criteria:
                     # Try to get structured criteria from tasks data
                     agent_data = tasks_data.get('agents', {}).get(agent_id, {})
-                    criteria = agent_data.get('acceptance_criteria', {
-                        "code_quality": [],
-                        "testing": [],
-                        "architecture": []
-                    })
-                    acceptance_criteria = json.dumps(criteria)
+                    acceptance_criteria = agent_data.get('acceptance_criteria', "")
 
                 if not acceptance_criteria:
                     return None
