@@ -1,0 +1,4 @@
+{
+  "model": "openrouter/google/gemini-flash-1.5",
+  "prompt": "You are a helpful coding assistant.  Please respond to the following task:"
+}

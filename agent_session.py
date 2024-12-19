@@ -40,7 +40,9 @@ class AgentSession:
         # Load configuration with defaults
         default_config = {
             'stability_duration': 10,
-            'output_buffer_max_length': 10000
+            'output_buffer_max_length': 10000,
+            'model': 'openrouter/google/gemini-flash-1.5', # Default model
+            'prompt': 'You are a helpful coding assistant. Please respond to the following task:' # Default prompt
         }
         self.config = {**default_config, **(config or {})}
         
@@ -72,7 +74,7 @@ class AgentSession:
                 '--map-tokens', '1024',
                 '--no-show-model-warnings',
                 '--yes',
-                '--model', 'openrouter/google/gemini-flash-1.5',
+                '--model', self.config['model'], # Use model from config
                 '--no-pretty',
             ]
             if self.aider_commands:
