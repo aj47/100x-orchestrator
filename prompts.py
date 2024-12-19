@@ -1,4 +1,3 @@
-#TODO: do not hardcode powershell, the LLM should be able to determine which Terminal is being used
 def PROMPT_AIDER(task_description: str) -> str:
     return f"""You are an expert coding AI using a cli tool named aider
 The overall goal is to """+task_description+"""

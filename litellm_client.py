@@ -4,10 +4,7 @@ from dotenv import load_dotenv
 from litellm import completion
 
 class LiteLLMClient:
-    """Client for interacting with LLMs to get summaries with JSON mode"""
-    
     def __init__(self):
-        # Load environment variables from ~/.env
         env_path = Path.home() / '.env'
         if not load_dotenv(env_path):
             print(f"Warning: Could not load {env_path}")
@@ -18,7 +15,6 @@ class LiteLLMClient:
             raise ValueError(f"OPENROUTER_API_KEY not found in {env_path}")
         
     def chat_completion(self, system_message: str = "", user_message: str = "", model="openrouter/google/gemini-flash-1.5"):
-        """Get a summary of the coding session logs using JSON mode"""
         try:
             response = completion(
                 model=model,
