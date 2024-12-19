@@ -1,5 +1,5 @@
 import json
-from typing import Dict, List, Optional
+from typing import Dict, List, Optional, Union
 from dataclasses import dataclass, field
 from datetime import datetime
 from github import Github
@@ -21,6 +21,17 @@ class PromptProcessor:
         self.critique_handler = CritiqueHandler()
         
     def process_response(self, agent_id: str, response: str, acceptance_criteria: str = '') -> Optional[str]:
+        """
+        Process agent response and validate against structured acceptance criteria.
+        
+        Args:
+            agent_id: Unique identifier for the agent
+            response: JSON response from the agent
+            acceptance_criteria: JSON string containing structured criteria categories
+            
+        Returns:
+            Optional[str]: Next action for the agent or None
+        """
         try:
             data = json.loads(response)
             
@@ -52,7 +63,16 @@ class PromptProcessor:
             action = agent_response.action.strip()
             if action == '/finish':
                 tasks_data = load_tasks()
-                acceptance_criteria = tasks_data.get('acceptance_criteria', '')
+                if not acceptance_criteria:
+                    # Try to get structured criteria from tasks data
+                    agent_data = tasks_data.get('agents', {}).get(agent_id, {})
+                    criteria = agent_data.get('acceptance_criteria', {
+                        "code_quality": [],
+                        "testing": [],
+                        "architecture": []
+                    })
+                    acceptance_criteria = json.dumps(criteria)
+
                 if not acceptance_criteria:
                     return None
 
@@ -61,7 +81,7 @@ class PromptProcessor:
                     for r in self.response_history[agent_id]
                 ])
 
-                code_diff = ""
+                code_diff = ""  # In future, could get this from git
 
                 meets_criteria, feedback = self.critique_handler.validate_submission(
                     history, code_diff, acceptance_criteria
@@ -77,7 +97,7 @@ class PromptProcessor:
                 client = LiteLLMClient()
                 pr_info = client.chat_completion(
                     system_message=PROMPT_PR(),
-                    user_message=f"Agent history:\n{history}"
+                    user_message=f"Agent history:\n{history}\n\nAcceptance Criteria:\n{acceptance_criteria}"
                 )
                 
                 try:
@@ -102,12 +122,19 @@ class PromptProcessor:
             return None
             
     def get_agent_state(self, agent_id: str) -> Dict:
+        """Get current state of an agent including structured criteria status."""
         return self.agent_states.get(agent_id, {
             'progress': 'Not started',
             'thought': 'Initializing...',
             'future': 'Waiting to begin',
-            'last_action': None
+            'last_action': None,
+            'acceptance_criteria': {
+                "code_quality": [],
+                "testing": [],
+                "architecture": []
+            }
         })
         
     def get_response_history(self, agent_id: str) -> List[AgentResponse]:
+        """Get complete response history for an agent."""
         return self.response_history.get(agent_id, [])
