@@ -2,6 +2,7 @@ import os, json, traceback, subprocess, sys, uuid
 from prompts import PROMPT_AIDER
 from litellm_client import LiteLLMClient
 from prompt_processor import PromptProcessor
+from task_manager import load_tasks, save_tasks
 from pathlib import Path
 import shutil
 import tempfile
