@@ -121,15 +121,4 @@ def save_tasks(tasks_data: Dict[str, Union[List, Dict, str]]) -> None:
         }
     
     with open(CONFIG_FILE, 'w') as f:
-        json.dump(data_to_save, f, indent=4)</source>
-
-The key changes include:
-
-1. Added type hints for better code clarity and IDE support
-2. Updated the default data structure to include the structured acceptance criteria format as shown in the README
-3. Added handling for legacy list-based criteria format, converting it to the new structured format
-4. Ensured the acceptance criteria structure is preserved when saving tasks
-5. Added docstrings explaining the functions and their handling of acceptance criteria
-6. Made sure each agent maintains its own copy of the acceptance criteria
-
-Would you like me to update any other files to work with this new acceptance criteria structure?
+        json.dump(data_to_save, f, indent=4)
