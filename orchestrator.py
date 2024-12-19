@@ -190,9 +190,6 @@ def initialiseCodingAgent(repository_url: str = None, task_description: str = No
 
     return created_agent_ids if created_agent_ids else None
 
-    except Exception:
-        return None
-
 def get_github_token():
     load_dotenv()
     token = os.getenv('GITHUB_TOKEN')
