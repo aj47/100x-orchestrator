@@ -20,6 +20,7 @@ class PromptProcessor:
     def __init__(self):
         self.agent_states: Dict[str, Dict] = {}
         self.response_history: Dict[str, List[AgentResponse]] = {}
+        self.critique_handler = CritiqueHandler()
         
     def process_response(self, agent_id: str, response: str) -> Optional[str]:
         """Process a JSON response and return the action to execute"""
@@ -61,17 +62,38 @@ class PromptProcessor:
             # Process action
             action = agent_response.action.strip()
             if action == '/finish':
-                # Generate PR info using LiteLLM
-                from litellm_client import LiteLLMClient
-                from prompts import PROMPT_PR
-                
-                client = LiteLLMClient()
-                # Get full history of responses for context
+                # Get acceptance criteria from agent state
+                acceptance_criteria = self.agent_states[agent_id].get('acceptance_criteria', '')
+                if not acceptance_criteria:
+                    logging.warning(f"No acceptance criteria found for agent {agent_id}")
+                    return None
+
+                # Get session logs and code diff
                 history = "\n".join([
                     f"Progress: {r.progress}\nThought: {r.thought}\nAction: {r.action}\nFuture: {r.future}\n"
                     for r in self.response_history[agent_id]
                 ])
-                
+
+                # TODO: Get actual git diff from workspace
+                # For now using placeholder
+                code_diff = "TODO: Get actual git diff"
+
+                # Validate against acceptance criteria
+                meets_criteria, feedback = self.critique_handler.validate_submission(
+                    history, code_diff, acceptance_criteria
+                )
+
+                if not meets_criteria:
+                    # Store feedback in agent state
+                    self.agent_states[agent_id]['critique_feedback'] = feedback
+                    # Return instruction to address feedback
+                    return f"/instruct Please address this feedback before submitting: {feedback}"
+
+                # If criteria met, generate PR info
+                from litellm_client import LiteLLMClient
+                from prompts import PROMPT_PR
+                    
+                client = LiteLLMClient()
                 pr_info = client.chat_completion(
                     system_message=PROMPT_PR(),
                     user_message=f"Agent history:\n{history}"

@@ -260,7 +260,8 @@ document.addEventListener('DOMContentLoaded', async () => {
                     tasks: tasks,
                     num_agents: agentCount,
                     aider_commands: document.getElementById('aiderCommands').value.trim(),
-                    github_token: document.getElementById('githubToken').value.trim()
+                    github_token: document.getElementById('githubToken').value.trim(),
+                    acceptance_criteria: document.getElementById('acceptanceCriteria').value.trim()
                 })
             });
             
