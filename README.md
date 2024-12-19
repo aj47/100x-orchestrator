@@ -11,47 +11,41 @@ The 100x-orchestrator system consists of three key components:
    - Coordinates agent creation, task allocation, and monitoring
    - Handles resource management and inter-agent communication
 
-2. **Aider Agents**: 
-   - Individual task-specific agents responsible for executing coding tasks
-   - Each agent has its own workspace and dedicated configuration
+2. **Aider Sessions**: 
+   - Individual task-specific sessions responsible for executing coding tasks
+   - Each session has its own workspace and dedicated configuration
    - Manages the lifecycle of its associated Aider instance
 
 3. **Aider Instances**: 
    - Actual AI coding assistants that perform specific coding operations
-   - Dedicated to each Aider Agent
+   - Dedicated to each Aider Session
    - Interact directly with the repository and execute coding tasks
+
+## Project Structure
+
+```
+100x-orchestrator/
+├── app.py                  # Web interface
+├── orchestrator/           # Core orchestration logic
+│   ├── __init__.py
+│   ├── orchestrator.py     # Main orchestration logic
+│   ├── aider_session.py    # Aider session management
+│   ├── prompt_processor.py # Response processing
+│   └── critique_handler.py # Code review validation
+├── requirements.txt        # Project dependencies
+├── tasks/                  # Task configuration
+├── templates/             # Web interface templates
+└── workspaces/           # Session workspaces
+```
 
 ## Features
 
-- **Advanced Multi-Agent Management**: Create and manage multiple AI coding agents with granular control
-- **Real-Time Output Tracking**: Monitor agent and Aider instance progress
+- **Advanced Multi-Session Management**: Create and manage multiple AI coding sessions with granular control
+- **Real-Time Output Tracking**: Monitor session and Aider instance progress
 - **Git Integration**: Automatic repository cloning and branch management
-- **Workspace Isolation**: Strict isolation for each agent and its Aider instance
+- **Workspace Isolation**: Strict isolation for each session and its Aider instance
 - **Web Interface**: Comprehensive dashboard for system monitoring
-- **Intelligent Session Management**: Robust handling of agent lifecycles and Aider interactions
-
-## Architecture Diagram
-
-```
-+-------------------+
-|   Orchestrator    |
-|  (Central Control)|
-+--------+----------+
-         |
-         | Manages
-         v
-+--------+----------+
-|   Aider Agents    |
-| (Task Executors)  |
-+--------+----------+
-         |
-         | Instantiates
-         v
-+--------+----------+
-| Aider Instances   |
-| (AI Coding Tools) |
-+-------------------+
-```
+- **Intelligent Session Management**: Robust handling of session lifecycles and Aider interactions
 
 ## Installation
 
@@ -86,7 +80,10 @@ set LITELLM_MODEL=anthropic/claude-3-5-sonnet-20240620  # On Windows
 {
     "tasks": [],
     "agents": {},
-    "repository_url": ""
+    "repository_url": "",
+    "config": {
+        "aider_session": {}
+    }
 }
 ```
 
@@ -99,28 +96,16 @@ python app.py
 
 2. Access the web interface at `http://localhost:5000`
 
-3. Create new agents:
+3. Create new sessions:
    - Enter a Git repository URL
    - Define your tasks
-   - Choose number of agents per task
-   - Click "Create Agent"
+   - Choose number of sessions per task
+   - Click "Create Session"
 
 4. Monitor progress:
-   - View real-time agent outputs
-   - Check agent status
-   - Manage agent lifecycle
-
-## Project Structure
-
-```
-100x-orchestrator/
-├── app.py              # Web interface
-├── orchestrator.py     # Core orchestration logic
-├── requirements.txt    # Project dependencies
-├── tasks/             # Task configuration
-├── templates/         # Web interface templates
-└── workspaces/        # Agent workspaces
-```
+   - View real-time session outputs
+   - Check session status
+   - Manage session lifecycle
 
 ## Technical Stack
 
@@ -131,11 +116,7 @@ python app.py
 - LiteLLM
 - Threading
 
-## Contributing
-
-Contributions are welcome! Please feel free to submit a Pull Request.
-
-Python Coding Standards
+## Python Coding Standards
 
 1. Conciseness
    - Write clear, concise code that is easy to understand
@@ -160,7 +141,10 @@ Python Coding Standards
    - Use type hints
    - Always handle errors gracefully
 
+## Contributing
+
+Contributions are welcome! Please feel free to submit a Pull Request.
+
 ## License
 
 [MIT License](LICENSE)
-
