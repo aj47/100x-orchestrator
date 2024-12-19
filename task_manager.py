@@ -63,7 +63,6 @@ def save_tasks(tasks_data):
                 'created_at': agent_data.get('created_at'),
                 'last_updated': agent_data.get('last_updated'),
                 'aider_output': agent_data.get('aider_output', ''),
-                'last_critique': agent_data.get('last_critique'),
                 'progress': agent_data.get('progress', ''),
                 'thought': agent_data.get('thought', ''),
                 'progress_history': agent_data.get('progress_history', []),
