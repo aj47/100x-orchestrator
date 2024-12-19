@@ -24,11 +24,7 @@ def load_tasks() -> Dict[str, Union[List, Dict, str]]:
                     "tasks": [],
                     "agents": {},
                     "repository_url": "",
-                    "acceptance_criteria": {
-                        "code_quality": [],
-                        "testing": [],
-                        "architecture": []
-                    }
+                    "acceptance_criteria": ""
                 }
             
             # Ensure required keys exist with proper structure
@@ -36,21 +32,12 @@ def load_tasks() -> Dict[str, Union[List, Dict, str]]:
             data.setdefault('agents', {})
             data.setdefault('repository_url', '')
             
-            # Initialize acceptance criteria structure if not present
+            # Initialize acceptance criteria as a single string if not present
             if 'acceptance_criteria' not in data:
-                data['acceptance_criteria'] = {
-                    "code_quality": [],
-                    "testing": [],
-                    "architecture": []
-                }
-            elif isinstance(data['acceptance_criteria'], list):
-                # Convert legacy list format to structured format
-                criteria_list = data['acceptance_criteria']
-                data['acceptance_criteria'] = {
-                    "code_quality": [c for c in criteria_list if "style" in c.lower() or "documentation" in c.lower()],
-                    "testing": [c for c in criteria_list if "test" in c.lower() or "coverage" in c.lower()],
-                    "architecture": [c for c in criteria_list if "pattern" in c.lower() or "design" in c.lower()]
-                }
+                data['acceptance_criteria'] = ""
+            elif not isinstance(data['acceptance_criteria'], str):
+                # Convert structured criteria to a single string
+                data['acceptance_criteria'] = json.dumps(data['acceptance_criteria'])
             
             return data
     except (FileNotFoundError, json.JSONDecodeError):
