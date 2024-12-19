@@ -53,18 +53,8 @@ def load_tasks() -> Dict[str, Union[List, Dict, str]]:
                 }
             
             return data
-    except FileNotFoundError:
-        return {
-            "tasks": [],
-            "agents": {},
-            "repository_url": "",
-            "acceptance_criteria": {
-                "code_quality": [],
-                "testing": [],
-                "architecture": []
-            }
-        }
-    except json.JSONDecodeError:
+    except (FileNotFoundError, json.JSONDecodeError):
+        # Initialize with default structure if file not found or JSON error
         return {
             "tasks": [],
             "agents": {},
