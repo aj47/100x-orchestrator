@@ -78,13 +78,9 @@ def save_tasks(tasks_data: Dict[str, Union[List, Dict, str]]) -> None:
         "tasks": tasks_data.get("tasks", []),
         "agents": {},
         "repository_url": tasks_data.get("repository_url", ""),
-        "acceptance_criteria": tasks_data.get("acceptance_criteria", {
-            "code_quality": [],
-            "testing": [],
-            "architecture": []
-        })
+        "acceptance_criteria": tasks_data.get("acceptance_criteria", "")
     }
-    
+         
     # Copy agent data without the session object and normalize paths
     for agent_id, agent_data in tasks_data.get("agents", {}).items():
         data_to_save["agents"][agent_id] = {
@@ -102,11 +98,7 @@ def save_tasks(tasks_data: Dict[str, Union[List, Dict, str]]) -> None:
             'future': agent_data.get('future', ''),
             'last_action': agent_data.get('last_action', ''),
             'acceptance_criteria': agent_data.get('acceptance_criteria', 
-                tasks_data.get('acceptance_criteria', {
-                    "code_quality": [],
-                    "testing": [],
-                    "architecture": []
-                })
+                tasks_data.get('acceptance_criteria', "")
             )
         }
     
