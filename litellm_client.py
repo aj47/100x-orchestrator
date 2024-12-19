@@ -1,9 +1,4 @@
 import os
-import logging
-from logging_config import configure_logging
-
-# Initialize logging
-configure_logging()
 from pathlib import Path
 from dotenv import load_dotenv
 from litellm import completion
@@ -15,7 +10,7 @@ class LiteLLMClient:
         # Load environment variables from ~/.env
         env_path = Path.home() / '.env'
         if not load_dotenv(env_path):
-            logging.warning(f"Could not load {env_path}")
+            print(f"Warning: Could not load {env_path}")
             
         self.api_key = os.getenv('OPENROUTER_API_KEY')
         
@@ -38,5 +33,4 @@ class LiteLLMClient:
             return response.choices[0].message.content
             
         except Exception as e:
-            logging.error(f"Error getting session summary: {e}")
             return f"Error generating summary: {str(e)}"
