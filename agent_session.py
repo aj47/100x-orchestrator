@@ -26,7 +26,7 @@ def normalize_path(path_str):
         return None
 
 class AgentSession:
-    def __init__(self, workspace_path, task, config=None, aider_commands=None):
+    def __init__(self, workspace_path, task, config=None, aider_commands=None, acceptance_criteria_path=None, session_context_path=None):
         self.workspace_path = normalize_path(workspace_path)
         self.task = task
         self.aider_commands = aider_commands # Store aider commands
@@ -36,6 +36,8 @@ class AgentSession:
         self.session_id = str(uuid.uuid4())[:8]  # For logging
         self._buffer_lock = threading.Lock()  # Add lock for thread-safe buffer access
         self.aider_commands = aider_commands
+        self.acceptance_criteria_path = acceptance_criteria_path
+        self.session_context_path = session_context_path
         
         # Load configuration with defaults
         default_config = {
@@ -375,3 +377,40 @@ class AgentSession:
             logging.info(f"[Session {self.session_id}] Cleanup completed")
         except Exception as e:
             logging.error(f"[Session {self.session_id}] Error during cleanup: {e}", exc_info=True)
+
+    def assess_acceptance_criteria(self):
+        try:
+            if not self.acceptance_criteria_path or not self.session_context_path:
+                raise ValueError("Paths to acceptance criteria and session context are required.")
+
+            with open(self.acceptance_criteria_path, 'r') as f:
+                acceptance_criteria = json.load(f)
+            with open(self.session_context_path, 'r') as f:
+                session_context = json.load(f)
+
+            # Compare session context with acceptance criteria (customize this logic)
+            unmet_criteria = []
+            for criterion, expected_value in acceptance_criteria.items():
+                if criterion not in session_context or session_context[criterion] != expected_value:
+                    unmet_criteria.append(criterion)
+
+            if unmet_criteria:
+                instructions = self._generate_instructions(unmet_criteria)
+                return instructions
+            else:
+                return "Acceptance criteria met. Ready for submission."
+
+        except (FileNotFoundError, json.JSONDecodeError) as e:
+            logging.error(f"Error assessing acceptance criteria: {e}")
+            return f"Error: Could not assess acceptance criteria. {e}"
+        except Exception as e:
+            logging.exception(f"An unexpected error occurred: {e}")
+            return f"Error: An unexpected error occurred. {e}"
+
+    def _generate_instructions(self, unmet_criteria):
+        instructions = "The following acceptance criteria are not met:\n"
+        for criterion in unmet_criteria:
+            instructions += f"- {criterion}\n"
+        instructions += "Please address these criteria before proceeding."
+        return instructions
+
