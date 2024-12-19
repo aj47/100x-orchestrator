@@ -1,7 +1,5 @@
 from flask import Flask, render_template, request, jsonify, send_from_directory
-from logging_config import configure_logging
 
-configure_logging()
 from orchestrator import (
     initialiseCodingAgent, 
     main_loop, 
