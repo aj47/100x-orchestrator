@@ -268,11 +268,13 @@ document.addEventListener('DOMContentLoaded', async () => {
                 },
                 body: JSON.stringify({
                     repo_url: document.getElementById('repoUrl').value,
-                    tasks: tasks,
+                    tasks: tasks.map(task => ({
+                        ...task,
+                        acceptance_criteria: document.getElementById('acceptanceCriteria').value.trim()
+                    })),
                     num_agents: agentCount,
                     aider_commands: document.getElementById('aiderCommands').value.trim(),
-                    github_token: document.getElementById('githubToken').value.trim(),
-                    acceptance_criteria: document.getElementById('acceptanceCriteria').value.trim()
+                    github_token: document.getElementById('githubToken').value.trim()
                 })
             });
             
