@@ -306,7 +306,7 @@ def initialiseCodingAgent(repository_url: str = None, task_description: str = No
                 'thought_history': [],   # Array to store thought history
                 'future': '',
                 'last_action': '',
-                'acceptance_criteria': task_description.get('acceptance_criteria', '')  # Store acceptance criteria
+                'acceptance_criteria': task_description['acceptance_criteria'] if isinstance(task_description, dict) else ''  # Store acceptance criteria
             }
             tasks_data['repository_url'] = repository_url
             save_tasks(tasks_data)
