@@ -68,6 +68,13 @@ def initialiseCodingAgent(repository_url: str = None, task_description: str = No
         tasks_data = load_tasks()
         agent_config = tasks_data.get('config', {}).get('agent_session', {})
         
+        # Get the structured acceptance criteria
+        acceptance_criteria = tasks_data.get('acceptance_criteria', {
+            "code_quality": [],
+            "testing": [],
+            "architecture": []
+        })
+        
         for i in range(num_agents):
             agent_id = str(uuid.uuid4())
             
@@ -149,7 +156,7 @@ def initialiseCodingAgent(repository_url: str = None, task_description: str = No
                 'thought_history': [],
                 'future': '',
                 'last_action': '',
-                'acceptance_criteria': tasks_data.get('acceptance_criteria', '')
+                'acceptance_criteria': acceptance_criteria  # Use structured format
             }
             tasks_data['repository_url'] = repository_url
             save_tasks(tasks_data)
@@ -206,7 +213,16 @@ def create_pull_request(agent_id, branch_name, pr_info):
             subprocess.run(["git", "config", "user.email", "actions@github.com"], check=True)
             
             subprocess.run(["git", "add", "."], check=True)
-            subprocess.run(["git", "commit", "-m", f"Changes by Agent {agent_id}"], check=False)
+            
+            # Include acceptance criteria status in commit message
+            commit_msg = f"Changes by Agent {agent_id}\n\nAcceptance Criteria Status:\n"
+            criteria = agent_data.get('acceptance_criteria', {})
+            for category, items in criteria.items():
+                commit_msg += f"\n{category.replace('_', ' ').title()}:\n"
+                for item in items:
+                    commit_msg += f"- {item}\n"
+            
+            subprocess.run(["git", "commit", "-m", commit_msg], check=False)
             
             remote_url = f"https://x-access-token:{token}@github.com/{repo_name}.git"
             subprocess.run(["git", "remote", "set-url", "origin", remote_url], check=True)
@@ -217,9 +233,16 @@ def create_pull_request(agent_id, branch_name, pr_info):
 
         repo = g.get_repo(repo_name)
         
+        # Include acceptance criteria in PR description
+        pr_description = pr_info.get('description', 'Automated changes') + "\n\n## Acceptance Criteria Status\n"
+        for category, items in criteria.items():
+            pr_description += f"\n### {category.replace('_', ' ').title()}\n"
+            for item in items:
+                pr_description += f"- [ ] {item}\n"
+        
         pr = repo.create_pull(
             title=pr_info.get('title', f'Changes by Agent {agent_id}'),
-            body=pr_info.get('description', 'Automated changes'),
+            body=pr_description,
             head=branch_name,
             base='main'
         )
@@ -334,8 +357,16 @@ def main_loop():
                             
                             if agent_id in prompt_processors:
                                 processor = prompt_processors[agent_id]
-                                acceptance_criteria = tasks_data['agents'][agent_id].get('acceptance_criteria', '')
-                                action = processor.process_response(agent_id, follow_up_message, acceptance_criteria)
+                                acceptance_criteria = tasks_data['agents'][agent_id].get('acceptance_criteria', {
+                                    "code_quality": [],
+                                    "testing": [],
+                                    "architecture": []
+                                })
+                                action = processor.process_response(
+                                    agent_id, 
+                                    follow_up_message, 
+                                    json.dumps(acceptance_criteria)  # Convert structured criteria to JSON string
+                                )
                                 
                                 if agent_id in aider_sessions:
                                     action_message = f'<div class="output-line agent-action"><strong>[AGENT ACTION]:</strong> {action}</div>'
