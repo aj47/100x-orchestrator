@@ -1,28 +1,19 @@
-import os, json, traceback, subprocess, sys, uuid
+import os, json, subprocess, sys, uuid
 from time import sleep
 import threading
 import datetime
-import queue
 import io
-import logging
 from pathlib import Path
 import time
-import re
 
 def normalize_path(path_str):
     """Normalize a path string to absolute path with forward slashes."""
     if not path_str:
         return None
     try:
-        # Convert to Path object and resolve to absolute path
         path = Path(path_str).resolve()
-        # Convert to string with forward slashes
-        normalized = str(path).replace('\\', '/')
-        # Log both the input and output paths
-        logging.debug(f"Path normalization: {path_str} -> {normalized}")
-        return normalized
-    except Exception as e:
-        logging.error(f"Error normalizing path {path_str}: {e}")
+        return str(path).replace('\\', '/')
+    except Exception:
         return None
 
 class AgentSession:

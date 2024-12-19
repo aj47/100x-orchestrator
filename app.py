@@ -1,12 +1,4 @@
-import logging
 from flask import Flask, render_template, request, jsonify, send_from_directory
-from werkzeug.serving import WSGIRequestHandler
-
-# Custom log filter to suppress specific log messages
-class TasksJsonLogFilter(logging.Filter):
-    def filter(self, record):
-        # Suppress log messages for tasks.json requests
-        return not ('/tasks/tasks.json' in record.getMessage())
 from orchestrator import (
     initialiseCodingAgent, 
     main_loop, 
@@ -23,18 +15,6 @@ import datetime
 
 app = Flask(__name__)
 
-# Configure basic logging
-logging.basicConfig(
-    level=logging.INFO,
-    format='%(asctime)s - %(message)s',
-    handlers=[
-        logging.StreamHandler()
-    ]
-)
-
-# Add filter to suppress tasks.json log messages
-for handler in logging.getLogger().handlers:
-    handler.addFilter(TasksJsonLogFilter())
 
 @app.route('/')
 def index():
@@ -109,11 +89,7 @@ def create_agent():
         with open(env_path, 'a') as f:
             f.write(f"\nGITHUB_TOKEN={github_token}\n")
         
-        # Enhanced logging for debugging
-        app.logger.info(f"Received create_agent request: {data}")
-        
         if not repo_url or not tasks:
-            app.logger.error("Missing repository URL or tasks")
             return jsonify({'error': 'Repository URL and tasks are required'}), 400
         
         # Ensure tasks is a list
