@@ -3,8 +3,16 @@ from time import sleep
 import threading
 import datetime
 import io
+import logging
 from pathlib import Path
 import time
+
+# Configure logging
+logging.basicConfig(
+    level=logging.INFO,
+    format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
+    handlers=[logging.StreamHandler()]
+)
 
 def normalize_path(path_str):
     """Normalize a path string to absolute path with forward slashes."""
