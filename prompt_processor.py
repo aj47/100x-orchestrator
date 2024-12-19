@@ -5,6 +5,7 @@ from dataclasses import dataclass, field
 from datetime import datetime
 from github import Github
 from critique_handler import CritiqueHandler
+from orchestrator import load_tasks
 
 @dataclass
 class AgentResponse:
