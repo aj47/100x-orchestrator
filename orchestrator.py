@@ -75,34 +75,117 @@ def initialiseCodingAgent(repository_url: str = None, task_description: str = No
             "architecture": []
         })
         
-        for i in range(num_agents):
+        for _ in range(num_agents):
             agent_id = str(uuid.uuid4())
-            
             agent_workspace = Path(tempfile.mkdtemp(prefix=f"agent_{agent_id}_")).resolve()
-            
+
+            # Define standard directories within the workspace
             workspace_dirs = {
                 "src": agent_workspace / "src",
-                "tests": agent_workspace / "tests", 
-                "docs": agent_workspace / "docs", 
-                "config": agent_workspace / "config", 
+                "tests": agent_workspace / "tests",
+                "docs": agent_workspace / "docs",
+                "config": agent_workspace / "config",
                 "repo": agent_workspace / "repo"
             }
-            
+
+            # Create directories
             for dir_path in workspace_dirs.values():
                 dir_path.mkdir(parents=True, exist_ok=True)
-                
+
+            # Write the task description to a file in the workspace
             task_file = agent_workspace / "current_task.txt"
             task_file.write_text(task_description)
-            
+
             original_dir = Path.cwd()
             repo_dir = None
             full_repo_path = None
-            
+
             try:
+                # Change to the repository directory within the workspace
                 os.chdir(workspace_dirs["repo"])
+
+                # Clone the repository if URL is provided
                 if not repository_url:
+                    logging.error("Repository URL is required for cloning.")
                     shutil.rmtree(agent_workspace)
                     continue
+
+                repo_name = repository_url.rstrip('/').split('/')[-1]
+                if repo_name.endswith('.git'):
+                    repo_name = repo_name[:-4]
+
+                if not cloneRepository(repository_url):
+                    logging.error(f"Failed to clone repository: {repository_url}")
+                    shutil.rmtree(agent_workspace)
+                    continue
+
+                # Check if repository was cloned successfully
+                if not os.path.exists(repo_name) or not os.path.isdir(os.path.join(repo_name, '.git')):
+                    logging.error(f"Repository directory '{repo_name}' not found or not a git repository.")
+                    shutil.rmtree(agent_workspace)
+                    continue
+
+                repo_dir = repo_name
+                full_repo_path = (workspace_dirs["repo"] / repo_dir).resolve()
+
+                # Change to the cloned repository directory
+                os.chdir(full_repo_path)
+
+                # Create a new branch for the agent
+                branch_name = f"agent-{agent_id[:8]}"
+                try:
+                    subprocess.check_call(f"git checkout -b {branch_name}", shell=True)
+                except subprocess.CalledProcessError:
+                    logging.error(f"Failed to create branch '{branch_name}'.")
+                    shutil.rmtree(agent_workspace)
+                    continue
+
+                # Initialize an Aider session
+                aider_session = AgentSession(str(full_repo_path), task_description, agent_config, aider_commands=aider_commands)
+                prompt_processor = PromptProcessor()
+
+                # Start the Aider session
+                if not aider_session.start():
+                    logging.error("Failed to start Aider session.")
+                    shutil.rmtree(agent_workspace)
+                    continue
+
+                # Store the Aider session and prompt processor
+                aider_sessions[agent_id] = aider_session
+                prompt_processors[agent_id] = prompt_processor
+
+            finally:
+                # Change back to the original directory
+                os.chdir(original_dir)
+
+            # Store agent data
+            tasks_data['agents'][agent_id] = {
+                'workspace': normalize_path(agent_workspace),
+                'repo_path': normalize_path(full_repo_path) if full_repo_path else None,
+                'task': task_description,
+                'status': 'pending',
+                'created_at': datetime.datetime.now().isoformat(),
+                'last_updated': datetime.datetime.now().isoformat(),
+                'aider_output': '',
+                'progress': '',
+                'thought': '',
+                'progress_history': [],
+                'thought_history': [],
+                'future': '',
+                'last_action': '',
+                'acceptance_criteria': acceptance_criteria
+            }
+            tasks_data['repository_url'] = repository_url
+            save_tasks(tasks_data)
+
+            created_agent_ids.append(agent_id)
+
+        return created_agent_ids if created_agent_ids else None
+
+    except Exception as e:
+        logging.error(f"An error occurred during agent initialization: {e}")
+        traceback.print_exc()
+        return None
 
                 repo_name = repository_url.rstrip('/').split('/')[-1]
                 if repo_name.endswith('.git'):
