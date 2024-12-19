@@ -68,16 +68,16 @@ def initialiseCodingAgent(repository_url: str = None, task_description: str = No
         tasks_data = load_tasks()
         agent_config = tasks_data.get('config', {}).get('agent_session', {})
         
-        # Get the structured acceptance criteria
-        acceptance_criteria = tasks_data.get('acceptance_criteria', {
-            "code_quality": [],
-            "testing": [],
-            "architecture": []
-        })
-        
         for _ in range(num_agents):
             agent_id = str(uuid.uuid4())
             agent_workspace = Path(tempfile.mkdtemp(prefix=f"agent_{agent_id}_")).resolve()
+
+            # Get the structured acceptance criteria
+            acceptance_criteria = tasks_data.get('acceptance_criteria', {
+                "code_quality": [],
+                "testing": [],
+                "architecture": []
+            })
 
             # Define standard directories within the workspace
             workspace_dirs = {
