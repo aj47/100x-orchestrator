@@ -26,7 +26,7 @@ def normalize_path(path_str):
         return None
 
 class AgentSession:
-    def __init__(self, workspace_path, task, config=None, aider_commands=None):
+    def __init__(self, workspace_path, task, config_path="config.json", aider_commands=None):
         self.workspace_path = normalize_path(workspace_path)
         self.task = task
         self.aider_commands = aider_commands # Store aider commands
@@ -40,9 +40,18 @@ class AgentSession:
         # Load configuration with defaults
         default_config = {
             'stability_duration': 10,
-            'output_buffer_max_length': 10000
+            'output_buffer_max_length': 10000,
+            "llm_model": "openrouter/google/gemini-flash-1.5", #default model
+            "prompt": "" #default prompt
         }
-        self.config = {**default_config, **(config or {})}
+        self.config = {**default_config}
+        
+        try:
+            with open(config_path, 'r') as f:
+                config_data = json.load(f)
+                self.config.update(config_data)
+        except (FileNotFoundError, json.JSONDecodeError) as e:
+            logging.error(f"[Session {self.session_id}] Error loading config from {config_path}: {e}")
         
         logging.info(f"[Session {self.session_id}] Initialized with workspace: {self.workspace_path}")
         logging.info(f"[Session {self.session_id}] Configuration: {self.config}")
@@ -72,7 +81,7 @@ class AgentSession:
                 '--map-tokens', '1024',
                 '--no-show-model-warnings',
                 '--yes',
-                '--model', 'openrouter/google/gemini-flash-1.5',
+                '--model', self.config["llm_model"], # Use config for model
                 '--no-pretty',
             ]
             if self.aider_commands:
