@@ -1,0 +1,4 @@
+{
+  "llm_model": "YOUR_LLM_MODEL_STRING",
+  "prompt": "YOUR_PROMPT_HERE"
+}
