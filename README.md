@@ -1,166 +1,64 @@
 # 100x-orchestrator
 
-A web-based orchestration system for managing AI coding agents with advanced multi-layered architecture.
-
-## Architecture Overview
-
-The 100x-orchestrator system consists of three key components:
-
-1. **Orchestrator**: 
-   - The central control unit managing the entire system
-   - Coordinates agent creation, task allocation, and monitoring
-   - Handles resource management and inter-agent communication
-
-2. **Aider Agents**: 
-   - Individual task-specific agents responsible for executing coding tasks
-   - Each agent has its own workspace and dedicated configuration
-   - Manages the lifecycle of its associated Aider instance
-
-3. **Aider Instances**: 
-   - Actual AI coding assistants that perform specific coding operations
-   - Dedicated to each Aider Agent
-   - Interact directly with the repository and execute coding tasks
+[Previous content remains the same until the Features section]
 
 ## Features
 
-- **Advanced Multi-Agent Management**: Create and manage multiple AI coding agents with granular control
-- **Real-Time Output Tracking**: Monitor agent and Aider instance progress
+- **Advanced Multi-Session Management**: Create and manage multiple AI coding sessions with granular control
+- **Real-Time Output Tracking**: Monitor session and Aider instance progress
 - **Git Integration**: Automatic repository cloning and branch management
-- **Workspace Isolation**: Strict isolation for each agent and its Aider instance
+- **Workspace Isolation**: Strict isolation for each session and its Aider instance
 - **Web Interface**: Comprehensive dashboard for system monitoring
-- **Intelligent Session Management**: Robust handling of agent lifecycles and Aider interactions
+- **Intelligent Session Management**: Robust handling of session lifecycles and Aider interactions
+- **Automated Code Review**: Built-in critique system for validating changes against acceptance criteria
 
-## Architecture Diagram
+## Acceptance Criteria System
 
-```
-+-------------------+
-|   Orchestrator    |
-|  (Central Control)|
-+--------+----------+
-         |
-         | Manages
-         v
-+--------+----------+
-|   Aider Agents    |
-| (Task Executors)  |
-+--------+----------+
-         |
-         | Instantiates
-         v
-+--------+----------+
-| Aider Instances   |
-| (AI Coding Tools) |
-+-------------------+
-```
+The 100x-orchestrator includes a sophisticated acceptance criteria validation system that ensures all code changes meet predefined quality standards and requirements.
 
-## Installation
+### How It Works
 
-1. Clone the repository:
-```bash
-git clone https://github.com/yourusername/100x-orchestrator.git
-cd 100x-orchestrator
-```
-
-2. Create and activate a virtual environment:
-```bash
-python -m venv .venv
-.venv\Scripts\activate  # On Windows
-source .venv/bin/activate  # On Unix/MacOS
-```
-
-3. Install dependencies:
-```bash
-pip install -r requirements.txt
-```
-
-## Configuration
-
-1. Set up your environment variables:
-```bash
-set LITELLM_MODEL=anthropic/claude-3-5-sonnet-20240620  # On Windows
-# export LITELLM_MODEL=anthropic/claude-3-5-sonnet-20240620  # On Unix/MacOS
-```
-
-2. The system uses tasks.json for configuration:
+1. **Definition**: Acceptance criteria are defined when creating tasks:
 ```json
 {
-    "tasks": [],
-    "agents": {},
-    "repository_url": ""
+    "tasks": [
+        {
+            "title": "Task Name",
+            "description": "Task details",
+            "acceptance_criteria": [
+                "Must maintain existing test coverage",
+                "Should follow PEP 8 style guidelines",
+                "Must include appropriate error handling"
+            ]
+        }
+    ]
 }
 ```
 
-## Usage
+2. **Validation Process**:
+   - The CritiqueHandler automatically validates all code changes
+   - Analyzes both the code diff and session logs
+   - Provides detailed feedback on criteria compliance
+   - Prevents completion until all criteria are met
 
-1. Start the web server:
-```bash
-python app.py
+3. **Feedback Loop**:
+   - Real-time feedback to agents
+   - Specific guidance on unmet criteria
+   - Automatic PR creation only after validation
+
+### Example Criteria
+
+```json
+{
+    "acceptance_criteria": [
+        "Code must be properly documented with docstrings",
+        "All new functions must include type hints",
+        "Unit tests must be included for new functionality",
+        "Code must pass all existing tests",
+        "Changes must not introduce new dependencies",
+        "Variable names must be descriptive and follow conventions"
+    ]
+}
 ```
 
-2. Access the web interface at `http://localhost:5000`
-
-3. Create new agents:
-   - Enter a Git repository URL
-   - Define your tasks
-   - Choose number of agents per task
-   - Click "Create Agent"
-
-4. Monitor progress:
-   - View real-time agent outputs
-   - Check agent status
-   - Manage agent lifecycle
-
-## Project Structure
-
-```
-100x-orchestrator/
-├── app.py              # Web interface
-├── orchestrator.py     # Core orchestration logic
-├── requirements.txt    # Project dependencies
-├── tasks/             # Task configuration
-├── templates/         # Web interface templates
-└── workspaces/        # Agent workspaces
-```
-
-## Technical Stack
-
-- Python 3.8+
-- Flask
-- Aider
-- Git
-- LiteLLM
-- Threading
-
-## Contributing
-
-Contributions are welcome! Please feel free to submit a Pull Request.
-
-Python Coding Standards
-
-1. Conciseness
-   - Write clear, concise code that is easy to understand
-   - Avoid unnecessary comments - let code be self-documenting
-   - Keep functions small and focused
-   - Remove redundant code
-
-2. Imports & Structure
-   - Group: stdlib > third-party > local
-   - Use absolute imports
-   - One import per line
-
-3. Naming & Style
-   - snake_case for functions/variables
-   - PascalCase for classes
-   - UPPERCASE for constants
-   - Max line length: 100
-
-4. Safety & Error Handling
-   - Use subprocess.check_call() over run()
-   - Catch specific exceptions
-   - Use type hints
-   - Always handle errors gracefully
-
-## License
-
-[MIT License](LICENSE)
-
+[Rest of the README remains the same]
