@@ -313,7 +313,7 @@ def initialiseCodingAgent(repository_url: str = None, task_description: str = No
             # Add critique rules to tasks data config
             if 'config' not in tasks_data:
                 tasks_data['config'] = {}
-            tasks_data['config']['critique_rules'] = data.get('config', {}).get('critique_rules', [])
+            tasks_data['config']['critique_rules'] = tasks_data.get('config', {}).get('critique_rules', [])
                 
             save_tasks(tasks_data)
             
