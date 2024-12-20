@@ -151,6 +151,38 @@ document.addEventListener('DOMContentLoaded', async () => {
         return taskItem;
     }
     
+    // Add rule button functionality
+    document.getElementById('addRule').addEventListener('click', () => {
+        const ruleList = document.getElementById('ruleList');
+        const ruleItem = document.createElement('div');
+        ruleItem.classList.add('rule-item', 'mb-2');
+        
+        ruleItem.innerHTML = `
+            <div class="d-flex gap-2">
+                <div class="flex-grow-1">
+                    <input type="text" class="form-control mb-2" 
+                           placeholder="Rule name (e.g. Progress Rate)"
+                           name="rule_name[]" required>
+                    <input type="text" class="form-control mb-2"
+                           placeholder="Condition (e.g. progress_updates > 1 per 5min)"
+                           name="rule_condition[]" required>
+                    <select class="form-control" name="rule_severity[]">
+                        <option value="info">Info</option>
+                        <option value="warning">Warning</option>
+                        <option value="error">Error</option>
+                    </select>
+                </div>
+                <button type="button" class="btn btn-danger remove-rule">×</button>
+            </div>
+        `;
+        
+        ruleItem.querySelector('.remove-rule').addEventListener('click', () => {
+            ruleItem.remove();
+        });
+        
+        ruleList.appendChild(ruleItem);
+    });
+
     // Add task button functionality
     addTaskButton.addEventListener('click', () => {
         const taskItems = taskList.querySelectorAll('.task-item');
@@ -250,6 +282,13 @@ document.addEventListener('DOMContentLoaded', async () => {
             
             const agentCount = parseInt(document.getElementById('agentCount').value, 10);
             
+            // Collect rules
+            const rules = Array.from(document.querySelectorAll('.rule-item')).map(item => ({
+                name: item.querySelector('[name="rule_name[]"]').value.trim(),
+                condition: item.querySelector('[name="rule_condition[]"]').value.trim(),
+                severity: item.querySelector('[name="rule_severity[]"]').value
+            })).filter(rule => rule.name !== '' && rule.condition !== '');
+
             const response = await fetch('/create_agent', {
                 method: 'POST',
                 headers: {
@@ -260,7 +299,8 @@ document.addEventListener('DOMContentLoaded', async () => {
                     tasks: tasks,
                     num_agents: agentCount,
                     aider_commands: document.getElementById('aiderCommands').value.trim(),
-                    github_token: document.getElementById('githubToken').value.trim()
+                    github_token: document.getElementById('githubToken').value.trim(),
+                    rules: rules
                 })
             });
             

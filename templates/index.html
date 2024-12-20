@@ -74,6 +74,29 @@
                                placeholder="e.g. --test --yes">
                         <small class="form-text text-muted">Optional: Add custom command line arguments for aider</small>
                     </div>
+
+                    <div class="form-group">
+                        <label>Critique Rules</label>
+                        <div class="d-flex gap-2 mb-2">
+                            <button type="button" id="addRule" class="btn btn-secondary btn-sm">+ Add Rule</button>
+                        </div>
+                        <div id="ruleList">
+                            <!-- Rules will be dynamically populated here -->
+                            <div class="rule-item mb-2">
+                                <input type="text" class="form-control mb-2" 
+                                       placeholder="Rule name (e.g. Progress Rate)"
+                                       name="rule_name[]" required>
+                                <input type="text" class="form-control mb-2"
+                                       placeholder="Condition (e.g. progress_updates > 1 per 5min)"
+                                       name="rule_condition[]" required>
+                                <select class="form-control" name="rule_severity[]">
+                                    <option value="info">Info</option>
+                                    <option value="warning">Warning</option>
+                                    <option value="error">Error</option>
+                                </select>
+                            </div>
+                        </div>
+                    </div>
                     
                     <div class="form-group">
                         <label>Tasks</label>
