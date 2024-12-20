@@ -26,7 +26,7 @@ def normalize_path(path_str):
         return None
 
 class AgentSession:
-    def __init__(self, workspace_path, task, config=None, aider_commands=None):
+    def __init__(self, workspace_path, task, config_path='config.json', config=None, aider_commands=None):
         self.workspace_path = normalize_path(workspace_path)
         self.task = task
         self.aider_commands = aider_commands # Store aider commands
@@ -37,12 +37,20 @@ class AgentSession:
         self._buffer_lock = threading.Lock()  # Add lock for thread-safe buffer access
         self.aider_commands = aider_commands
         
-        # Load configuration with defaults
+        # Load configuration with defaults and config file
         default_config = {
             'stability_duration': 10,
-            'output_buffer_max_length': 10000
+            'output_buffer_max_length': 10000,
+            'llm_model': 'openrouter/google/gemini-flash-1.5',
+            'prompt': 'You are a helpful coding assistant. Please respond to the following task:'
         }
-        self.config = {**default_config, **(config or {})}
+        try:
+            with open(config_path, 'r') as f:
+                file_config = json.load(f)
+                self.config = {**default_config, **file_config, **(config or {})}
+        except (FileNotFoundError, json.JSONDecodeError) as e:
+            logging.warning(f"Error loading config from {config_path}: {e}. Using default config.")
+            self.config = default_config
         
         logging.info(f"[Session {self.session_id}] Initialized with workspace: {self.workspace_path}")
         logging.info(f"[Session {self.session_id}] Configuration: {self.config}")
@@ -72,7 +80,7 @@ class AgentSession:
                 '--map-tokens', '1024',
                 '--no-show-model-warnings',
                 '--yes',
-                '--model', 'openrouter/google/gemini-flash-1.5',
+                '--model', self.config['llm_model'], # Use config for model
                 '--no-pretty',
             ]
             if self.aider_commands:
