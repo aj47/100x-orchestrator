@@ -322,6 +322,47 @@ body {
     color: #dc3545;
 }
 
+/* Feedback and critique styles */
+.feedback-section {
+    background-color: #2a2a2a;
+    border-left: 3px solid #ffc107;
+    padding: 0.75rem;
+    margin-top: 0.5rem;
+    border-radius: 0 4px 4px 0;
+}
+
+.feedback-section strong {
+    color: #ffc107;
+}
+
+.critique-section {
+    background-color: #2a2a2a;
+    border-left: 3px solid #17a2b8;
+    padding: 0.75rem;
+    margin-top: 0.5rem;
+    border-radius: 0 4px 4px 0;
+}
+
+.critique-section strong {
+    color: #17a2b8;
+}
+
+.critique-approved {
+    border-left-color: #28a745;
+}
+
+.critique-approved strong {
+    color: #28a745;
+}
+
+.critique-rejected {
+    border-left-color: #dc3545;
+}
+
+.critique-rejected strong {
+    color: #dc3545;
+}
+
 /* CLI Output specific styles */
 .cli-output {
     background-color: #1e1e1e;
