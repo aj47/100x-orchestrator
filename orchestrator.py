@@ -2,6 +2,7 @@ import os, json, traceback, subprocess, sys, uuid
 from prompts import PROMPT_AIDER
 from litellm_client import LiteLLMClient
 from prompt_processor import PromptProcessor
+from critique_agent import CritiqueAgent
 from pathlib import Path
 import shutil
 import tempfile
@@ -308,6 +309,12 @@ def initialiseCodingAgent(repository_url: str = None, task_description: str = No
                 'last_action': ''
             }
             tasks_data['repository_url'] = repository_url
+                
+            # Add critique rules to tasks data config
+            if 'config' not in tasks_data:
+                tasks_data['config'] = {}
+            tasks_data['config']['critique_rules'] = data.get('config', {}).get('critique_rules', [])
+                
             save_tasks(tasks_data)
             
             logging.info(f"Successfully initialized agent {agent_id}")

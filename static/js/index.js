@@ -256,6 +256,11 @@ document.addEventListener('DOMContentLoaded', async () => {
                 .split('\n')
                 .map(rule => rule.trim())
                 .filter(rule => rule !== '');
+                    
+            // Add critique rules to config
+            const config = {
+                critique_rules: rules
+            };
 
             const response = await fetch('/create_agent', {
                 method: 'POST',
@@ -268,7 +273,9 @@ document.addEventListener('DOMContentLoaded', async () => {
                     num_agents: agentCount,
                     aider_commands: document.getElementById('aiderCommands').value.trim(),
                     github_token: document.getElementById('githubToken').value.trim(),
-                    rules: rules
+                    config: {
+                        critique_rules: rules
+                    }
                 })
             });
             
