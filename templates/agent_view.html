@@ -67,6 +67,29 @@
                                 <div class="action-item">
                                     <strong>Last Action:</strong> <span data-field="action">{{ agent.last_action }}</span>
                                 </div>
+                                {% if agent.last_critique %}
+                                <div class="critique-item mt-3">
+                                    <strong>Last Critique:</strong>
+                                    <div class="critique-content">
+                                        <div class="critique-status {{ 'text-success' if agent.last_critique.approved else 'text-danger' }}">
+                                            Status: {{ 'Approved' if agent.last_critique.approved else 'Needs Improvement' }}
+                                        </div>
+                                        <div class="critique-feedback">
+                                            Feedback: {{ agent.last_critique.feedback }}
+                                        </div>
+                                        {% if agent.last_critique.suggestions %}
+                                        <div class="critique-suggestions">
+                                            <strong>Suggestions:</strong>
+                                            <ul>
+                                            {% for suggestion in agent.last_critique.suggestions %}
+                                                <li>{{ suggestion }}</li>
+                                            {% endfor %}
+                                            </ul>
+                                        </div>
+                                        {% endif %}
+                                    </div>
+                                </div>
+                                {% endif %}
                             </div>
 
                             <h6><i class="fas fa-terminal me-2"></i>Aider Output</h6>

@@ -322,6 +322,42 @@ body {
     color: #dc3545;
 }
 
+/* Critique styles */
+.critique-item {
+    background-color: #2a2a2a;
+    border-radius: 4px;
+    padding: 1rem;
+    margin-top: 1rem;
+}
+
+.critique-item strong {
+    color: #ffc107;
+}
+
+.critique-content {
+    margin-top: 0.5rem;
+}
+
+.critique-status {
+    font-weight: bold;
+    margin-bottom: 0.5rem;
+}
+
+.critique-feedback {
+    color: #e0e0e0;
+    margin-bottom: 0.5rem;
+}
+
+.critique-suggestions {
+    margin-top: 0.5rem;
+}
+
+.critique-suggestions ul {
+    margin: 0.5rem 0;
+    padding-left: 1.5rem;
+    color: #adb5bd;
+}
+
 /* Feedback and critique styles */
 .feedback-section {
     background-color: #2a2a2a;

@@ -590,8 +590,21 @@ def main_loop():
                                             critique_rules
                                         )
                                 
+                                        # Parse critique result if it's a string
+                                        if isinstance(critique_result, str):
+                                            try:
+                                                critique_data = json.loads(critique_result)
+                                            except json.JSONDecodeError:
+                                                critique_data = {
+                                                    "approved": False,
+                                                    "feedback": "Error parsing critique result",
+                                                    "suggestions": []
+                                                }
+                                        else:
+                                            critique_data = critique_result
+
                                         # Store critique result
-                                        tasks_data['agents'][agent_id]['last_critique'] = critique_result
+                                        tasks_data['agents'][agent_id]['last_critique'] = critique_data
                                         save_tasks(tasks_data)
 
                                         # Parse critique result as dict if it's a string

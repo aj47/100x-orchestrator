@@ -163,12 +163,34 @@ async function fetchUpdates() {
                     }
                 }
                 
-                // Update last critique if it exists
-                const currentCritique = agent.querySelector('.progress-section:last-child');
-                const newCritique = newAgentCard.querySelector('.progress-section:last-child');
-                if (currentCritique && newCritique && currentCritique.innerHTML !== newCritique.innerHTML) {
-                    currentCritique.innerHTML = newCritique.innerHTML;
-                    console.log(`Agent ${agentId} critique updated`);
+                // Update critique section if it exists
+                const currentCritique = agent.querySelector('.critique-item');
+                const newCritique = newAgentCard.querySelector('.critique-item');
+                
+                if (newCritique) {
+                    if (currentCritique) {
+                        if (currentCritique.innerHTML !== newCritique.innerHTML) {
+                            currentCritique.innerHTML = newCritique.innerHTML;
+                            console.log(`Agent ${agentId} critique updated`);
+                            
+                            // Flash effect for new critique
+                            currentCritique.style.transition = 'background-color 0.5s';
+                            currentCritique.style.backgroundColor = '#3a3a3a';
+                            setTimeout(() => {
+                                currentCritique.style.backgroundColor = '#2a2a2a';
+                            }, 500);
+                        }
+                    } else {
+                        // If critique section doesn't exist yet, add it
+                        const agentState = agent.querySelector('.agent-state');
+                        if (agentState) {
+                            const critiqueDiv = document.createElement('div');
+                            critiqueDiv.className = 'critique-item mt-3';
+                            critiqueDiv.innerHTML = newCritique.innerHTML;
+                            agentState.appendChild(critiqueDiv);
+                            console.log(`Agent ${agentId} critique section added`);
+                        }
+                    }
                 }
             }
         });
