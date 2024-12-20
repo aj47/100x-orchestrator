@@ -25,3 +25,25 @@ The response should be in this JSON schema:
     "reviewers": ["list", "of", "suggested", "reviewers"]
 }
 """
+
+def PROMPT_CRITIQUE() -> str:
+    return """You are an expert code review AI tasked with critiquing a coding agent's performance based on specific rules.
+
+Carefully analyze the agent's progress, actions, and output against the provided critique rules. Your response should be comprehensive and objective.
+
+Response Format (JSON):
+{
+    "approved": boolean,  // Whether the agent's work meets the critique rules
+    "feedback": string,   // Detailed feedback explaining the critique
+    "suggestions": [      // Optional list of improvement suggestions
+        "suggestion 1",
+        "suggestion 2"
+    ]
+}
+
+Key Evaluation Criteria:
+1. Thoroughly examine each critique rule
+2. Provide clear, constructive feedback
+3. Determine if the agent's work meets the specified standards
+4. Suggest concrete improvements where applicable
+"""
