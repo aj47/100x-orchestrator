@@ -251,15 +251,12 @@ document.addEventListener('DOMContentLoaded', async () => {
             
             const agentCount = parseInt(document.getElementById('agentCount').value, 10);
             
-            // Collect rules from textarea
-            const rules = document.getElementById('critiqueRules').value
-                .split('\n')
-                .map(rule => rule.trim())
-                .filter(rule => rule !== '');
+            // Collect critique rules as a single string
+            const critiqueRules = document.getElementById('critiqueRules').value.trim();
                     
             // Add critique rules to config
             const config = {
-                critique_rules: rules
+                critique_rules: critiqueRules
             };
 
             const response = await fetch('/create_agent', {
@@ -274,7 +271,7 @@ document.addEventListener('DOMContentLoaded', async () => {
                     aider_commands: document.getElementById('aiderCommands').value.trim(),
                     github_token: document.getElementById('githubToken').value.trim(),
                     config: {
-                        critique_rules: rules
+                        critique_rules: critiqueRules
                     }
                 })
             });
