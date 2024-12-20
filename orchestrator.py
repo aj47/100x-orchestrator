@@ -564,53 +564,56 @@ def main_loop():
                                 if action == "/finish":
                                     # Get PR info from agent state
                                     pr_info = processor.get_agent_state(agent_id).get('pr_info')
-                                    if pr_info:
-                                        try:
-                                            # Get critique rules from config
-                                            critique_rules = tasks_data.get('config', {}).get('critique_rules', '')
-                                    
-                                            # Run critique before creating PR
-                                            from critique_agent import CritiqueAgent
-                                            critique_result = CritiqueAgent.evaluate_agent(
-                                                tasks_data['agents'][agent_id],
-                                                critique_rules
-                                            )
-                                    
-                                            # Store critique result
-                                            tasks_data['agents'][agent_id]['last_critique'] = critique_result
-                                            save_tasks(tasks_data)
-
-                                            try:
-                                                # Parse critique result as dict if it's a string
-                                                if isinstance(critique_result, str):
-                                                    import json
-                                                    critique_result = json.loads(critique_result)
-
-                                                # Only create PR if critique approved
-                                                if critique_result.get('approved', False):
-                                                    # Create pull request
-                                                    branch_name = f"agent-{agent_id[:8]}"
-                                                    pr = create_pull_request(agent_id, branch_name, pr_info)
-                                                    if pr:
-                                                        logging.info(f"Created PR: {pr.html_url}")
-                                                        # Update agent state with PR URL
-                                                        tasks_data['agents'][agent_id]['pr_url'] = pr.html_url
-                                                        tasks_data['agents'][agent_id]['status'] = 'completed'
-                                                        save_tasks(tasks_data)
-                                                    else:
-                                                        logging.error("Failed to create PR")
-                                                        tasks_data['agents'][agent_id]['status'] = 'pr_creation_failed'
-                                                        save_tasks(tasks_data)
-                                                else:
-                                                    logging.warning(f"Critique rejected PR creation: {critique_result.get('feedback')}")
-                                                    tasks_data['agents'][agent_id]['status'] = 'critique_rejected'
-                                                    save_tasks(tasks_data)
-                                            except Exception as e:
-                                                logging.error(f"Error in PR creation process: {str(e)}")
-                                                tasks_data['agents'][agent_id]['status'] = 'error'
-                                                save_tasks(tasks_data)
-                                    else:
+                                    if not pr_info:
                                         logging.error("No PR info found in agent state")
+                                        tasks_data['agents'][agent_id]['status'] = 'error'
+                                        tasks_data['agents'][agent_id]['error_message'] = 'No PR info found'
+                                        save_tasks(tasks_data)
+                                        continue
+
+                                    try:
+                                        # Get critique rules from config
+                                        critique_rules = tasks_data.get('config', {}).get('critique_rules', '')
+                                
+                                        # Run critique before creating PR
+                                        from critique_agent import CritiqueAgent
+                                        critique_result = CritiqueAgent.evaluate_agent(
+                                            tasks_data['agents'][agent_id],
+                                            critique_rules
+                                        )
+                                
+                                        # Store critique result
+                                        tasks_data['agents'][agent_id]['last_critique'] = critique_result
+                                        save_tasks(tasks_data)
+
+                                        # Parse critique result as dict if it's a string
+                                        if isinstance(critique_result, str):
+                                            critique_result = json.loads(critique_result)
+
+                                        # Only create PR if critique approved
+                                        if critique_result.get('approved', False):
+                                            # Create pull request
+                                            branch_name = f"agent-{agent_id[:8]}"
+                                            pr = create_pull_request(agent_id, branch_name, pr_info)
+                                            if pr:
+                                                logging.info(f"Created PR: {pr.html_url}")
+                                                # Update agent state with PR URL
+                                                tasks_data['agents'][agent_id]['pr_url'] = pr.html_url
+                                                tasks_data['agents'][agent_id]['status'] = 'completed'
+                                                save_tasks(tasks_data)
+                                            else:
+                                                logging.error("Failed to create PR")
+                                                tasks_data['agents'][agent_id]['status'] = 'pr_creation_failed'
+                                                save_tasks(tasks_data)
+                                        else:
+                                            logging.warning(f"Critique rejected PR creation: {critique_result.get('feedback')}")
+                                            tasks_data['agents'][agent_id]['status'] = 'critique_rejected'
+                                            save_tasks(tasks_data)
+                                    except Exception as e:
+                                        logging.error(f"Error in PR creation process: {str(e)}")
+                                        tasks_data['agents'][agent_id]['status'] = 'error'
+                                        tasks_data['agents'][agent_id]['error_message'] = str(e)
+                                        save_tasks(tasks_data)
                                 elif action:
                                     # Send the processed action if the process is running
                                     if agent_session.send_message(action):
