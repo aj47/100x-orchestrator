@@ -571,12 +571,20 @@ def main_loop():
                                         save_tasks(tasks_data)
                                         continue
 
+                                    # Get PR info from agent state
+                                    pr_info = processor.get_agent_state(agent_id).get('pr_info')
+                                    if not pr_info:
+                                        logging.error("No PR info found in agent state")
+                                        tasks_data['agents'][agent_id]['status'] = 'error'
+                                        tasks_data['agents'][agent_id]['error_message'] = 'No PR info found'
+                                        save_tasks(tasks_data)
+                                        continue
+
                                     try:
                                         # Get critique rules from config
                                         critique_rules = tasks_data.get('config', {}).get('critique_rules', '')
                                 
                                         # Run critique before creating PR
-                                        from critique_agent import CritiqueAgent
                                         critique_result = CritiqueAgent.evaluate_agent(
                                             tasks_data['agents'][agent_id],
                                             critique_rules
