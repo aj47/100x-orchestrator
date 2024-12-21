@@ -343,6 +343,9 @@ def main_loop():
                         session_logs = agent_session.get_output()
                         try:
                             litellm_client = LiteLLMClient()
+                            #if session_logs is empty or only newlines. replace it with "*aider started*"
+                            if not session_logs or session_logs.isspace():
+                                session_logs = "*aider started*"
                             follow_up_message = litellm_client.chat_completion(
                                 PROMPT_AIDER(agent_session.task),
                                 session_logs

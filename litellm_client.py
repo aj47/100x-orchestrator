@@ -34,5 +34,5 @@ class LiteLLMClient:
             return response.choices[0].message.content
             
         except Exception as e:
-            logging.error(f"Error getting session summary: {e}")
+            logging.error(f"Error response from litellm: {str(e)}")
             return f"Error generating summary: {str(e)}"
