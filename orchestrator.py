@@ -635,6 +635,11 @@ def main_loop():
                                                         
                                                 # Send feedback as new task to agent
                                                 aider_sessions[agent_id].send_message(feedback_msg)
+                                                # Reset agent status to continue processing
+                                                tasks_data['agents'][agent_id]['status'] = 'in_progress'
+                                                save_tasks(tasks_data)
+                                                # Skip PR creation and continue main loop
+                                                continue
                                         
                                         save_tasks(tasks_data)
 
@@ -659,7 +664,7 @@ def main_loop():
                                                 save_tasks(tasks_data)
                                         else:
                                             logging.warning(f"Critique rejected PR creation: {critique_result.get('feedback')}")
-                                            tasks_data['agents'][agent_id]['status'] = 'critique_rejected'
+                                            tasks_data['agents'][agent_id]['status'] = 'in_progress'  # Changed from 'critique_rejected' to allow continuation
                                             save_tasks(tasks_data)
                                     except Exception as e:
                                         logging.error(f"Error in PR creation process: {str(e)}")
