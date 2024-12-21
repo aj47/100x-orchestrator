@@ -17,7 +17,7 @@ from github import Github
 from dotenv import load_dotenv
 
 # Import the new AgentSession class
-from agent_session import AgentSession, normalize_path
+from aider_agent import AiderAgent, normalize_path
 
 
 
@@ -192,7 +192,7 @@ def initialiseCodingAgent(repository_url: str = None, task_description: str = No
                     logging.error("Failed to create new branch", exc_info=True)
                     shutil.rmtree(agent_workspace)
                     continue
-                aider_session = AgentSession(str(full_repo_path), task_description, agent_config, aider_commands=aider_commands)
+                aider_session = AiderAgent(str(full_repo_path), task_description, agent_config, aider_commands=aider_commands)
                 prompt_processor = PromptProcessor()
                 if not aider_session.start():
                     logging.error("Failed to start aider session")
@@ -344,7 +344,7 @@ def main_loop():
                 logging.info(f"Checking agent {agent_id}")
                 update_agent_output(agent_id)
                 if agent_id in aider_sessions:
-                    agent_session: AgentSession = aider_sessions[agent_id]
+                    agent_session: AiderAgent = aider_sessions[agent_id]
                     if agent_session.is_ready():
                         session_logs = agent_session.get_output()
                         try:
@@ -379,47 +379,4 @@ def main_loop():
                                         'last_updated': current_time
                                     })
                                     save_tasks(tasks_data)
-                                except json.JSONDecodeError:
-                                    logging.error(f"Invalid JSON in follow_up_message: {follow_up_message}")
-                            if agent_id in prompt_processors:
-                                processor = prompt_processors[agent_id]
-                                action = processor.process_response(agent_id, follow_up_message)
-                                if agent_id in aider_sessions:
-                                    action_message = f'<div class="output-line agent-action"><strong>[AGENT ACTION]:</strong> {action}</div>'
-                                    aider_sessions[agent_id].output_buffer.write(action_message)
-                                if action == "/finish":
-                                    pr_info = processor.get_agent_state(agent_id).get('pr_info')
-                                    if pr_info:
-                                        try:
-                                            branch_name = f"agent-{agent_id[:8]}"
-                                            pr = create_pull_request(agent_id, branch_name, pr_info)
-                                            if pr:
-                                                logging.info(f"Created PR: {pr.html_url}")
-                                                tasks_data['agents'][agent_id]['pr_url'] = pr.html_url
-                                                tasks_data['agents'][agent_id]['status'] = 'completed'
-                                                save_tasks(tasks_data)
-                                            else:
-                                                logging.error("Failed to create PR")
-                                        except Exception as e:
-                                            logging.error(f"Error creating PR: {e}")
-                                    else:
-                                        logging.error("No PR info found in agent state")
-                                elif action:
-                                    if agent_session.send_message(action):
-                                        logging.info(f"Sending action: {action} to {agent_id}")
-                                    else:
-                                        logging.error(f"Failed to send action to agent {agent_id}")
-                                else:
-                                    logging.error(f"Failed to process response from OpenRouter")
-                            else:
-                                logging.error(f"No prompt processor found for agent {agent_id}")
-                        except Exception as e:
-                            logging.error(f"Error processing session summary: {e}")
-            sleep(CHECK_INTERVAL)
-        except Exception as e:
-            logging.error(f"Error in main loop: {e}", exc_info=True)
-            sleep(CHECK_INTERVAL)
-
-if __name__ == "__main__":
-    logging.info("Starting orchestrator")
-    main_loop()
+                                except json.
