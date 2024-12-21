@@ -245,6 +245,8 @@ class AgentSession:
             # Initial output snapshot
             initial_output = self.get_output()
             logging.debug(f"[Session {self.session_id}] Initial output length: {len(initial_output)}")
+            if not initial_output or initial_output.isspace():
+                return True
             
             # Track time and output stability
             start_time = time.time()
