@@ -153,6 +153,7 @@ class AgentSession:
                     "Newer aider version",
                     "Run this command to update:",
                     "python.exe -m pip install aider",
+                    "cmd.exe?",
                     "Aider v",
                     "Model:",
                     "Git repo:",
