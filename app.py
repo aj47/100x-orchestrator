@@ -36,6 +36,9 @@ logging.basicConfig(
 for handler in logging.getLogger().handlers:
     handler.addFilter(TasksJsonLogFilter())
 
+# Retrieve GitHub token from environment variable.  This should be set outside the code.
+GITHUB_TOKEN = os.environ.get('GITHUB_TOKEN')
+
 @app.route('/')
 def index():
     return render_template('index.html')
@@ -99,16 +102,10 @@ def create_agent():
         tasks = data.get('tasks', [])
         num_agents = data.get('num_agents', 1)  # Default to 1 if not specified
         aider_commands = data.get('aider_commands') # Get aider commands
-        github_token = data.get('github_token')
 
-        if not github_token:
-            return jsonify({'error': 'GitHub token is required'}), 400
+        if not GITHUB_TOKEN:
+            return jsonify({'error': 'GitHub token is missing from environment variables'}), 400
 
-        # Save token to .env file
-        env_path = Path.home() / '.env'
-        with open(env_path, 'a') as f:
-            f.write(f"\nGITHUB_TOKEN={github_token}\n")
-        
         # Enhanced logging for debugging
         app.logger.info(f"Received create_agent request: {data}")
         
@@ -138,7 +135,8 @@ def create_agent():
                     repository_url=repo_url, 
                     task_description=task_text,
                     num_agents=num_agents,
-                    aider_commands=aider_commands # Pass aider commands
+                    aider_commands=aider_commands, # Pass aider commands
+                    github_token=GITHUB_TOKEN # Pass github token
                 )
                 
                 if agent_ids:
