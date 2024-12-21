@@ -179,7 +179,12 @@ document.addEventListener('DOMContentLoaded', async () => {
 
             // Create issue selection UI
             const issueListContainer = document.createElement('div');
+            issueListContainer.className = 'github-issues-list';
+
             issues.filter(issue => !issue.pull_request).forEach(issue => {
+                const issueItem = document.createElement('div');
+                issueItem.className = 'issue-item';
+
                 const checkbox = document.createElement('input');
                 checkbox.type = 'checkbox';
                 checkbox.id = `issue-${issue.id}`;
@@ -187,16 +192,26 @@ document.addEventListener('DOMContentLoaded', async () => {
 
                 const label = document.createElement('label');
                 label.htmlFor = `issue-${issue.id}`;
-                label.textContent = `${issue.title} (#${issue.number})`;
+                
+                const titleSpan = document.createElement('span');
+                titleSpan.textContent = issue.title;
+                
+                const numberSpan = document.createElement('span');
+                numberSpan.className = 'issue-number';
+                numberSpan.textContent = `#${issue.number}`;
 
-                issueListContainer.appendChild(checkbox);
-                issueListContainer.appendChild(label);
-                issueListContainer.appendChild(document.createElement('br'));
+                label.appendChild(titleSpan);
+                label.appendChild(numberSpan);
+
+                issueItem.appendChild(checkbox);
+                issueItem.appendChild(label);
+                issueListContainer.appendChild(issueItem);
             });
 
             // Add load selected button
             const loadButton = document.createElement('button');
             loadButton.textContent = 'Load Selected Issues';
+            loadButton.className = 'load-issues-btn';
             loadButton.addEventListener('click', () => {
                 const selectedIssues = Array.from(issueListContainer.querySelectorAll('input[type="checkbox"]:checked'))
                     .map(checkbox => checkbox.value);
