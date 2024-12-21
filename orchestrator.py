@@ -622,6 +622,19 @@ def main_loop():
                                         # Add critique feedback to aider output
                                         if agent_id in aider_sessions:
                                             aider_sessions[agent_id].output_buffer.write(critique_feedback)
+                                            
+                                            # If not approved, send feedback as new task to agent
+                                            if not critique_data.get('approved', False):
+                                                feedback_msg = "Please address the following code review feedback:\n\n"
+                                                feedback_msg += f"FEEDBACK: {critique_data.get('feedback', 'No feedback provided')}\n\n"
+                                                
+                                                if critique_data.get('suggestions'):
+                                                    feedback_msg += "SUGGESTIONS:\n"
+                                                    for suggestion in critique_data['suggestions']:
+                                                        feedback_msg += f"- {suggestion}\n"
+                                                        
+                                                # Send feedback as new task to agent
+                                                aider_sessions[agent_id].send_message(feedback_msg)
                                         
                                         save_tasks(tasks_data)
 
