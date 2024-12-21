@@ -5,17 +5,17 @@ async function updateOverview() {
         const data = await response.json();
         const agents = data.agents || {};
         const agentCount = Object.keys(agents).length;
-        
+
         // Update statistics
         document.getElementById('totalAgents').textContent = agentCount;
-        
+
         // Calculate unique tasks
         const uniqueTasks = new Set(Object.values(agents).map(agent => agent.task)).size;
         document.getElementById('activeTasks').textContent = uniqueTasks;
-        
+
         // Update repository display
         document.getElementById('repoDisplay').textContent = data.repository_url || 'Not set';
-        
+
         // Show/hide delete button based on agent count
         document.getElementById('deleteAllAgents').style.display = agentCount > 0 ? 'inline-block' : 'none';
     } catch (error) {
@@ -33,7 +33,7 @@ document.getElementById('deleteAllAgents').addEventListener('click', async () =>
         const response = await fetch('/tasks/tasks.json');
         const data = await response.json();
         const agents = Object.keys(data.agents || {});
-        
+
         let successCount = 0;
         let errorCount = 0;
 
@@ -42,7 +42,7 @@ document.getElementById('deleteAllAgents').addEventListener('click', async () =>
                 const deleteResponse = await fetch(`/delete_agent/${agentId}`, {
                     method: 'DELETE'
                 });
-                
+
                 if (deleteResponse.ok) {
                     successCount++;
                 } else {
@@ -58,7 +58,7 @@ document.getElementById('deleteAllAgents').addEventListener('click', async () =>
         const resultDiv = document.getElementById('result');
         const alertDiv = resultDiv.querySelector('.alert');
         resultDiv.style.display = 'block';
-        
+
         if (errorCount === 0) {
             alertDiv.className = 'alert alert-success';
             alertDiv.textContent = `Successfully deleted ${successCount} agent(s)`;
@@ -81,32 +81,18 @@ document.getElementById('deleteAllAgents').addEventListener('click', async () =>
 document.addEventListener('DOMContentLoaded', async () => {
     // Initial overview update
     await updateOverview();
-    
+
     // Update overview every 5 seconds
     setInterval(updateOverview, 5000);
     const taskList = document.getElementById('taskList');
     const repoUrl = document.getElementById('repoUrl');
     const addTaskButton = document.getElementById('addTask');
-    
-    // Fetch initial tasks from tasks.json
-    try {
-        const tasksResponse = await fetch('/tasks/tasks.json');
-        const tasksData = await tasksResponse.json();
-        repoUrl.value = tasksData.repository_url;
-        // Populate initial tasks
-        tasksData.tasks.forEach((taskDescription, index) => {
-            const taskItem = createTaskItem(taskDescription, index === 0);
-            taskList.appendChild(taskItem);
-        });
-    } catch (error) {
-        console.error('Error fetching tasks:', error);
-    }
-    
+
     // Function to create a task item
     function createTaskItem(initialValue = '', isFirst = false) {
         const taskItem = document.createElement('div');
         taskItem.classList.add('task-item');
-        
+
         const taskContainer = document.createElement('div');
         taskContainer.classList.add('mb-2');
 
@@ -122,53 +108,40 @@ document.addEventListener('DOMContentLoaded', async () => {
         descriptionInput.placeholder = 'Detailed task description...';
         descriptionInput.rows = 3;
         descriptionInput.value = initialValue.description || '';
-        
+
         const removeButton = document.createElement('button');
         removeButton.type = 'button';
         removeButton.classList.add('btn', 'btn-danger', 'remove-task');
         removeButton.textContent = '-';
         removeButton.style.display = 'inline-block';
-        
+
         // Remove task functionality
         removeButton.addEventListener('click', (e) => {
             const taskItems = taskList.querySelectorAll('.task-item');
-            if (taskItems.length > 0) {
+            if (taskItems.length > 1) {
                 e.target.closest('.task-item').remove();
-                
-                // Ensure there's always at least one task
-                if (taskItems.length === 1) {
-                    const newTaskItem = createTaskItem();
-                    taskList.appendChild(newTaskItem);
-                }
             }
         });
-        
+
         taskContainer.appendChild(titleInput);
         taskContainer.appendChild(descriptionInput);
         taskContainer.appendChild(removeButton);
         taskItem.appendChild(taskContainer);
-        
+
         return taskItem;
     }
-    
+
     // Add task button functionality
     addTaskButton.addEventListener('click', () => {
-        const taskItems = taskList.querySelectorAll('.task-item');
-        
-        // Show remove buttons for all existing tasks
-        taskItems.forEach(item => {
-            item.querySelector('.remove-task').style.display = 'inline-block';
-        });
-        
         const newTaskItem = createTaskItem();
         taskList.appendChild(newTaskItem);
     });
-    
+
     // Fetch GitHub issues
     document.getElementById('fetchIssues').addEventListener('click', async () => {
         const repoUrl = document.getElementById('repoUrl').value;
         const githubToken = document.getElementById('githubToken').value;
-        
+
         if (!repoUrl || !githubToken) {
             const resultDiv = document.getElementById('result');
             const alertDiv = resultDiv.querySelector('.alert');
@@ -199,20 +172,51 @@ document.addEventListener('DOMContentLoaded', async () => {
             }
 
             const issues = await response.json();
-            
+
             // Clear existing tasks
             const taskList = document.getElementById('taskList');
             taskList.innerHTML = '';
 
-            // Filter out pull requests and add each issue as a task
-            const openIssues = issues.filter(issue => !issue.pull_request);
-            openIssues.forEach((issue, index) => {
-                const taskItem = createTaskItem({
-                    title: issue.title,
-                    description: issue.body || ''
-                }, index === 0);
-                taskList.appendChild(taskItem);
+            // Create issue selection UI
+            const issueListContainer = document.createElement('div');
+            issues.filter(issue => !issue.pull_request).forEach(issue => {
+                const checkbox = document.createElement('input');
+                checkbox.type = 'checkbox';
+                checkbox.id = `issue-${issue.id}`;
+                checkbox.value = issue.id;
+
+                const label = document.createElement('label');
+                label.htmlFor = `issue-${issue.id}`;
+                label.textContent = `${issue.title} (#${issue.number})`;
+
+                issueListContainer.appendChild(checkbox);
+                issueListContainer.appendChild(label);
+                issueListContainer.appendChild(document.createElement('br'));
             });
+
+            // Add load selected button
+            const loadButton = document.createElement('button');
+            loadButton.textContent = 'Load Selected Issues';
+            loadButton.addEventListener('click', () => {
+                const selectedIssues = Array.from(issueListContainer.querySelectorAll('input[type="checkbox"]:checked'))
+                    .map(checkbox => checkbox.value);
+
+                const selectedIssueData = issues.filter(issue => selectedIssues.includes(String(issue.id)));
+
+                // Clear existing tasks
+                taskList.innerHTML = '';
+
+                selectedIssueData.forEach((issue, index) => {
+                    const taskItem = createTaskItem({
+                        title: issue.title,
+                        description: issue.body || ''
+                    }, index === 0);
+                    taskList.appendChild(taskItem);
+                });
+            });
+
+            issueListContainer.appendChild(loadButton);
+            taskList.appendChild(issueListContainer);
 
             // Show success message
             const resultDiv = document.getElementById('result');
@@ -233,10 +237,10 @@ document.addEventListener('DOMContentLoaded', async () => {
     // Form submission
     document.getElementById('agentForm').addEventListener('submit', async (e) => {
         e.preventDefault();
-        
+
         const resultDiv = document.getElementById('result');
         const alertDiv = resultDiv.querySelector('.alert');
-        
+
         try {
             // Collect tasks
             const tasks = Array.from(document.querySelectorAll('.task-item')).map(item => {
@@ -247,9 +251,9 @@ document.addEventListener('DOMContentLoaded', async () => {
                     description: description
                 };
             }).filter(task => task.title !== '');
-            
+
             const agentCount = parseInt(document.getElementById('agentCount').value, 10);
-            
+
             const response = await fetch('/create_agent', {
                 method: 'POST',
                 headers: {
@@ -263,14 +267,14 @@ document.addEventListener('DOMContentLoaded', async () => {
                     github_token: document.getElementById('githubToken').value.trim()
                 })
             });
-            
+
             const data = await response.json();
-            
+
             resultDiv.style.display = 'block';
             if (data.success) {
                 alertDiv.className = 'alert alert-success';
                 alertDiv.textContent = `Success! Agents ${data.agent_ids.join(', ')} created. Redirecting to Agent View...`;
-                
+
                 // Redirect to agents view after a short delay
                 setTimeout(() => {
                     window.location.href = '/agents';
