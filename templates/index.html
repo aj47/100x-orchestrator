@@ -12,8 +12,9 @@
         <div class="d-flex justify-content-between align-items-center mb-4">
             <h1>100x Orchestrator</h1>
             <a href="/agents" class="btn btn-primary">View Agents</a>
+            <button id="lightModeToggle" class="btn btn-secondary">Toggle Light Mode</button>
         </div>
-        
+
         <!-- Agent Overview -->
         <div class="card mb-4">
             <div class="card-header">
@@ -51,19 +52,19 @@
                         <input type="text" class="form-control" id="repoUrl" required
                                placeholder="https://github.com/username/repo.git">
                     </div>
-                    
+
                     <div class="form-group">
                         <label for="agentCount">Number of Agents per Task</label>
-                        <input type="number" class="form-control" id="agentCount" 
-                               min="1" max="10" value="1" 
+                        <input type="number" class="form-control" id="agentCount"
+                               min="1" max="10" value="1"
                                placeholder="Number of agents to create for each task">
                     </div>
 
                     <div class="form-group">
                         <label for="githubToken">GitHub Token</label>
-                        <input type="password" class="form-control" id="githubToken" 
+                        <input type="password" class="form-control" id="githubToken"
                                placeholder="Enter your GitHub Personal Access Token">
-                        <small class="form-text text-muted">Required: Create a token with 'repo' scope at 
+                        <small class="form-text text-muted">Required: Create a token with 'repo' scope at
                             <a href="https://github.com/settings/tokens" target="_blank">GitHub Settings</a>
                         </small>
                     </div>
@@ -74,7 +75,7 @@
                                placeholder="e.g. --test --yes">
                         <small class="form-text text-muted">Optional: Add custom command line arguments for aider</small>
                     </div>
-                    
+
                     <div class="form-group">
                         <label>Tasks</label>
                         <div class="d-flex gap-2 mb-2">
@@ -85,12 +86,12 @@
                             <!-- Tasks will be dynamically populated here -->
                         </div>
                     </div>
-                    
+
                     <button type="submit" class="btn btn-primary">Create Agents</button>
                 </form>
             </div>
         </div>
-        
+
         <div id="result" class="mt-4" style="display: none;">
             <div class="alert" role="alert"></div>
         </div>
@@ -99,5 +100,6 @@
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
     <script src="/static/js/index.js"></script>
+    <script src="/static/js/light-mode-toggle.js"></script>
 </body>
 </html>
