@@ -379,4 +379,14 @@ def main_loop():
                                         'last_updated': current_time
                                     })
                                     save_tasks(tasks_data)
-                                except json.
+                                except json.JSONDecodeError as e:
+                                    logging.error(f"Error decoding JSON response from LLM: {e}", exc_info=True)
+                                except Exception as e:
+                                    logging.error(f"Error processing LLM response: {e}", exc_info=True)
+                        except Exception as e:
+                            logging.error(f"Error getting LLM completion: {e}", exc_info=True)
+                sleep(CHECK_INTERVAL)
+        except Exception as e:
+            logging.error(f"Error in main loop: {e}", exc_info=True)
+            sleep(CHECK_INTERVAL)
+
