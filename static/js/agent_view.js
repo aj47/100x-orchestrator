@@ -227,6 +227,37 @@ function showToast(message, type = 'success') {
 }
 
 // DOM Ready handlers
+// Add CSS styles for critique feedback
+const critiqueStyles = `
+    .critique-feedback-block {
+        margin: 1rem 0;
+        padding: 1rem;
+        border-radius: 0.5rem;
+        background-color: rgba(33, 37, 41, 0.1);
+        border-left: 4px solid var(--bs-primary);
+    }
+    .critique-feedback-block h4 {
+        margin-bottom: 1rem;
+        color: var(--bs-light);
+    }
+    .critique-status {
+        margin-bottom: 0.5rem;
+        font-weight: bold;
+    }
+    .critique-feedback {
+        margin-bottom: 0.5rem;
+    }
+    .critique-suggestions ul {
+        margin-top: 0.5rem;
+        margin-bottom: 0;
+    }
+`;
+
+// Add styles to document
+const styleSheet = document.createElement("style");
+styleSheet.textContent = critiqueStyles;
+document.head.appendChild(styleSheet);
+
 document.addEventListener('DOMContentLoaded', () => {
     // Handle collapse icon rotation
     document.querySelectorAll('.card-header[data-bs-toggle="collapse"]').forEach(header => {

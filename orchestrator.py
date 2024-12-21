@@ -603,8 +603,26 @@ def main_loop():
                                         else:
                                             critique_data = critique_result
 
-                                        # Store critique result
+                                        # Store critique result and add to aider output
                                         tasks_data['agents'][agent_id]['last_critique'] = critique_data
+                                        
+                                        # Format critique feedback for aider output
+                                        critique_feedback = f"""
+<div class="critique-feedback-block">
+    <h4>🔍 Code Review Feedback:</h4>
+    <div class="critique-status {('text-success' if critique_data.get('approved', False) else 'text-danger')}">
+        Status: {('✅ Approved' if critique_data.get('approved', False) else '❌ Needs Improvement')}
+    </div>
+    <div class="critique-feedback">
+        <strong>Feedback:</strong> {critique_data.get('feedback', 'No feedback provided')}
+    </div>
+    {'<div class="critique-suggestions"><strong>Suggestions:</strong><ul>' + ''.join([f'<li>{s}</li>' for s in critique_data.get('suggestions', [])]) + '</ul></div>' if critique_data.get('suggestions') else ''}
+</div>
+"""
+                                        # Add critique feedback to aider output
+                                        if agent_id in aider_sessions:
+                                            aider_sessions[agent_id].output_buffer.write(critique_feedback)
+                                        
                                         save_tasks(tasks_data)
 
                                         # Parse critique result as dict if it's a string

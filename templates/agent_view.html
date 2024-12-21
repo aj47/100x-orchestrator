@@ -68,19 +68,21 @@
                                     <strong>Last Action:</strong> <span data-field="action">{{ agent.last_action }}</span>
                                 </div>
                                 {% if agent.last_critique %}
-                                <div class="critique-item mt-3">
-                                    <strong>Last Critique:</strong>
+                                <div class="critique-item mt-3 p-3 border-start border-4 rounded-3" style="border-color: {{ 'var(--bs-success)' if agent.last_critique.approved else 'var(--bs-danger)' }}; background-color: rgba(33, 37, 41, 0.1);">
+                                    <h5 class="mb-3">🔍 Code Review Feedback</h5>
                                     <div class="critique-content">
-                                        <div class="critique-status {{ 'text-success' if agent.last_critique.approved else 'text-danger' }}">
-                                            Status: {{ 'Approved' if agent.last_critique.approved else 'Needs Improvement' }}
+                                        <div class="critique-status mb-2 {{ 'text-success' if agent.last_critique.approved else 'text-danger' }}">
+                                            <i class="fas {{ 'fa-check-circle' if agent.last_critique.approved else 'fa-exclamation-circle' }} me-2"></i>
+                                            <strong>Status:</strong> {{ 'Approved ✅' if agent.last_critique.approved else 'Needs Improvement ❌' }}
                                         </div>
-                                        <div class="critique-feedback">
-                                            Feedback: {{ agent.last_critique.feedback }}
+                                        <div class="critique-feedback mb-2">
+                                            <strong>Feedback:</strong><br>
+                                            <p class="ms-3 mb-2">{{ agent.last_critique.feedback }}</p>
                                         </div>
                                         {% if agent.last_critique.suggestions %}
                                         <div class="critique-suggestions">
                                             <strong>Suggestions:</strong>
-                                            <ul>
+                                            <ul class="mb-0">
                                             {% for suggestion in agent.last_critique.suggestions %}
                                                 <li>{{ suggestion }}</li>
                                             {% endfor %}
