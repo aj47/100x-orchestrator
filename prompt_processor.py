@@ -90,12 +90,8 @@ class PromptProcessor:
             elif action.startswith('/instruct '):
                 # Return just the instruction without the command
                 return action[10:].strip()
-            elif action.startswith(('/ls', '/git', '/add')):
-                # Return the full command for other actions
-                return action
             else:
-                logging.error(f"Invalid action in response: {action}")
-                return None
+                return action
                 
         except json.JSONDecodeError:
             logging.error(f"Invalid JSON response: {response}")
