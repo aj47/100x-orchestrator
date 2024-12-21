@@ -1,0 +1,8 @@
+{
+  "model": "openrouter/google/gemini-flash-1.5",
+  "prompts": {
+    "summarization": "Please provide a concise summary of the following text:\n\n{text}",
+    "translation": "Translate the following text from {source_language} to {target_language}:\n\n{text}",
+    "code_generation": "Generate code in {language} to accomplish the following task:\n\n{task_description}"
+  }
+}
