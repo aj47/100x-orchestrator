@@ -6,12 +6,7 @@ from pathlib import Path
 import shutil
 import tempfile
 from time import sleep
-from litellm import completion
-import threading
 import datetime
-import queue
-import io
-import errno
 import logging
 from github import Github
 from dotenv import load_dotenv
@@ -23,7 +18,6 @@ from agent_session import AgentSession, normalize_path
 
 # Configuration
 DEFAULT_AGENTS_PER_TASK = 2
-MODEL_NAME = os.environ.get('LITELLM_MODEL', 'anthropic/claude-3-5-sonnet-20240620')
 CONFIG_FILE = Path("tasks/tasks.json")
 
 # Ensure tasks directory exists
