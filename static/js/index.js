@@ -189,6 +189,27 @@ document.addEventListener('DOMContentLoaded', async () => {
                 checkbox.type = 'checkbox';
                 checkbox.id = `issue-${issue.id}`;
                 checkbox.value = issue.id;
+                
+                // Add change event listener to checkbox
+                checkbox.addEventListener('change', () => {
+                    if (checkbox.checked) {
+                        // Add task when checked
+                        const taskItem = createTaskItem({
+                            title: issue.title,
+                            description: issue.body || ''
+                        });
+                        taskList.appendChild(taskItem);
+                    } else {
+                        // Remove task when unchecked
+                        const tasks = Array.from(taskList.querySelectorAll('.task-item'));
+                        const matchingTask = tasks.find(task => 
+                            task.querySelector('.task-title').value === issue.title
+                        );
+                        if (matchingTask) {
+                            matchingTask.remove();
+                        }
+                    }
+                });
 
                 const label = document.createElement('label');
                 label.htmlFor = `issue-${issue.id}`;
@@ -207,30 +228,6 @@ document.addEventListener('DOMContentLoaded', async () => {
                 issueItem.appendChild(label);
                 issueListContainer.appendChild(issueItem);
             });
-
-            // Add load selected button
-            const loadButton = document.createElement('button');
-            loadButton.textContent = 'Load Selected Issues';
-            loadButton.className = 'load-issues-btn';
-            loadButton.addEventListener('click', () => {
-                const selectedIssues = Array.from(issueListContainer.querySelectorAll('input[type="checkbox"]:checked'))
-                    .map(checkbox => checkbox.value);
-
-                const selectedIssueData = issues.filter(issue => selectedIssues.includes(String(issue.id)));
-
-                // Clear existing tasks
-                taskList.innerHTML = '';
-
-                selectedIssueData.forEach((issue, index) => {
-                    const taskItem = createTaskItem({
-                        title: issue.title,
-                        description: issue.body || ''
-                    }, index === 0);
-                    taskList.appendChild(taskItem);
-                });
-            });
-
-            issueListContainer.appendChild(loadButton);
             taskList.appendChild(issueListContainer);
 
             // Show success message

@@ -201,20 +201,6 @@ body {
     margin-left: 8px;
 }
 
-.load-issues-btn {
-    background: #007bff;
-    color: white;
-    border: none;
-    padding: 8px 16px;
-    border-radius: 4px;
-    margin-top: 10px;
-    cursor: pointer;
-    transition: background-color 0.2s;
-}
-
-.load-issues-btn:hover {
-    background: #0056b3;
-}
 
 /* Timer styles */
 .timer { 
