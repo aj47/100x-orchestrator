@@ -60,10 +60,10 @@
                     </div>
 
                     <div class="form-group">
-                        <label for="githubToken">GitHub Token</label>
-                        <input type="password" class="form-control" id="githubToken" 
+                        <label for="githubToken">GitHub Token (Environment Variable: GITHUB_TOKEN)</label>
+                        <input type="text" class="form-control" id="githubToken" readonly value="(Set Environment Variable)"
                                placeholder="Enter your GitHub Personal Access Token">
-                        <small class="form-text text-muted">Required: Create a token with 'repo' scope at 
+                        <small class="form-text text-muted">Required: Set the GITHUB_TOKEN environment variable. Create a token with 'repo' scope at 
                             <a href="https://github.com/settings/tokens" target="_blank">GitHub Settings</a>
                         </small>
                     </div>
