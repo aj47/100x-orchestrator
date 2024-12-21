@@ -152,21 +152,60 @@ class AgentSession:
             return False
 
     def _read_output(self, pipe, pipe_name):
-        # ... (rest of the _read_output method remains unchanged) ...
+        while not self._stop_event.is_set():
+            try:
+                line = pipe.readline()
+                if not line:
+                    break
+                with self._buffer_lock:
+                    self.output_buffer.write(line)
+            except Exception as e:
+                logging.error(f"[Session {self.session_id}] Error reading {pipe_name}: {e}")
+                break
+
     def get_output(self):
-        # ... (rest of the get_output method remains unchanged) ...
+        with self._buffer_lock:
+            output = self.output_buffer.getvalue()
+            self.output_buffer.truncate(0) # Clear buffer after reading
+            self.output_buffer.seek(0) # Reset buffer pointer
+            return output
 
     def _echo_message(self, message: str) -> None:
-        # ... (rest of the _echo_message method remains unchanged) ...
+        try:
+            self.process.stdin.write(message + '\n')
+            self.process.stdin.flush()
+        except Exception as e:
+            logging.error(f"[Session {self.session_id}] Error sending message: {e}")
 
     def is_ready(self) -> bool:
-        # ... (rest of the is_ready method remains unchanged) ...
+        return self.process is not None and self.process.poll() is None
 
     def send_message(self, message: str, timeout: int = 10) -> bool:
-        # ... (rest of the send_message method remains unchanged) ...
+        if not self.is_ready():
+            return False
+        self._echo_message(message)
+        start_time = time.time()
+        while time.time() - start_time < timeout:
+            output = self.get_output()
+            if "Ready!" in output:
+                return True
+            sleep(0.1)
+        return False
 
     def _format_output_line(self, line: str) -> str:
-        # ... (rest of the _format_output_line method remains unchanged) ...
+        # Remove ANSI escape codes
+        line = re.sub(r'\x1b\[[0-9;]*[mG]', '', line)
+        return line.strip()
 
     def cleanup(self) -> None:
-        # ... (rest of the cleanup method remains unchanged) ...
+        if self.process:
+            self._stop_event.set()
+            try:
+                self.process.terminate()
+                self.process.wait(timeout=5)
+            except subprocess.TimeoutExpired:
+                self.process.kill()
+            finally:
+                self.process = None
+                logging.info(f"[Session {self.session_id}] Session cleaned up")
+
