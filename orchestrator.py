@@ -658,10 +658,14 @@ def main_loop():
                                                 tasks_data['agents'][agent_id]['pr_url'] = pr.html_url
                                                 tasks_data['agents'][agent_id]['status'] = 'completed'
                                                 save_tasks(tasks_data)
+                                                # Stop processing this agent after successful PR creation
+                                                continue
                                             else:
                                                 logging.error("Failed to create PR")
                                                 tasks_data['agents'][agent_id]['status'] = 'pr_creation_failed'
                                                 save_tasks(tasks_data)
+                                                # Continue processing on PR creation failure
+                                                continue
                                         else:
                                             logging.warning(f"Critique rejected PR creation: {critique_result.get('feedback')}")
                                             tasks_data['agents'][agent_id]['status'] = 'in_progress'  # Changed from 'critique_rejected' to allow continuation
