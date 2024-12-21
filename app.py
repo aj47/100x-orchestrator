@@ -20,6 +20,7 @@ import threading
 import json
 from pathlib import Path
 import datetime
+import re
 
 app = Flask(__name__)
 
@@ -99,16 +100,11 @@ def create_agent():
         tasks = data.get('tasks', [])
         num_agents = data.get('num_agents', 1)  # Default to 1 if not specified
         aider_commands = data.get('aider_commands') # Get aider commands
-        github_token = data.get('github_token')
+        github_token = os.environ.get('GITHUB_TOKEN') # Get token from environment
 
         if not github_token:
-            return jsonify({'error': 'GitHub token is required'}), 400
+            return jsonify({'error': 'GitHub token is required. Set the GITHUB_TOKEN environment variable.'}), 400
 
-        # Save token to .env file
-        env_path = Path.home() / '.env'
-        with open(env_path, 'a') as f:
-            f.write(f"\nGITHUB_TOKEN={github_token}\n")
-        
         # Enhanced logging for debugging
         app.logger.info(f"Received create_agent request: {data}")
         
