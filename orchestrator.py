@@ -91,7 +91,8 @@ def save_tasks(tasks_data):
                 'progress_history': agent_data.get('progress_history', []),
                 'thought_history': agent_data.get('thought_history', []),
                 'future': agent_data.get('future', ''),
-                'last_action': agent_data.get('last_action', '')
+                'last_action': agent_data.get('last_action', ''),
+                'pr_url': agent_data.get('pr_url') # Include pr_url
             }
         
         with open(CONFIG_FILE, 'w') as f:
@@ -209,7 +210,8 @@ def initialiseCodingAgent(repository_url: str = None, task_description: str = No
                 'progress_history': [],
                 'thought_history': [],
                 'future': '',
-                'last_action': ''
+                'last_action': '',
+                'pr_url': None # Initialize pr_url
             }
             tasks_data['repository_url'] = repository_url
             save_tasks(tasks_data)
@@ -275,11 +277,12 @@ def create_pull_request(agent_id, branch_name, pr_info):
             head=branch_name,
             base='main'
         )
+        pr_url = pr.html_url
         if pr_info.get('labels'):
             pr.add_to_labels(*pr_info['labels'])
         if pr_info.get('reviewers'):
             pr.create_review_request(reviewers=pr_info['reviewers'])
-        return pr
+        return pr_url
     except Exception as e:
         logging.error(f"Error creating pull request: {e}")
         return None
@@ -378,45 +381,4 @@ def main_loop():
                                     save_tasks(tasks_data)
                                 except json.JSONDecodeError:
                                     logging.error(f"Invalid JSON in follow_up_message: {follow_up_message}")
-                            if agent_id in prompt_processors:
-                                processor = prompt_processors[agent_id]
-                                action = processor.process_response(agent_id, follow_up_message)
-                                if agent_id in aider_sessions:
-                                    action_message = f'<div class="output-line agent-action"><strong>[AGENT ACTION]:</strong> {action}</div>'
-                                    aider_sessions[agent_id].output_buffer.write(action_message)
-                                if action == "/finish":
-                                    pr_info = processor.get_agent_state(agent_id).get('pr_info')
-                                    if pr_info:
-                                        try:
-                                            branch_name = f"agent-{agent_id[:8]}"
-                                            pr = create_pull_request(agent_id, branch_name, pr_info)
-                                            if pr:
-                                                logging.info(f"Created PR: {pr.html_url}")
-                                                tasks_data['agents'][agent_id]['pr_url'] = pr.html_url
-                                                tasks_data['agents'][agent_id]['status'] = 'completed'
-                                                save_tasks(tasks_data)
-                                            else:
-                                                logging.error("Failed to create PR")
-                                        except Exception as e:
-                                            logging.error(f"Error creating PR: {e}")
-                                    else:
-                                        logging.error("No PR info found in agent state")
-                                elif action:
-                                    if agent_session.send_message(action):
-                                        logging.info(f"Sending action: {action} to {agent_id}")
-                                    else:
-                                        logging.error(f"Failed to send action to agent {agent_id}")
-                                else:
-                                    logging.error(f"Failed to process response from OpenRouter")
-                            else:
-                                logging.error(f"No prompt processor found for agent {agent_id}")
-                        except Exception as e:
-                            logging.error(f"Error processing session summary: {e}")
-            sleep(CHECK_INTERVAL)
-        except Exception as e:
-            logging.error(f"Error in main loop: {e}", exc_info=True)
-            sleep(CHECK_INTERVAL)
-
-if __name__ == "__main__":
-    logging.info("Starting orchestrator")
-    main_loop()
+                            if agent_id

@@ -36,6 +36,7 @@ class AgentSession:
         self.session_id = str(uuid.uuid4())[:8]  # For logging
         self._buffer_lock = threading.Lock()  # Add lock for thread-safe buffer access
         self.aider_commands = aider_commands
+        self.pr_url = None # Add pr_url attribute
         
         # Load configuration with defaults
         default_config = {
