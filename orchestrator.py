@@ -14,8 +14,6 @@ from dotenv import load_dotenv
 # Import the new AgentSession class
 from agent_session import AgentSession, normalize_path
 
-
-
 # Configuration
 DEFAULT_AGENTS_PER_TASK = 2
 CONFIG_FILE = Path("tasks/tasks.json")
@@ -36,12 +34,7 @@ def load_tasks():
         with open(CONFIG_FILE, 'r') as f:
             data = json.load(f)
             
-            # Ensure data has the correct structure
-            if not isinstance(data, dict):
-                logging.warning("tasks.json has incorrect structure, resetting to default")
-                return {"tasks": [], "agents": {}, "repository_url": ""}
-            
-            # Ensure required keys exist
+            # Ensure data has the correct structure and required keys
             data.setdefault('tasks', [])
             data.setdefault('agents', {})
             data.setdefault('repository_url', '')
@@ -55,16 +48,14 @@ def load_tasks():
                         if 'repo_path' in agent_data:
                             agent_data['repo_path'] = normalize_path(agent_data['repo_path'])
             else:
-                logging.warning("Agents data is not a dictionary, resetting to empty dict")
-                data['agents'] = {}
+                data['agents'] = {} # Reset to empty dict if not a dictionary
                 
             return data
     except FileNotFoundError:
-        logging.info("tasks.json not found, creating default")
-        return {"tasks": [], "agents": {}, "repository_url": ""}
+        return {"tasks": [], "agents": {}, "repository_url": ""} # Return default if file not found
     except json.JSONDecodeError:
         logging.error("Error decoding tasks.json", exc_info=True)
-        return {"tasks": [], "agents": {}, "repository_url": ""}
+        return {"tasks": [], "agents": {}, "repository_url": ""} # Return default on decode error
 
 def save_tasks(tasks_data):
     """Save tasks to tasks.json."""
@@ -96,7 +87,6 @@ def save_tasks(tasks_data):
         
         with open(CONFIG_FILE, 'w') as f:
             json.dump(data_to_save, f, indent=4)
-        logging.info("tasks data saved")
     except Exception as e:
         logging.error(f"Error saving tasks: {e}", exc_info=True)
 
@@ -114,7 +104,6 @@ def delete_agent(agent_id):
             if workspace and os.path.exists(workspace):
                 try:
                     shutil.rmtree(workspace)
-                    logging.info(f"Removed workspace for agent {agent_id}")
                 except Exception as e:
                     logging.error(f"Could not remove workspace: {e}", exc_info=True)
             del tasks_data['agents'][agent_id]
@@ -165,7 +154,6 @@ def initialiseCodingAgent(repository_url: str = None, task_description: str = No
                 repo_name = repository_url.rstrip('/').split('/')[-1]
                 if repo_name.endswith('.git'):
                     repo_name = repo_name[:-4]
-                logging.info(f"Cloning {repository_url}")
                 if not cloneRepository(repository_url):
                     logging.error("Failed to clone repository")
                     shutil.rmtree(agent_workspace)
@@ -181,7 +169,6 @@ def initialiseCodingAgent(repository_url: str = None, task_description: str = No
                 branch_name = f"agent-{agent_id[:8]}"
                 try:
                     subprocess.check_call(f"git checkout -b {branch_name}", shell=True)
-                    logging.info(f"Created branch {branch_name}")
                 except subprocess.CalledProcessError:
                     logging.error("Failed to create new branch", exc_info=True)
                     shutil.rmtree(agent_workspace)
@@ -220,7 +207,7 @@ def initialiseCodingAgent(repository_url: str = None, task_description: str = No
         return None
 
 def get_github_token():
-    """Get GitHub token from environment"""
+    """Retrieve GitHub token from environment variables."""
     load_dotenv()
     token = os.getenv('GITHUB_TOKEN')
     if not token:
@@ -235,7 +222,7 @@ def get_github_token():
         return None
 
 def create_pull_request(agent_id, branch_name, pr_info):
-    """Create a pull request for the agent's changes"""
+    """Create a pull request for the agent's changes."""
     try:
         token = get_github_token()
         if not token:
@@ -285,7 +272,7 @@ def create_pull_request(agent_id, branch_name, pr_info):
         return None
 
 def cloneRepository(repository_url: str) -> bool:
-    """Clone git repository using subprocess.check_call."""
+    """Clone git repository using subprocess."""
     try:
         if not repository_url:
             logging.error("No repository URL provided")
@@ -311,7 +298,6 @@ def cloneRepository(repository_url: str) -> bool:
 def update_agent_output(agent_id):
     """Update the output for a specific agent."""
     try:
-        logging.info(f"Updating output for agent {agent_id}")
         tasks_data = load_tasks()
         agent_data = tasks_data['agents'].get(agent_id)
         if not agent_data:
@@ -335,7 +321,6 @@ def main_loop():
         try:
             tasks_data = load_tasks()
             for agent_id in list(tasks_data['agents'].keys()):
-                logging.info(f"Checking agent {agent_id}")
                 update_agent_output(agent_id)
                 if agent_id in aider_sessions:
                     agent_session: AgentSession = aider_sessions[agent_id]
