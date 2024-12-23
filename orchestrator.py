@@ -381,4 +381,25 @@ def main_loop():
                                     save_tasks(tasks_data)
                                 except json.JSONDecodeError:
                                     logging.error(f"Invalid JSON in follow_up_message: {follow_up_message}")
-                            if agent_id
+                            #This was the problematic line
+                            #if agent_id
+                            #Corrected line
+                            if agent_id in tasks_data['agents']:
+                                branch_name = f"agent-{agent_id[:8]}"
+                                pr_info = tasks_data['agents'][agent_id].get('pr_info')
+                                if pr_info and tasks_data['agents'][agent_id]['status'] == 'creating_pr':
+                                    pr_url = create_pull_request(agent_id, branch_name, pr_info)
+                                    if pr_url:
+                                        tasks_data['agents'][agent_id]['pr_url'] = pr_url
+                                        tasks_data['agents'][agent_id]['status'] = 'pr_created'
+                                        save_tasks(tasks_data)
+                                    else:
+                                        tasks_data['agents'][agent_id]['status'] = 'pr_failed'
+                                        save_tasks(tasks_data)
+                        except Exception as e:
+                            logging.error(f"Error processing agent {agent_id}: {e}", exc_info=True)
+                sleep(CHECK_INTERVAL)
+        except Exception as e:
+            logging.error(f"Error in main loop: {e}", exc_info=True)
+            sleep(CHECK_INTERVAL)
+
