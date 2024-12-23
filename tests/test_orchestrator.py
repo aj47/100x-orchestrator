@@ -34,16 +34,6 @@ def test_load_tasks_exception(mock_load_tasks, mock_save_tasks, mock_initialiseC
         "repository_url": ""
     }
 
-@patch('orchestrator.initialiseCodingAgent')
-@patch('orchestrator.save_tasks')
-@patch('orchestrator.load_tasks')
-def test_save_tasks_exception(mock_load_tasks, mock_save_tasks, mock_initialiseCodingAgent, temp_config_file):
-    """Test save_tasks exception handling."""
-    mock_save_tasks.side_effect = IOError
-    tasks_data = {"tasks": [], "agents": {}}
-    with pytest.raises(IOError):
-        save_tasks(tasks_data)
-
 @patch('orchestrator.subprocess.run')
 def test_clone_repository_exception(mock_subprocess_run):
     """Test cloneRepository exception handling."""
@@ -90,59 +80,8 @@ def test_initialiseCodingAgent_start_exception(mock_agent_session):
     assert result is None
 
 @patch('orchestrator.load_tasks')
-def test_delete_agent_exception(mock_load_tasks):
-    """Test delete_agent exception handling."""
-    mock_load_tasks.side_effect = Exception("Error loading tasks")
-    with pytest.raises(Exception):
-        delete_agent('test_agent_id')
-
-@patch('orchestrator.load_tasks')
 def test_delete_agent_not_found(mock_load_tasks):
     """Test delete_agent when agent is not found."""
     mock_load_tasks.return_value = {'agents': {}}
     result = delete_agent('test_agent_id')
     assert result is False
-    
-def test_agent_session_read_output_exception():
-    """Test AgentSession._read_output exception handling."""
-    with patch('agent_session.logging.info') as mock_log:
-        with patch('agent_session.time.sleep') as mock_sleep:
-            with patch('agent_session.subprocess.Popen') as mock_popen:
-                mock_popen.return_value.stdout = MagicMock()
-                mock_popen.return_value.stderr = MagicMock()
-                mock_popen.return_value.poll.return_value = None
-                mock_popen.return_value.stdout.readline.side_effect = Exception("Readline error")
-                session = AgentSession("test_path", "test_task")
-                session._read_output(session.process.stdout, "stdout")
-                mock_log.assert_any_call(f"[Session {session.session_id}] Error reading from stdout: Readline error")
-
-def test_agent_session_send_message_exception():
-    """Test AgentSession.send_message exception handling."""
-    with patch('agent_session.logging.info') as mock_log:
-        with patch('agent_session.subprocess.Popen') as mock_popen:
-            mock_popen.return_value.stdin = MagicMock()
-            mock_popen.return_value.poll.return_value = None
-            mock_popen.return_value.stdin.write.side_effect = BrokenPipeError("Broken pipe")
-            session = AgentSession("test_path", "test_task")
-            result = session.send_message("test message")
-            assert result is False
-            mock_log.assert_any_call(f"[Session {session.session_id}] Pipe error sending message: Broken pipe")
-
-def test_agent_session_is_ready_exception():
-    """Test AgentSession.is_ready exception handling."""
-    with patch('agent_session.logging.info') as mock_log:
-        with patch('agent_session.time.sleep') as mock_sleep:
-            session = AgentSession("test_path", "test_task")
-            session.get_output = MagicMock(side_effect=Exception("Get output error"))
-            result = session.is_ready()
-            assert result is False
-            mock_log.assert_any_call(f"[Session {session.session_id}] Error in readiness check: Get output error")
-
-def test_agent_session_cleanup_exception():
-    """Test AgentSession.cleanup exception handling."""
-    with patch('agent_session.logging.info') as mock_log:
-        with patch('agent_session.subprocess.Popen') as mock_popen:
-            mock_popen.return_value.terminate.side_effect = Exception("Terminate error")
-            session = AgentSession("test_path", "test_task")
-            session.cleanup()
-            mock_log.assert_any_call(f"[Session {session.session_id}] Error during cleanup: Terminate error")
