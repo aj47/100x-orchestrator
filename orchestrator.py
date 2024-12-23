@@ -14,8 +14,6 @@ from dotenv import load_dotenv
 # Import the new AgentSession class
 from agent_session import AgentSession, normalize_path
 
-
-
 # Configuration
 DEFAULT_AGENTS_PER_TASK = 2
 CONFIG_FILE = Path("tasks/tasks.json")
@@ -335,7 +333,7 @@ def main_loop():
         try:
             tasks_data = load_tasks()
             for agent_id in list(tasks_data['agents'].keys()):
-                logging.info(f"Checking agent {agent_id}")
+                logging.debug(f"Checking agent {agent_id}") # Changed to DEBUG level
                 update_agent_output(agent_id)
                 if agent_id in aider_sessions:
                     agent_session: AgentSession = aider_sessions[agent_id]
@@ -403,7 +401,7 @@ def main_loop():
                                         logging.error("No PR info found in agent state")
                                 elif action:
                                     if agent_session.send_message(action):
-                                        logging.info(f"Sending action: {action} to {agent_id}")
+                                        logging.debug(f"Sending action: {action} to {agent_id}") # Changed to DEBUG level
                                     else:
                                         logging.error(f"Failed to send action to agent {agent_id}")
                                 else:
