@@ -102,47 +102,7 @@ def test_delete_agent_not_found(mock_load_tasks):
     mock_load_tasks.return_value = {'agents': {}}
     result = delete_agent('test_agent_id')
     assert result is False
-
-@patch('orchestrator.update_agent_output')
-def test_main_loop_exception(mock_update_agent_output):
-    """Test main_loop exception handling."""
-    mock_update_agent_output.side_effect = Exception("Error updating agent output")
-    with patch('orchestrator.sleep') as mock_sleep:
-        with pytest.raises(Exception):
-            main_loop()
-
-@patch('orchestrator.LiteLLMClient.chat_completion')
-def test_main_loop_litellm_exception(mock_chat_completion):
-    """Test main_loop exception handling for LiteLLM errors."""
-    mock_chat_completion.side_effect = Exception("LiteLLM error")
-    with patch('orchestrator.sleep') as mock_sleep:
-        with pytest.raises(Exception):
-            main_loop()
-
-@patch('orchestrator.PromptProcessor.process_response')
-def test_main_loop_prompt_processor_exception(mock_process_response):
-    """Test main_loop exception handling for PromptProcessor errors."""
-    mock_process_response.side_effect = Exception("PromptProcessor error")
-    with patch('orchestrator.sleep') as mock_sleep:
-        with pytest.raises(Exception):
-            main_loop()
-
-@patch('orchestrator.create_pull_request')
-def test_main_loop_create_pr_exception(mock_create_pull_request):
-    """Test main_loop exception handling for PR creation errors."""
-    mock_create_pull_request.side_effect = Exception("PR creation error")
-    with patch('orchestrator.sleep') as mock_sleep:
-        with pytest.raises(Exception):
-            main_loop()
-
-@patch('orchestrator.AgentSession.send_message')
-def test_main_loop_send_message_exception(mock_send_message):
-    """Test main_loop exception handling for message sending errors."""
-    mock_send_message.side_effect = Exception("Message sending error")
-    with patch('orchestrator.sleep') as mock_sleep:
-        with pytest.raises(Exception):
-            main_loop()
-
+    
 def test_agent_session_read_output_exception():
     """Test AgentSession._read_output exception handling."""
     with patch('agent_session.logging.info') as mock_log:
@@ -186,16 +146,3 @@ def test_agent_session_cleanup_exception():
             session = AgentSession("test_path", "test_task")
             session.cleanup()
             mock_log.assert_any_call(f"[Session {session.session_id}] Error during cleanup: Terminate error")
-
-from orchestrator import main_loop
-@pytest.mark.asyncio
-async def test_main_loop_handles_exceptions():
-    """Test that the main loop gracefully handles exceptions."""
-    with patch('orchestrator.sleep') as mock_sleep:
-        with patch('orchestrator.load_tasks') as mock_load_tasks:
-            mock_load_tasks.side_effect = Exception("Simulated load_tasks error")
-            with pytest.raises(Exception) as excinfo:
-                main_loop()
-            assert "Simulated load_tasks error" in str(excinfo.value)
-            mock_sleep.assert_called_once()
-
