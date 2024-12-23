@@ -1,0 +1,36 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Agent View</title>
+    <link rel="stylesheet" href="/static/css/styles.css">
+</head>
+<body>
+    <h1>Agent View</h1>
+    <div id="agent-container">
+        {% for agent_id, agent_data in agents.items() %}
+            <div class="agent-card" id="agent-{{ agent_id }}">
+                <h2>Agent {{ agent_id }}</h2>
+                <div class="agent-info">
+                    <p>Task: {{ agent_data.task }}</p>
+                    <p>Status: {{ agent_data.status }}</p>
+                    <p>Created At: {{ agent_data.created_at }}</p>
+                    <p>Last Updated: {{ agent_data.last_updated }}</p>
+                    <p>Progress: {{ agent_data.progress }}</p>
+                    <p>Thought: {{ agent_data.thought }}</p>
+                    <p>Future: {{ agent_data.future }}</p>
+                    <p>Last Action: {{ agent_data.last_action }}</p>
+                    <a href="#" class="pr-link" target="_blank">View PR</a>
+                </div>
+                <div class="agent-output">
+                    {{ agent_data.aider_output | safe }}
+                </div>
+            </div>
+        {% endfor %}
+    </div>
+    <button onclick="forceUpdate()">Force Update</button>
+    <div id="deleteToast" class="toast">
+        <div id="toastMessage" class="toast-body"></div>
+    </div>
+    <script src="/static/js/agent_view.js"></script>
+</body>
+</html>

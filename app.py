@@ -78,7 +78,8 @@ def agent_view():
         # Ensure basic fields exist
         agent.setdefault('aider_output', '')
         agent.setdefault('last_updated', None)
-        
+        agent.setdefault('pr_url', None) # Add pr_url field
+
         # Add new fields for progress tracking
         agent.setdefault('progress', '')
         agent.setdefault('thought', '')
