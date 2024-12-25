@@ -111,20 +111,3 @@ def get_all_agents():
     except Exception as e:
         logging.error(f"Error retrieving all agents: {e}", exc_info=True)
         return []
-```
-
-Next, we need to update the `requirements.txt` file to include the `sqlite3` package.
-
-requirements.txt
-```
-<<<<<<< SEARCH
-flask==2.0.1
-Werkzeug==2.0
-litellm==1.52.16
-python-dotenv==1.0.1
-aider-chat==0.65
-gitpython>=3.1.40
-requests>=2.31.0
-pytest>=7.4.3
-pytest-cov>=4.1.0
-PyGithub>=2.1.1
