@@ -1,6 +1,15 @@
-import os, json, traceback, subprocess, sys, uuid
+import os, json, traceback, subprocess, sys, uuid, sqlite3
 from prompts import PROMPT_AIDER
 from litellm_client import LiteLLMClient
+from db import (
+    init_db,
+    create_agent,
+    get_agent,
+    update_agent,
+    delete_agent as db_delete_agent,
+    get_all_agents,
+    DATABASE_PATH
+)
 from prompt_processor import PromptProcessor
 from pathlib import Path
 import shutil
@@ -200,6 +209,24 @@ def initialiseCodingAgent(repository_url: str = None, task_description: str = No
             }
             tasks_data['repository_url'] = repository_url
             save_tasks(tasks_data)
+            agent_data = {
+                'agent_id': agent_id,
+                'workspace': normalize_path(agent_workspace),
+                'repo_path': normalize_path(full_repo_path) if full_repo_path else None,
+                'task': task_description,
+                'status': 'pending',
+                'created_at': datetime.datetime.now().isoformat(),
+                'last_updated': datetime.datetime.now().isoformat(),
+                'aider_output': '',
+                'progress': '',
+                'thought': '',
+                'progress_history': '[]',
+                'thought_history': '[]',
+                'future': '',
+                'last_action': '',
+                'repository_url': repository_url
+            }
+            create_agent(agent_data)
             created_agent_ids.append(agent_id)
         return created_agent_ids
     except Exception as e:
@@ -335,32 +362,33 @@ def main_loop():
                                 PROMPT_AIDER(agent_session.task),
                                 session_logs
                             )
-                            if agent_id in tasks_data['agents']:
+                            agent_data = get_agent(agent_id)
+                            if agent_
                                 try:
                                     follow_up_data = json.loads(follow_up_message)
                                     current_time = datetime.datetime.now().isoformat()
-                                    if 'progress_history' not in tasks_data['agents'][agent_id]:
-                                        tasks_data['agents'][agent_id]['progress_history'] = []
-                                    if 'thought_history' not in tasks_data['agents'][agent_id]:
-                                        tasks_data['agents'][agent_id]['thought_history'] = []
+                                    progress_history = json.loads(agent_data.get('progress_history', '[]'))
+                                    thought_history = json.loads(agent_data.get('thought_history', '[]'))
                                     if follow_up_data.get('progress'):
-                                        tasks_data['agents'][agent_id]['progress'] = follow_up_data['progress']
-                                        tasks_data['agents'][agent_id]['progress_history'].append({
+                                        progress_history.append({
                                             'timestamp': current_time,
                                             'content': follow_up_data['progress']
                                         })
                                     if follow_up_data.get('thought'):
-                                        tasks_data['agents'][agent_id]['thought'] = follow_up_data['thought']
-                                        tasks_data['agents'][agent_id]['thought_history'].append({
+                                        thought_history.append({
                                             'timestamp': current_time,
                                             'content': follow_up_data['thought']
                                         })
-                                    tasks_data['agents'][agent_id].update({
+                                    updates = {
+                                        'progress': follow_up_data.get('progress', ''),
+                                        'thought': follow_up_data.get('thought', ''),
                                         'future': follow_up_data.get('future', ''),
                                         'last_action': follow_up_data.get('action', ''),
-                                        'last_updated': current_time
-                                    })
-                                    save_tasks(tasks_data)
+                                        'last_updated': current_time,
+                                        'progress_history': json.dumps(progress_history),
+                                        'thought_history': json.dumps(thought_history)
+                                    }
+                                    update_agent(agent_id, updates)
                                 except json.JSONDecodeError:
                                     logging.error(f"Invalid JSON in follow_up_message: {follow_up_message}")
                             if agent_id in prompt_processors:
@@ -377,9 +405,7 @@ def main_loop():
                                             pr = create_pull_request(agent_id, branch_name, pr_info)
                                             if pr:
                                                 logging.info(f"Created PR: {pr.html_url}")
-                                                tasks_data['agents'][agent_id]['pr_url'] = pr.html_url
-                                                tasks_data['agents'][agent_id]['status'] = 'completed'
-                                                save_tasks(tasks_data)
+                                                update_agent(agent_id, {'pr_url': pr.html_url, 'status': 'completed'})
                                             else:
                                                 logging.error("Failed to create PR")
                                         except Exception as e:
@@ -401,7 +427,7 @@ def main_loop():
         except Exception as e:
             logging.error(f"Error in main loop: {e}", exc_info=True)
             sleep(CHECK_INTERVAL)
-
 if __name__ == "__main__":
+    init_db()
     logging.info("Starting orchestrator")
     main_loop()
