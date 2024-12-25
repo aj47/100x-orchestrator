@@ -173,23 +173,6 @@ def initialiseCodingAgent(repository_url: str = None, task_description: str = No
                 prompt_processors[agent_id] = prompt_processor
             finally:
                 os.chdir(original_dir)
-            tasks_data['agents'][agent_id] = {
-                'workspace': normalize_path(agent_workspace),
-                'repo_path': normalize_path(full_repo_path) if full_repo_path else None,
-                'task': task_description,
-                'status': 'pending',
-                'created_at': datetime.datetime.now().isoformat(),
-                'last_updated': datetime.datetime.now().isoformat(),
-                'aider_output': '',
-                'progress': '',
-                'thought': '',
-                'progress_history': [],
-                'thought_history': [],
-                'future': '',
-                'last_action': ''
-            }
-            tasks_data['repository_url'] = repository_url
-            save_tasks(tasks_data)
             agent_data = {
                 'agent_id': agent_id,
                 'workspace': normalize_path(agent_workspace),
@@ -327,8 +310,7 @@ def main_loop():
     logging.info("Starting main loop")
     while True:
         try:
-            tasks_data = load_tasks()
-            for agent_id in list(tasks_data['agents'].keys()):
+            for agent_id in [agent['agent_id'] for agent in get_all_agents()]:
                 update_agent_output(agent_id)
                 if agent_id in aider_sessions:
                     agent_session: AgentSession = aider_sessions[agent_id]
