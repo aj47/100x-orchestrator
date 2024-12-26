@@ -220,7 +220,16 @@ def create_pull_request(agent_id, branch_name, pr_info):
         repo_parts = repo_url.rstrip('/').split('/')
         repo_name = '/'.join(repo_parts[-2:]).replace('.git', '')
         current_dir = os.getcwd()
+        
         try:
+            # Check if PR already exists
+            repo = g.get_repo(repo_name)
+            existing_prs = repo.get_pulls(state='open', head=f"{repo_parts[-2]}:{branch_name}")
+            if existing_prs.totalCount > 0:
+                logging.info(f"PR already exists: {existing_prs[0].html_url}")
+                return existing_prs[0]
+                
+            # Prepare and push changes
             os.chdir(repo_path)
             subprocess.run(["git", "config", "user.name", "GitHub Actions"], check=True)
             subprocess.run(["git", "config", "user.email", "actions@github.com"], check=True)
@@ -231,17 +240,33 @@ def create_pull_request(agent_id, branch_name, pr_info):
             subprocess.run(["git", "push", "-u", "origin", branch_name], check=True)
         finally:
             os.chdir(current_dir)
-        repo = g.get_repo(repo_name)
+            
+        # Create PR
         pr = repo.create_pull(
             title=pr_info.get('title', f'Changes by Agent {agent_id}'),
             body=pr_info.get('description', 'Automated changes'),
             head=branch_name,
             base='main'
         )
+        
+        # Add labels if specified
         if pr_info.get('labels'):
-            pr.add_to_labels(*pr_info['labels'])
+            try:
+                pr.add_to_labels(*pr_info['labels'])
+            except Exception as e:
+                logging.warning(f"Could not add labels: {e}")
+                
+        # Add reviewers if specified and they are collaborators
         if pr_info.get('reviewers'):
-            pr.create_review_request(reviewers=pr_info['reviewers'])
+            try:
+                # Filter reviewers to only collaborators
+                collaborators = {collab.login.lower() for collab in repo.get_collaborators()}
+                valid_reviewers = [r for r in pr_info['reviewers'] if r.lower() in collaborators]
+                if valid_reviewers:
+                    pr.create_review_request(reviewers=valid_reviewers)
+            except Exception as e:
+                logging.warning(f"Could not add reviewers: {e}")
+                
         return pr
     except Exception as e:
         logging.error(f"Error creating pull request: {e}")
