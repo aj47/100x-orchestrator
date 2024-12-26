@@ -54,25 +54,41 @@ def delete_agent(agent_id):
     """Delete a specific agent and clean up its workspace."""
     try:
         logging.info(f"Deleting agent {agent_id}")
+        
+        # Clean up session if it exists
+        if agent_id in aider_sessions:
+            try:
+                aider_sessions[agent_id].cleanup()
+                del aider_sessions[agent_id]
+                logging.info(f"Cleaned up session for agent {agent_id}")
+            except Exception as e:
+                logging.error(f"Error cleaning up session: {e}", exc_info=True)
+        
+        # Remove from database
+        success = db_delete_agent(agent_id)
+        if not success:
+            logging.error(f"Failed to delete agent {agent_id} from database")
+            return False
+            
+        # Clean up workspace
         tasks_data = load_tasks()
         if agent_id in tasks_data['agents']:
             agent_data = tasks_data['agents'][agent_id]
-            if agent_id in aider_sessions:
-                aider_sessions[agent_id].cleanup()
-                del aider_sessions[agent_id]
             workspace = agent_data.get('workspace')
             if workspace and os.path.exists(workspace):
                 try:
                     shutil.rmtree(workspace)
+                    logging.info(f"Removed workspace for agent {agent_id}")
                 except Exception as e:
                     logging.error(f"Could not remove workspace: {e}", exc_info=True)
+            
+            # Remove from in-memory tasks data
             del tasks_data['agents'][agent_id]
             save_tasks(tasks_data)
-            logging.info(f"Agent {agent_id} deleted")
-            return True
-        else:
-            logging.warning(f"No agent found with ID {agent_id}")
-            return False
+        
+        logging.info(f"Agent {agent_id} deleted successfully")
+        return True
+        
     except Exception as e:
         logging.error(f"Error deleting agent: {e}", exc_info=True)
         return False
