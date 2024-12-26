@@ -359,6 +359,7 @@ def main_loop():
                                                 logging.info(f"Created PR: {pr.html_url}")
                                                 tasks_data['agents'][agent_id]['pr_url'] = pr.html_url
                                                 tasks_data['agents'][agent_id]['status'] = 'completed'
+                                                tasks_data['agents'][agent_id]['completed_at'] = datetime.datetime.now().isoformat()
                                                 # Clean up the session
                                                 if agent_id in aider_sessions:
                                                     aider_sessions[agent_id].cleanup()
