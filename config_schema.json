@@ -1,0 +1,9 @@
+{
+  "type": "object",
+  "properties": {
+    "model": { "type": "string" },
+    "temperature": { "type": "number", "minimum": 0.0, "maximum": 1.0 },
+    "system_prompt": { "type": "string" }
+  },
+  "required": ["model", "temperature", "system_prompt"]
+}
