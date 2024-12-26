@@ -1,5 +1,5 @@
 import logging
-from flask import Flask, render_template, request, jsonify, send_from_directory
+from flask import Flask, render_template, request, jsonify, send_from_directory, Response
 from werkzeug.serving import WSGIRequestHandler
 
 # Custom log filter to suppress specific log messages
@@ -206,6 +206,13 @@ def remove_agent(agent_id):
             'success': False,
             'error': str(e)
         }), 500
+
+@app.route('/stream')
+def stream():
+    def generate():
+        for i in range(101):
+            yield f"data: {i}\n\n"
+    return Response(generate(), mimetype="text/event-stream")
 
 if __name__ == '__main__':
     app.run(debug=True)

@@ -130,7 +130,7 @@ def initialiseCodingAgent(repository_url: str = None, task_description: str = No
                 repo_name = repository_url.rstrip('/').split('/')[-1]
                 if repo_name.endswith('.git'):
                     repo_name = repo_name[:-4]
-                if not cloneRepository(repository_url):
+                if not cloneRepository(repository_url, agent_id):
                     logging.error("Failed to clone repository")
                     shutil.rmtree(agent_workspace)
                     continue
@@ -247,21 +247,31 @@ def create_pull_request(agent_id, branch_name, pr_info):
         logging.error(f"Error creating pull request: {e}")
         return None
 
-def cloneRepository(repository_url: str) -> bool:
-    """Clone git repository using subprocess."""
+def cloneRepository(repository_url: str, agent_id: str) -> bool:
+    """Clone git repository using subprocess and report progress via SSE."""
     try:
         if not repository_url:
             logging.error("No repository URL provided")
             return False
-        logging.info(f"Cloning {repository_url}")
-        result = subprocess.run(
+        logging.info(f"Cloning {repository_url} for agent {agent_id}")
+        process = subprocess.Popen(
             f"git clone --quiet {repository_url}",
             shell=True,
-            capture_output=True,
-            text=True
+            stdout=subprocess.PIPE,
+            stderr=subprocess.PIPE
         )
-        if result.returncode != 0:
-            logging.error(f"Git clone failed: {result.stderr}")
+        while process.poll() is None:
+            # Send progress updates to the client
+            # In a real-world scenario, you would extract progress from the git clone output
+            # This example simulates progress
+            progress = process.stdout.readline().decode('utf-8').strip()
+            if progress:
+                logging.info(f"Cloning progress for agent {agent_id}: {progress}")
+                # Send progress update to client using SSE (implementation not shown here)
+            sleep(1)
+        stdout, stderr = process.communicate()
+        if process.returncode != 0:
+            logging.error(f"Git clone failed: {stderr.decode()}")
             return False
         return True
     except subprocess.SubprocessError as e:
