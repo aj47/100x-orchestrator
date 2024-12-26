@@ -42,26 +42,9 @@ def index():
 
 @app.route('/tasks/tasks.json')
 def serve_tasks_json():
-    """Serve the tasks.json file, creating it if it doesn't exist"""
-    tasks_file = Path('tasks/tasks.json')
-    
-    # Ensure tasks directory exists
-    tasks_file.parent.mkdir(parents=True, exist_ok=True)
-    
-    # Create file with default content if it doesn't exist
-    if not tasks_file.exists():
-        default_data = {
-            "tasks": [],
-            "agents": {},
-            "repository_url": "",
-            "config": {
-                "agent_session": {}
-            }
-        }
-        with tasks_file.open('w') as f:
-            json.dump(default_data, f, indent=4)
-    
-    return send_from_directory('tasks', 'tasks.json')
+    """Serve tasks data in JSON format from database."""
+    tasks_data = load_tasks()
+    return jsonify(tasks_data)
 
 @app.route('/agents')
 def agent_view():

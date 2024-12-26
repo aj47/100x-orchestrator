@@ -14,12 +14,13 @@ from dotenv import load_dotenv
 # Import the new AgentSession class
 from agent_session import AgentSession, normalize_path
 
+from database import (
+    save_agent, get_agent, get_all_agents, delete_agent as db_delete_agent,
+    save_task, get_all_tasks, save_config, get_config
+)
+
 # Configuration
 DEFAULT_AGENTS_PER_TASK = 2
-CONFIG_FILE = Path("tasks/tasks.json")
-
-# Ensure tasks directory exists
-CONFIG_FILE.parent.mkdir(parents=True, exist_ok=True)
 tools, available_functions = [], {}
 MAX_TOOL_OUTPUT_LENGTH = 5000  # Adjust as needed
 CHECK_INTERVAL = 5  # Reduced to 30 seconds for more frequent updates
@@ -29,64 +30,23 @@ aider_sessions = {}
 prompt_processors = {}
 
 def load_tasks():
-    """Load config from tasks.json."""
-    try:
-        with open(CONFIG_FILE, 'r') as f:
-            data = json.load(f)
-            
-            # Ensure data has the correct structure and required keys
-            data.setdefault('tasks', [])
-            data.setdefault('agents', {})
-            data.setdefault('repository_url', '')
-                
-            # Normalize paths in loaded data
-            if isinstance(data.get('agents'), dict):
-                for agent_id, agent_data in data['agents'].items():
-                    if isinstance(agent_data, dict):
-                        if 'workspace' in agent_data:
-                            agent_data['workspace'] = normalize_path(agent_data['workspace'])
-                        if 'repo_path' in agent_data:
-                            agent_data['repo_path'] = normalize_path(agent_data['repo_path'])
-            else:
-                data['agents'] = {} # Reset to empty dict if not a dictionary
-                
-            return data
-    except FileNotFoundError:
-        return {"tasks": [], "agents": {}, "repository_url": ""} # Return default if file not found
-    except json.JSONDecodeError:
-        logging.error("Error decoding tasks.json", exc_info=True)
-        return {"tasks": [], "agents": {}, "repository_url": ""} # Return default on decode error
+    """Load tasks and agents from database."""
+    return {
+        'tasks': get_all_tasks(),
+        'agents': get_all_agents(),
+        'repository_url': get_config('repository_url') or ''
+    }
 
 def save_tasks(tasks_data):
-    """Save tasks to tasks.json."""
+    """Save tasks and agents to database."""
     try:
-        data_to_save = {
-            "tasks": tasks_data.get("tasks", []),
-            "agents": {},
-            "repository_url": tasks_data.get("repository_url", "")
-        }
+        # Save repository URL
+        if 'repository_url' in tasks_data:
+            save_config('repository_url', tasks_data['repository_url'])
         
-        for agent_id, agent_data in tasks_data.get("agents", {}).items():
-            repo_path = normalize_path(agent_data.get('repo_path'))
-            data_to_save["agents"][agent_id] = {
-                'workspace': normalize_path(agent_data.get('workspace')),
-                'repo_path': repo_path,
-                'task': agent_data.get('task'),
-                'status': agent_data.get('status'),
-                'created_at': agent_data.get('created_at'),
-                'last_updated': agent_data.get('last_updated'),
-                'aider_output': agent_data.get('aider_output', ''),
-                'last_critique': agent_data.get('last_critique'),
-                'progress': agent_data.get('progress', ''),
-                'thought': agent_data.get('thought', ''),
-                'progress_history': agent_data.get('progress_history', []),
-                'thought_history': agent_data.get('thought_history', []),
-                'future': agent_data.get('future', ''),
-                'last_action': agent_data.get('last_action', '')
-            }
-        
-        with open(CONFIG_FILE, 'w') as f:
-            json.dump(data_to_save, f, indent=4)
+        # Save agents
+        for agent_id, agent_data in tasks_data.get('agents', {}).items():
+            save_agent(agent_id, agent_data)
     except Exception as e:
         logging.error(f"Error saving tasks: {e}", exc_info=True)
 
