@@ -297,6 +297,10 @@ def main_loop():
         try:
             tasks_data = load_tasks()
             for agent_id in list(tasks_data['agents'].keys()):
+                # Skip processing if agent has completed PR
+                if tasks_data['agents'][agent_id].get('pr_url'):
+                    continue
+                    
                 update_agent_output(agent_id)
                 if agent_id in aider_sessions:
                     agent_session: AgentSession = aider_sessions[agent_id]
@@ -355,6 +359,10 @@ def main_loop():
                                                 logging.info(f"Created PR: {pr.html_url}")
                                                 tasks_data['agents'][agent_id]['pr_url'] = pr.html_url
                                                 tasks_data['agents'][agent_id]['status'] = 'completed'
+                                                # Clean up the session
+                                                if agent_id in aider_sessions:
+                                                    aider_sessions[agent_id].cleanup()
+                                                    del aider_sessions[agent_id]
                                                 save_tasks(tasks_data)
                                             else:
                                                 logging.error("Failed to create PR")

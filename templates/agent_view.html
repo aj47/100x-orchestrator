@@ -95,6 +95,10 @@
                                     <i class="fas fa-check-circle me-2"></i>
                                     Pull Request created: <a href="{{ agent.pr_url }}" target="_blank" class="alert-link">View on GitHub</a>
                                 </div>
+                                <div class="alert alert-info">
+                                    <i class="fas fa-info-circle me-2"></i>
+                                    This agent has completed its task and will no longer be processed.
+                                </div>
                                 {% endif %}
                                 <small class="text-muted">
                                     <i class="fas fa-clock me-1"></i>Last Updated: {{ agent.last_updated or 'Never' }}
