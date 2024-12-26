@@ -84,6 +84,17 @@ async function fetchUpdates() {
                                     agentData.status === 'pending' ? 'bg-warning' : 'bg-success'}`;
             }
 
+            // Update PR info if it exists
+            const prInfoSection = agentCard.querySelector('#pr-info-' + agentId);
+            if (prInfoSection && agentData.pr_url) {
+                prInfoSection.style.display = 'block';
+                const prLink = prInfoSection.querySelector('a.alert-link');
+                if (prLink) {
+                    prLink.href = agentData.pr_url;
+                    prLink.textContent = 'View on GitHub';
+                }
+            }
+
             // Update timestamps
             const lastUpdated = agentCard.querySelector('.card-footer div:last-child');
             if (lastUpdated && agentData.last_updated) {
