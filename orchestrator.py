@@ -27,6 +27,7 @@ CHECK_INTERVAL = 5  # Reduced to 30 seconds for more frequent updates
 # Global dictionaries to store sessions and processors
 aider_sessions = {}
 prompt_processors = {}
+agent_completion_events = {} # Dictionary to track agent completion events
 
 def load_tasks():
     """Load config from tasks.json."""
@@ -82,7 +83,8 @@ def save_tasks(tasks_data):
                 'progress_history': agent_data.get('progress_history', []),
                 'thought_history': agent_data.get('thought_history', []),
                 'future': agent_data.get('future', ''),
-                'last_action': agent_data.get('last_action', '')
+                'last_action': agent_data.get('last_action', ''),
+                'pr_url': agent_data.get('pr_url', None) # Include pr_url
             }
         
         with open(CONFIG_FILE, 'w') as f:
@@ -181,6 +183,7 @@ def initialiseCodingAgent(repository_url: str = None, task_description: str = No
                     continue
                 aider_sessions[agent_id] = aider_session
                 prompt_processors[agent_id] = prompt_processor
+                agent_completion_events[agent_id] = threading.Event() # Initialize completion event
             finally:
                 os.chdir(original_dir)
             tasks_data['agents'][agent_id] = {
@@ -196,7 +199,8 @@ def initialiseCodingAgent(repository_url: str = None, task_description: str = No
                 'progress_history': [],
                 'thought_history': [],
                 'future': '',
-                'last_action': ''
+                'last_action': '',
+                'pr_url': None # Initialize pr_url
             }
             tasks_data['repository_url'] = repository_url
             save_tasks(tasks_data)
@@ -204,204 +208,3 @@ def initialiseCodingAgent(repository_url: str = None, task_description: str = No
         return created_agent_ids
     except Exception as e:
         logging.error(f"Error initializing coding agents: {e}", exc_info=True)
-        return None
-
-def get_github_token():
-    """Retrieve GitHub token from environment variables."""
-    load_dotenv()
-    token = os.getenv('GITHUB_TOKEN')
-    if not token:
-        logging.error("No GitHub token found in environment")
-        return None
-    try:
-        g = Github(token)
-        g.get_user().login
-        return token
-    except Exception as e:
-        logging.error(f"Invalid GitHub token: {e}")
-        return None
-
-def create_pull_request(agent_id, branch_name, pr_info):
-    """Create a pull request for the agent's changes."""
-    try:
-        token = get_github_token()
-        if not token:
-            return None
-        g = Github(token)
-        tasks_data = load_tasks()
-        repo_url = tasks_data.get('repository_url', '')
-        if not repo_url:
-            logging.error("No repository URL found")
-            return None
-        agent_data = tasks_data['agents'].get(agent_id)
-        if not agent_data:
-            logging.error(f"No agent data found for {agent_id}")
-            return None
-        repo_path = agent_data.get('repo_path')
-        if not repo_path:
-            logging.error("No repo path found for agent")
-            return None
-        repo_parts = repo_url.rstrip('/').split('/')
-        repo_name = '/'.join(repo_parts[-2:]).replace('.git', '')
-        current_dir = os.getcwd()
-        try:
-            os.chdir(repo_path)
-            subprocess.run(["git", "config", "user.name", "GitHub Actions"], check=True)
-            subprocess.run(["git", "config", "user.email", "actions@github.com"], check=True)
-            subprocess.run(["git", "add", "."], check=True)
-            subprocess.run(["git", "commit", "-m", f"Changes by Agent {agent_id}"], check=False)
-            remote_url = f"https://x-access-token:{token}@github.com/{repo_name}.git"
-            subprocess.run(["git", "remote", "set-url", "origin", remote_url], check=True)
-            subprocess.run(["git", "push", "-u", "origin", branch_name], check=True)
-        finally:
-            os.chdir(current_dir)
-        repo = g.get_repo(repo_name)
-        pr = repo.create_pull(
-            title=pr_info.get('title', f'Changes by Agent {agent_id}'),
-            body=pr_info.get('description', 'Automated changes'),
-            head=branch_name,
-            base='main'
-        )
-        if pr_info.get('labels'):
-            pr.add_to_labels(*pr_info['labels'])
-        if pr_info.get('reviewers'):
-            pr.create_review_request(reviewers=pr_info['reviewers'])
-        return pr
-    except Exception as e:
-        logging.error(f"Error creating pull request: {e}")
-        return None
-
-def cloneRepository(repository_url: str) -> bool:
-    """Clone git repository using subprocess."""
-    try:
-        if not repository_url:
-            logging.error("No repository URL provided")
-            return False
-        logging.info(f"Cloning {repository_url}")
-        result = subprocess.run(
-            f"git clone --quiet {repository_url}",
-            shell=True,
-            capture_output=True,
-            text=True
-        )
-        if result.returncode != 0:
-            logging.error(f"Git clone failed: {result.stderr}")
-            return False
-        return True
-    except subprocess.SubprocessError as e:
-        logging.error(f"Git clone failed: {str(e)}", exc_info=True)
-        return False
-    except Exception as e:
-        logging.error(f"Unexpected error during clone: {str(e)}", exc_info=True)
-        return False
-
-def update_agent_output(agent_id):
-    """Update the output for a specific agent."""
-    try:
-        tasks_data = load_tasks()
-        agent_data = tasks_data['agents'].get(agent_id)
-        if not agent_data:
-            logging.error(f"No agent found with ID {agent_id}")
-            return False
-        if agent_id in aider_sessions:
-            output = aider_sessions[agent_id].get_output()
-            agent_data['aider_output'] = output
-            agent_data['last_updated'] = datetime.datetime.now().isoformat()
-            save_tasks(tasks_data)
-            return True
-        return False
-    except Exception as e:
-        logging.error(f"Error updating agent output: {e}", exc_info=True)
-        return False
-
-def main_loop():
-    """Main orchestration loop to manage agents."""
-    logging.info("Starting main loop")
-    while True:
-        try:
-            tasks_data = load_tasks()
-            for agent_id in list(tasks_data['agents'].keys()):
-                update_agent_output(agent_id)
-                if agent_id in aider_sessions:
-                    agent_session: AgentSession = aider_sessions[agent_id]
-                    if agent_session.is_ready():
-                        session_logs = agent_session.get_output()
-                        try:
-                            litellm_client = LiteLLMClient()
-                            #if session_logs is empty or only newlines. replace it with "*aider started*"
-                            if not session_logs or session_logs.isspace():
-                                session_logs = "*aider started*"
-                            follow_up_message = litellm_client.chat_completion(
-                                PROMPT_AIDER(agent_session.task),
-                                session_logs
-                            )
-                            if agent_id in tasks_data['agents']:
-                                try:
-                                    follow_up_data = json.loads(follow_up_message)
-                                    current_time = datetime.datetime.now().isoformat()
-                                    if 'progress_history' not in tasks_data['agents'][agent_id]:
-                                        tasks_data['agents'][agent_id]['progress_history'] = []
-                                    if 'thought_history' not in tasks_data['agents'][agent_id]:
-                                        tasks_data['agents'][agent_id]['thought_history'] = []
-                                    if follow_up_data.get('progress'):
-                                        tasks_data['agents'][agent_id]['progress'] = follow_up_data['progress']
-                                        tasks_data['agents'][agent_id]['progress_history'].append({
-                                            'timestamp': current_time,
-                                            'content': follow_up_data['progress']
-                                        })
-                                    if follow_up_data.get('thought'):
-                                        tasks_data['agents'][agent_id]['thought'] = follow_up_data['thought']
-                                        tasks_data['agents'][agent_id]['thought_history'].append({
-                                            'timestamp': current_time,
-                                            'content': follow_up_data['thought']
-                                        })
-                                    tasks_data['agents'][agent_id].update({
-                                        'future': follow_up_data.get('future', ''),
-                                        'last_action': follow_up_data.get('action', ''),
-                                        'last_updated': current_time
-                                    })
-                                    save_tasks(tasks_data)
-                                except json.JSONDecodeError:
-                                    logging.error(f"Invalid JSON in follow_up_message: {follow_up_message}")
-                            if agent_id in prompt_processors:
-                                processor = prompt_processors[agent_id]
-                                action = processor.process_response(agent_id, follow_up_message)
-                                if agent_id in aider_sessions:
-                                    action_message = f'<div class="output-line agent-action"><strong>[AGENT ACTION]:</strong> {action}</div>'
-                                    aider_sessions[agent_id].output_buffer.write(action_message)
-                                if action == "/finish":
-                                    pr_info = processor.get_agent_state(agent_id).get('pr_info')
-                                    if pr_info:
-                                        try:
-                                            branch_name = f"agent-{agent_id[:8]}"
-                                            pr = create_pull_request(agent_id, branch_name, pr_info)
-                                            if pr:
-                                                logging.info(f"Created PR: {pr.html_url}")
-                                                tasks_data['agents'][agent_id]['pr_url'] = pr.html_url
-                                                tasks_data['agents'][agent_id]['status'] = 'completed'
-                                                save_tasks(tasks_data)
-                                            else:
-                                                logging.error("Failed to create PR")
-                                        except Exception as e:
-                                            logging.error(f"Error creating PR: {e}")
-                                    else:
-                                        logging.error("No PR info found in agent state")
-                                elif action:
-                                    if agent_session.send_message(action):
-                                        logging.info(f"Sending action: {action} to {agent_id}")
-                                    else:
-                                        logging.error(f"Failed to send action to agent {agent_id}")
-                                else:
-                                    logging.error(f"Failed to process response from OpenRouter")
-                            else:
-                                logging.error(f"No prompt processor found for agent {agent_id}")
-                        except Exception as e:
-                            logging.error(f"Error processing session summary: {e}")
-            sleep(CHECK_INTERVAL)
-        except Exception as e:
-            logging.error(f"Error in main loop: {e}", exc_info=True)
-            sleep(CHECK_INTERVAL)
-
-if __name__ == "__main__":
-    logging.info("Starting orchestrator")
-    main_loop()
