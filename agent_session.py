@@ -187,13 +187,18 @@ class AgentSession:
                     self.output_buffer.write(line)
                     # logging.debug(f"[Session {self.session_id}] Added to buffer: {line.strip()}")
                     
-                # Flush the pipe to ensure we get output immediately
-                pipe.flush()
+                try:
+                    # Flush the pipe to ensure we get output immediately
+                    pipe.flush()
+                except ValueError:
+                    # Pipe is closed, stop reading
+                    break
                 
             logging.info(f"[Session {self.session_id}] {pipe_name} reader stopping - process terminated: {self.process.poll() if self.process else 'No process'}")
                 
         except Exception as e:
-            logging.error(f"[Session {self.session_id}] Error reading from {pipe_name}: {e}", exc_info=True)
+            if not isinstance(e, ValueError):  # Don't log ValueError from closed pipe
+                logging.error(f"[Session {self.session_id}] Error reading from {pipe_name}: {e}", exc_info=True)
 
     def get_output(self):
         """Get the current output buffer contents"""
