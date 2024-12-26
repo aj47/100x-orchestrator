@@ -10,6 +10,7 @@ import datetime
 import logging
 from github import Github
 from dotenv import load_dotenv
+import threading # Import threading module
 
 # Import the new AgentSession class
 from agent_session import AgentSession, normalize_path
@@ -119,6 +120,19 @@ def delete_agent(agent_id):
         logging.error(f"Error deleting agent: {e}", exc_info=True)
         return False
 
+def cloneRepository(repository_url: str) -> bool:
+    """Clone a Git repository."""
+    try:
+        logging.info(f"Cloning repository from {repository_url}")
+        subprocess.check_call(["git", "clone", repository_url])
+        return True
+    except subprocess.CalledProcessError as e:
+        logging.error(f"Error cloning repository: {e}")
+        return False
+    except Exception as e:
+        logging.error(f"Unexpected error cloning repository: {e}")
+        return False
+
 def initialiseCodingAgent(repository_url: str = None, task_description: str = None, num_agents: int = None, aider_commands: str = None):
     """Initialise coding agents with configurable agent count."""
     logging.info("Starting agent initialization")
@@ -208,3 +222,4 @@ def initialiseCodingAgent(repository_url: str = None, task_description: str = No
         return created_agent_ids
     except Exception as e:
         logging.error(f"Error initializing coding agents: {e}", exc_info=True)
+
