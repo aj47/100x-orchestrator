@@ -11,6 +11,18 @@ def init_db():
     with sqlite3.connect(DATABASE_PATH) as conn:
         cursor = conn.cursor()
         
+        # Create model_config table
+        cursor.execute("""
+            CREATE TABLE IF NOT EXISTS model_config (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                orchestrator_model TEXT NOT NULL DEFAULT 'openrouter/google/gemini-flash-1.5',
+                aider_model TEXT NOT NULL DEFAULT 'anthropic/claude-3-haiku',
+                agent_model TEXT NOT NULL DEFAULT 'meta-llama/llama-3-70b',
+                created_at TEXT NOT NULL,
+                updated_at TEXT NOT NULL
+            )
+        """)
+        
         # Create agents table
         cursor.execute("""
             CREATE TABLE IF NOT EXISTS agents (

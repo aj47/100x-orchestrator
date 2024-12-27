@@ -18,7 +18,16 @@ class LiteLLMClient:
         if not self.api_key:
             raise ValueError(f"OPENROUTER_API_KEY not found in {env_path}")
         
-    def chat_completion(self, system_message: str = "", user_message: str = "", model="openrouter/google/gemini-flash-1.5"):
+    def chat_completion(self, system_message: str = "", user_message: str = "", model=None):
+        """Get a summary of the coding session logs using JSON mode"""
+        # If no model specified, use the default orchestrator model
+        if model is None:
+            from database import get_model_config
+            config = get_model_config()
+            if config and 'orchestrator_model' in config:
+                model = config['orchestrator_model']
+            else:
+                model = "openrouter/google/gemini-flash-1.5"
         """Get a summary of the coding session logs using JSON mode"""
         try:
             response = completion(

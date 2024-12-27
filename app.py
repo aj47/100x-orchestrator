@@ -170,6 +170,80 @@ def create_agent():
             'error': str(e)
         }), 500
 
+@app.route('/config/models', methods=['POST'])
+def update_model_config():
+    """Update the model configuration for orchestrator, aider and agent."""
+    try:
+        data = request.get_json()
+        required_fields = ['orchestrator_model', 'aider_model', 'agent_model']
+        
+        if not all(field in data for field in required_fields):
+            return jsonify({
+                'success': False,
+                'error': 'Missing required fields. Need orchestrator_model, aider_model, and agent_model'
+            }), 400
+        
+        # Save to database
+        with sqlite3.connect(DATABASE_PATH) as conn:
+            cursor = conn.cursor()
+            # Delete any existing config
+            cursor.execute("DELETE FROM model_config")
+            # Insert new config
+            cursor.execute("""
+                INSERT INTO model_config (
+                    orchestrator_model, aider_model, agent_model, 
+                    created_at, updated_at
+                ) VALUES (?, ?, ?, ?, ?)
+            """, (
+                data['orchestrator_model'],
+                data['aider_model'],
+                data['agent_model'],
+                datetime.datetime.now().isoformat(),
+                datetime.datetime.now().isoformat()
+            ))
+            conn.commit()
+            
+        return jsonify({
+            'success': True,
+            'message': 'Model configuration updated successfully'
+        })
+    except Exception as e:
+        return jsonify({
+            'success': False,
+            'error': str(e)
+        }), 500
+
+@app.route('/config/models', methods=['GET'])
+def get_model_config():
+    """Get the current model configuration."""
+    try:
+        with sqlite3.connect(DATABASE_PATH) as conn:
+            conn.row_factory = sqlite3.Row
+            cursor = conn.cursor()
+            cursor.execute("SELECT * FROM model_config ORDER BY id DESC LIMIT 1")
+            config = cursor.fetchone()
+            
+            if config:
+                return jsonify({
+                    'success': True,
+                    'config': dict(config)
+                })
+            else:
+                # Return default values if no config exists
+                return jsonify({
+                    'success': True,
+                    'config': {
+                        'orchestrator_model': 'openrouter/google/gemini-flash-1.5',
+                        'aider_model': 'anthropic/claude-3-haiku',
+                        'agent_model': 'meta-llama/llama-3-70b'
+                    }
+                })
+    except Exception as e:
+        return jsonify({
+            'success': False,
+            'error': str(e)
+        }), 500
+
 @app.route('/delete_agent/<agent_id>', methods=['DELETE'])
 def remove_agent(agent_id):
     try:
