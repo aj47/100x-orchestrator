@@ -249,6 +249,11 @@ def get_model_config():
             'error': str(e)
         }), 500
 
+@app.route('/config')
+def config_view():
+    """Render the configuration view."""
+    return render_template('config_view.html')
+
 @app.route('/delete_agent/<agent_id>', methods=['DELETE'])
 def remove_agent(agent_id):
     try:
