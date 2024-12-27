@@ -40,7 +40,14 @@ class LiteLLMClient:
                 response_format={"type": "json_object"}
             )
             
-            return response.choices[0].message.content
+            # Strip markdown code blocks if present
+            content = response.choices[0].message.content
+            if content.startswith('```json') and content.endswith('```'):
+                content = content[7:-3].strip()  # Remove ```json and trailing ```
+            elif content.startswith('```') and content.endswith('```'):
+                content = content[3:-3].strip()  # Remove ``` and trailing ```
+            
+            return content
             
         except Exception as e:
             logging.error(f"Error response from litellm: {str(e)}")
