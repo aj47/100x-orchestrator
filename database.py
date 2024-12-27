@@ -215,5 +215,18 @@ def save_config(key: str, value: str) -> bool:
         print(f"Error saving config: {e}")
         return False
 
+def get_model_config() -> Optional[Dict]:
+    """Get the current model configuration."""
+    try:
+        with sqlite3.connect(DATABASE_PATH) as conn:
+            conn.row_factory = sqlite3.Row
+            cursor = conn.cursor()
+            cursor.execute("SELECT * FROM model_config ORDER BY id DESC LIMIT 1")
+            config = cursor.fetchone()
+            return dict(config) if config else None
+    except Exception as e:
+        print(f"Error getting model config: {e}")
+        return None
+
 # Initialize the database when this module is imported
 init_db()
