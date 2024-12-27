@@ -42,40 +42,36 @@ document.addEventListener('DOMContentLoaded', () => {
 });
 
 async function loadCurrentConfig() {
+    const currentConfig = document.getElementById('currentConfig');
+    
     try {
         const response = await fetch('/config/models');
-        const data = await response.json();
+        const {success, config, error} = await response.json();
         
-        if (data.success) {
-            const config = data.config;
-            const configHtml = `
-                <div class="row">
-                    <div class="col-md-4">
-                        <h6>Orchestrator Model</h6>
-                        <p>${config.orchestrator_model}</p>
-                    </div>
-                    <div class="col-md-4">
-                        <h6>Aider Model</h6>
-                        <p>${config.aider_model}</p>
-                    </div>
-                    <div class="col-md-4">
-                        <h6>Agent Model</h6>
-                        <p>${config.agent_model}</p>
-                    </div>
-                </div>
-            `;
-            document.getElementById('currentConfig').innerHTML = configHtml;
-            
-            // Populate form fields
-            document.getElementById('orchestratorModel').value = config.orchestrator_model;
-            document.getElementById('aiderModel').value = config.aider_model;
-            document.getElementById('agentModel').value = config.agent_model;
-        } else {
-            document.getElementById('currentConfig').innerHTML = 
-                `<div class="alert alert-warning">Error loading configuration: ${data.error}</div>`;
+        if (!success) {
+            throw new Error(error || 'Failed to load config');
         }
+
+        currentConfig.innerHTML = `
+            <div class="row">
+                ${['orchestrator', 'aider', 'agent'].map(type => `
+                    <div class="col-md-4">
+                        <h6>${type.charAt(0).toUpperCase() + type.slice(1)} Model</h6>
+                        <p>${config[`${type}_model`]}</p>
+                    </div>
+                `).join('')}
+            </div>
+        `;
+
+        // Populate form fields
+        ['orchestrator', 'aider', 'agent'].forEach(type => {
+            document.getElementById(`${type}Model`).value = config[`${type}_model`];
+        });
     } catch (error) {
-        document.getElementById('currentConfig').innerHTML = 
-            `<div class="alert alert-danger">Error loading configuration: ${error.message}</div>`;
+        currentConfig.innerHTML = `
+            <div class="alert alert-danger">
+                Error loading configuration: ${error.message}
+            </div>
+        `;
     }
 }

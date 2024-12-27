@@ -34,19 +34,31 @@
                     <div class="mb-3">
                         <label for="orchestratorModel" class="form-label">Orchestrator Model</label>
                         <input type="text" class="form-control" id="orchestratorModel" required>
-                        <div class="form-text">The model used by the orchestrator (e.g. openrouter/google/gemini-flash-1.5)</div>
+                        <div class="form-text">
+                            LiteLLM model string for orchestrator. See 
+                            <a href="https://docs.litellm.ai/docs/providers" target="_blank">supported providers</a>.
+                            Example: openrouter/google/gemini-flash-1.5
+                        </div>
                     </div>
 
                     <div class="mb-3">
                         <label for="aiderModel" class="form-label">Aider Model</label>
                         <input type="text" class="form-control" id="aiderModel" required>
-                        <div class="form-text">The model used by Aider agents (e.g. anthropic/claude-3-haiku)</div>
+                        <div class="form-text">
+                            LiteLLM model string for Aider. See 
+                            <a href="https://docs.litellm.ai/docs/providers" target="_blank">supported providers</a>.
+                            Example: anthropic/claude-3-haiku
+                        </div>
                     </div>
 
                     <div class="mb-3">
                         <label for="agentModel" class="form-label">Agent Model</label>
                         <input type="text" class="form-control" id="agentModel" required>
-                        <div class="form-text">The model used by individual agents (e.g. meta-llama/llama-3-70b)</div>
+                        <div class="form-text">
+                            LiteLLM model string for agents. See 
+                            <a href="https://docs.litellm.ai/docs/providers" target="_blank">supported providers</a>.
+                            Example: meta-llama/llama-3-70b
+                        </div>
                     </div>
 
                     <button type="submit" class="btn btn-primary">Update Configuration</button>
