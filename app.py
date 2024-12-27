@@ -1,6 +1,11 @@
 import logging
+import sqlite3
+from pathlib import Path
 from flask import Flask, render_template, request, jsonify, send_from_directory
 from werkzeug.serving import WSGIRequestHandler
+
+# Database configuration
+DATABASE_PATH = Path("tasks.db")
 
 # Custom log filter to suppress specific log messages
 class TasksJsonLogFilter(logging.Filter):
