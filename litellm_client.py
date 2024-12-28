@@ -24,15 +24,17 @@ class LiteLLMClient:
         from database import get_model_config
         config = get_model_config()
         
-        if not config:
-            model = "openrouter/google/gemini-flash-1.5"
-        else:
-            if model_type == "aider":
-                model = config.get('aider_model', "anthropic/claude-3-haiku")
-            elif model_type == "agent":
-                model = config.get('agent_model', "meta-llama/llama-3-70b")
-            else:  # orchestrator
-                model = config.get('orchestrator_model', "openrouter/google/gemini-flash-1.5")
+        # Default models
+        DEFAULT_MODELS = {
+            "orchestrator": "openrouter/google/gemini-flash-1.5",
+            "aider": "anthropic/claude-3-haiku",
+            "agent": "meta-llama/llama-3-70b"
+        }
+        
+        # Get model from config or use default
+        model = config.get(f"{model_type}_model", DEFAULT_MODELS[model_type]) if config else DEFAULT_MODELS[model_type]
+        
+        logging.info(f"Using {model_type} model: {model}")
         """Get a summary of the coding session logs using JSON mode"""
         try:
             response = completion(

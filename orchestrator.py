@@ -341,6 +341,7 @@ def main_loop():
                                 session_logs,
                                 model_type="agent"  # Use agent model for agent responses
                             )
+                            logging.info(f"Agent {agent_id} response: {follow_up_message}")
                             if agent_id in tasks_data['agents']:
                                 try:
                                     follow_up_data = json.loads(follow_up_message)
