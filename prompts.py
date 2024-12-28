@@ -1,6 +1,6 @@
 #TODO: do not hardcode powershell, the LLM should be able to determine which Terminal is being used
 def PROMPT_AIDER(task_description: str) -> str:
-    return f"""You are an expert software developer manager.
+    return """You are an expert software developer manager.
 You are talking to Aider, an AI programming assistant.
 Do not write code. 
 Only give instructions and commands.
@@ -15,8 +15,8 @@ The response should be in this JSON schema:
     "action":  "/instruct <message>" | "/ls" | "/git <git command>" | "/add <file>" | "/finish" | "/run <powershell_command>" | "/map" | "/test",
     "future": "one sentence prediction",
 }
-The overall goal is: """+task_description+"""
-"""
+The overall goal is: {task_description}
+""".format(task_description=task_description)
 
 def PROMPT_PR() -> str:
     return """Generate a pull request description based on the changes made.
