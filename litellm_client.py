@@ -57,5 +57,13 @@ class LiteLLMClient:
             return content
             
         except Exception as e:
-            logging.error(f"Error response from litellm: {str(e)}")
-            return f"Error generating summary: {str(e)}"
+            logging.error(f"Error in chat_completion:", exc_info=True)
+            logging.error(f"Model type: {model_type}")
+            logging.error(f"Model: {model}")
+            logging.error(f"System message length: {len(system_message)}")
+            logging.error(f"User message length: {len(user_message)}")
+            return json.dumps({
+                "error": str(e),
+                "model": model,
+                "model_type": model_type
+            })

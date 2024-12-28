@@ -408,7 +408,9 @@ def main_loop():
                             else:
                                 logging.error(f"No prompt processor found for agent {agent_id}")
                         except Exception as e:
-                            logging.error(f"Error processing session summary: {e}")
+                            logging.error(f"Error processing session summary for agent {agent_id}:", exc_info=True)
+                            logging.error(f"Session logs length: {len(session_logs) if session_logs else 0}")
+                            logging.error(f"Task description: {agent_session.task[:200]}...")
             sleep(CHECK_INTERVAL)
         except Exception as e:
             logging.error(f"Error in main loop: {e}", exc_info=True)
