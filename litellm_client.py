@@ -24,11 +24,11 @@ class LiteLLMClient:
         from database import get_model_config
         config = get_model_config()
         
-        # Default models
+        # Default models - all use Gemini Flash
         DEFAULT_MODELS = {
             "orchestrator": "openrouter/google/gemini-flash-1.5",
-            "aider": "anthropic/claude-3-haiku",
-            "agent": "meta-llama/llama-3-70b"
+            "aider": "openrouter/google/gemini-flash-1.5",
+            "agent": "openrouter/google/gemini-flash-1.5"
         }
         
         # Get model from config or use default
