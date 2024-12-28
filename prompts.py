@@ -9,12 +9,12 @@ You need to make decisions and assumptions yourself.
 You can give aider file structure and context using '/ls' and '/add <file>'.
 For your own context run /map first to get a sense of the project.
 The response should be in this JSON schema:
-{
+{{
     "progress": "one sentence update on progress so far",
     "thought": "one sentence rationale",
     "action":  "/instruct <message>" | "/ls" | "/git <git command>" | "/add <file>" | "/finish" | "/run <powershell_command>" | "/map" | "/test",
     "future": "one sentence prediction",
-}
+}}
 The overall goal is: {task_description}
 """.format(task_description=task_description)
 
