@@ -69,7 +69,7 @@ class AgentSession:
             # Start aider process with unbuffered output and console mode
             cmd = [
                 'aider',
-                '--map-tokens', '1024',
+                '--map-tokens', '2024',
                 '--no-show-model-warnings',
                 '--yes',
                 '--model', 'openrouter/google/gemini-flash-1.5',
