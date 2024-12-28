@@ -104,6 +104,10 @@
                                     <i class="fas fa-clock me-1"></i>Last Updated: {{ agent.last_updated or 'Never' }}
                                 </small>
                             </div>
+                            <div class="progress mt-2">
+                                <div class="progress-bar" role="progressbar" style="width: 0%;" aria-valuenow="0" aria-valuemin="0" aria-valuemax="100">0%</div>
+                            </div>
+                            <div class="error-message mt-1 text-danger" style="display: none;"></div>
                         </div>
                     </div>
                 </div>
@@ -138,6 +142,7 @@
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/js/all.min.js"></script>
     <script src="/static/js/agent_view.js"></script>
+    <script src="https://cdn.socket.io/4.6.0/socket.io.min.js"></script>
     <!-- Help Modal -->
     <div class="modal fade" id="helpModal" tabindex="-1" aria-labelledby="helpModalLabel" aria-hidden="true">
         <div class="modal-dialog">
