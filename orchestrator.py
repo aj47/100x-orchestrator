@@ -338,7 +338,8 @@ def main_loop():
                                 session_logs = "*aider started*"
                             follow_up_message = litellm_client.chat_completion(
                                 PROMPT_AIDER(agent_session.task),
-                                session_logs
+                                session_logs,
+                                model_type="agent"  # Use agent model for agent responses
                             )
                             if agent_id in tasks_data['agents']:
                                 try:

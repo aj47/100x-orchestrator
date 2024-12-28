@@ -67,12 +67,17 @@ class AgentSession:
             startupinfo.dwFlags |= subprocess.STARTF_USESHOWWINDOW
             
             # Start aider process with unbuffered output and console mode
+            # Get the configured aider model
+            from database import get_model_config
+            config = get_model_config()
+            aider_model = config.get('aider_model', 'anthropic/claude-3-haiku') if config else 'anthropic/claude-3-haiku'
+            
             cmd = [
                 'aider',
                 '--map-tokens', '2024',
                 '--no-show-model-warnings',
                 '--yes',
-                '--model', 'openrouter/google/gemini-flash-1.5',
+                '--model', aider_model,
                 '--no-pretty',
             ]
             if self.aider_commands:
