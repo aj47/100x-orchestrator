@@ -70,7 +70,11 @@ class AgentSession:
             # Get the configured aider model
             from database import get_model_config
             config = get_model_config()
-            aider_model = config.get('aider_model', 'anthropic/claude-3-haiku') if config else 'anthropic/claude-3-haiku'
+            aider_model = config.get('aider_model') if config else None
+            if not aider_model:
+                from database import get_model_config
+                config = get_model_config()
+                aider_model = config.get('aider_model') if config else 'openrouter/google/gemini-flash-1.5'
             
             cmd = [
                 'aider',

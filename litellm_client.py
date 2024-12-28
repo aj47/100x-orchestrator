@@ -27,9 +27,9 @@ class LiteLLMClient:
         
         # Default models - all use Gemini Flash
         DEFAULT_MODELS = {
-            "orchestrator": "openrouter/google/gemini-flash-1.5",
-            "aider": "openrouter/google/gemini-flash-1.5",
-            "agent": "openrouter/google/gemini-flash-1.5"
+            "orchestrator": "openrouter/google/gemini-flash-1.5",  # Default model for orchestrator
+            "aider": "openrouter/google/gemini-flash-1.5",        # Default model for aider
+            "agent": "openrouter/google/gemini-flash-1.5"         # Default model for agent
         }
         
         # Get model from config or use default
