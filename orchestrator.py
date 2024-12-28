@@ -10,6 +10,8 @@ import datetime
 import logging
 from github import Github
 from dotenv import load_dotenv
+import requests
+from requests.exceptions import RequestException
 
 # Import the new AgentSession class
 from agent_session import AgentSession, normalize_path
@@ -272,21 +274,39 @@ def create_pull_request(agent_id, branch_name, pr_info):
         logging.error(f"Error creating pull request: {e}")
         return None
 
-def cloneRepository(repository_url: str) -> bool:
-    """Clone git repository using subprocess."""
+def cloneRepository(repository_url: str, progress_callback=None) -> bool:
+    """Clone git repository using subprocess and send progress updates."""
     try:
         if not repository_url:
             logging.error("No repository URL provided")
             return False
         logging.info(f"Cloning {repository_url}")
-        result = subprocess.run(
+        process = subprocess.Popen(
             f"git clone --quiet {repository_url}",
             shell=True,
-            capture_output=True,
+            stdout=subprocess.PIPE,
+            stderr=subprocess.PIPE,
             text=True
         )
-        if result.returncode != 0:
-            logging.error(f"Git clone failed: {result.stderr}")
+        while True:
+            output = process.stdout.readline()
+            if output == '' and process.poll() is not None:
+                break
+            if output:
+                if progress_callback:
+                    progress_callback({'status': 'progress', 'message': output.strip()})
+                else:
+                    logging.info(output.strip())
+            
+            error = process.stderr.readline()
+            if error:
+                if progress_callback:
+                    progress_callback({'status': 'error', 'message': error.strip()})
+                else:
+                    logging.error(error.strip())
+        returncode = process.poll()
+        if returncode != 0:
+            logging.error(f"Git clone failed with return code {returncode}")
             return False
         return True
     except subprocess.SubprocessError as e:
