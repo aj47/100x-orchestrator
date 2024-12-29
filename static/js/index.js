@@ -266,17 +266,23 @@ document.addEventListener('DOMContentLoaded', async () => {
 
             const agentCount = parseInt(document.getElementById('agentCount').value, 10);
 
+            // Store GitHub token in sessionStorage
+            const githubToken = document.getElementById('githubToken').value.trim();
+            if (githubToken) {
+                sessionStorage.setItem('github_token', githubToken);
+            }
+
             const response = await fetch('/create_agent', {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
+                    'X-GitHub-Token': sessionStorage.getItem('github_token') || ''
                 },
                 body: JSON.stringify({
                     repo_url: document.getElementById('repoUrl').value,
                     tasks: tasks,
                     num_agents: agentCount,
-                    aider_commands: document.getElementById('aiderCommands').value.trim(),
-                    github_token: document.getElementById('githubToken').value.trim()
+                    aider_commands: document.getElementById('aiderCommands').value.trim()
                 })
             });
 

@@ -87,15 +87,15 @@ def create_agent():
         tasks = data.get('tasks', [])
         num_agents = data.get('num_agents', 1)  # Default to 1 if not specified
         aider_commands = data.get('aider_commands') # Get aider commands
-        github_token = data.get('github_token')
-
+        github_token = request.headers.get('X-GitHub-Token')
         if not github_token:
             return jsonify({'error': 'GitHub token is required'}), 400
 
-        # Save token to .env file
-        env_path = Path.home() / '.env'
-        with open(env_path, 'a') as f:
-            f.write(f"\nGITHUB_TOKEN={github_token}\n")
+        # Save token using manager
+        from github_token import GitHubTokenManager
+        token_manager = GitHubTokenManager()
+        if not token_manager.set_token(github_token):
+            return jsonify({'error': 'Failed to save GitHub token'}), 500
         
         # Enhanced logging for debugging
         app.logger.info(f"Received create_agent request: {data}")
