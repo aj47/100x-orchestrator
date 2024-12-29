@@ -1,5 +1,5 @@
 // Global variables and state management
-const lastOutputLengths = {};
+let lastOutputLengths = {};
 let eventSource;
 
 // Initialize SSE connection
@@ -118,10 +118,14 @@ async function updateAgentViews(tasksData) {
             }
         }
         
+        // Create temporary div to parse HTML
+        const tempDiv = document.createElement('div');
+        tempDiv.innerHTML = tasksData.html || '';
+        
         const agents = document.querySelectorAll('.agent-card');
         agents.forEach(agent => {
             const agentId = agent.id.replace('agent-', '');
-            const newAgentCard = tempDiv.querySelector(`#agent-${agentId}`);
+            const newAgentCard = document.querySelector(`#agent-${agentId}`);
             
             if (newAgentCard) {
                 // Update CLI output if it has changed
