@@ -336,6 +336,31 @@ def main_loop():
                                                     })
                                             
                                                     if review_data['status'] == 'approved':
+                                                        # Get repository URL from tasks data
+                                                        repository_url = tasks_data.get('repository_url')
+                                                        if not repository_url:
+                                                            logging.error("No repository URL found in tasks data")
+                                                            continue
+                                                            
+                                                        pr_result = pr_manager.create_pull_request(
+                                                            repository_url,
+                                                            branch_name,
+                                                            pr_info
+                                                        )
+                                                        if pr_result:
+                                                            logging.info(f"Created PR: {pr_result['url']}")
+                                                            tasks_data['agents'][agent_id]['pr_url'] = pr_result['url']
+                                                            tasks_data['agents'][agent_id]['status'] = 'completed'
+                                                            tasks_data['agents'][agent_id]['completed_at'] = datetime.datetime.now().isoformat()
+                                                            # Clean up the session
+                                                            if agent_id in aider_sessions:
+                                                                aider_sessions[agent_id].cleanup()
+                                                                del aider_sessions[agent_id]
+                                                    else:
+                                                        # Send feedback to agent
+                                                        feedback_message = f"Review feedback:\n{review_data['feedback']}\nSuggestions:\n{review_data['suggestions']}"
+                                                        aider_sessions[agent_id].send_message(feedback_message)
+                                                        tasks_data['agents'][agent_id]['status'] = 'in_progress'
                                                 else:
                                                     logging.error(f"Review data missing required fields: {review_data}")
                                                     tasks_data['agents'][agent_id]['review_status'] = 'failed'
