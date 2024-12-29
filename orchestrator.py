@@ -418,6 +418,12 @@ def main_loop():
                                                 # Create PR if approved
                                                 from pull_request import PullRequestManager
                                                 pr_manager = PullRequestManager()
+                                                # Get repository URL from tasks data
+                                                repository_url = tasks_data.get('repository_url')
+                                                if not repository_url:
+                                                    logging.error("No repository URL found in tasks data")
+                                                    continue
+                                                    
                                                 pr_result = pr_manager.create_pull_request(
                                                     repository_url,
                                                     branch_name,
