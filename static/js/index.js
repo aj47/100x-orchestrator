@@ -78,18 +78,42 @@ document.getElementById('deleteAllAgents').addEventListener('click', async () =>
     }
 });
 
-document.addEventListener('DOMContentLoaded', async () => {
-    // Load GitHub token from sessionStorage if available
-    const savedToken = sessionStorage.getItem('github_token');
+// Storage helper functions
+function saveToStorage(key, value, useSession = false) {
+    const storage = useSession ? sessionStorage : localStorage;
+    if (value) {
+        storage.setItem(key, value);
+    }
+}
+
+function loadFromStorage(key, useSession = false) {
+    const storage = useSession ? sessionStorage : localStorage;
+    return storage.getItem(key);
+}
+
+function loadStoredValues() {
+    // Load GitHub token from sessionStorage
+    const savedToken = loadFromStorage('github_token', true);
     if (savedToken) {
         document.getElementById('githubToken').value = savedToken;
     }
 
-    // Load aider commands from localStorage if available
-    const savedCommands = localStorage.getItem('aider_commands');
+    // Load aider commands from localStorage
+    const savedCommands = loadFromStorage('aider_commands');
     if (savedCommands) {
         document.getElementById('aiderCommands').value = savedCommands;
     }
+
+    // Load repo URL from localStorage
+    const savedRepo = loadFromStorage('repo_url');
+    if (savedRepo) {
+        document.getElementById('repoUrl').value = savedRepo;
+    }
+}
+
+document.addEventListener('DOMContentLoaded', async () => {
+    // Load all stored values
+    loadStoredValues();
 
     // Initial overview update
     await updateOverview();
@@ -278,15 +302,14 @@ document.addEventListener('DOMContentLoaded', async () => {
 
             const agentCount = parseInt(document.getElementById('agentCount').value, 10);
 
-            // Store GitHub token in sessionStorage
+            // Store form values
             const githubToken = document.getElementById('githubToken').value.trim();
             const aiderCommands = document.getElementById('aiderCommands').value.trim();
-            if (githubToken) {
-                sessionStorage.setItem('github_token', githubToken);
-            }
-            if (aiderCommands) {
-                localStorage.setItem('aider_commands', aiderCommands);
-            }
+            const repoUrl = document.getElementById('repoUrl').value.trim();
+
+            saveToStorage('github_token', githubToken, true);
+            saveToStorage('aider_commands', aiderCommands);
+            saveToStorage('repo_url', repoUrl);
 
             const response = await fetch('/create_agent', {
                 method: 'POST',
