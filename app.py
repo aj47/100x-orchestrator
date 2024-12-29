@@ -1,8 +1,10 @@
 import logging
 import sqlite3
 from pathlib import Path
-from flask import Flask, render_template, request, jsonify, send_from_directory
+from flask import Flask, render_template, request, jsonify, send_from_directory, Response
 from werkzeug.serving import WSGIRequestHandler
+import json
+import time
 
 # Database configuration
 DATABASE_PATH = Path("tasks.db")
@@ -45,9 +47,28 @@ for handler in logging.getLogger().handlers:
 def index():
     return render_template('index.html')
 
+def generate_events():
+    """Generate SSE events for task updates."""
+    while True:
+        tasks_data = load_tasks()
+        yield f"data: {json.dumps(tasks_data)}\n\n"
+        time.sleep(1)  # Send updates every second
+
+@app.route('/tasks/stream')
+def stream_tasks():
+    """Stream tasks data using Server-Sent Events."""
+    return Response(
+        generate_events(),
+        mimetype='text/event-stream',
+        headers={
+            'Cache-Control': 'no-cache',
+            'Connection': 'keep-alive'
+        }
+    )
+
 @app.route('/tasks/tasks.json')
 def serve_tasks_json():
-    """Serve tasks data in JSON format from database."""
+    """Serve tasks data in JSON format from database (fallback)."""
     tasks_data = load_tasks()
     return jsonify(tasks_data)
 
@@ -56,10 +77,6 @@ def agent_view():
     """Render the agent view with all agent details."""
     tasks_data = load_tasks()
     agents = tasks_data.get('agents', {})
-    
-    # Calculate time until next check (reduced to 30 seconds for more frequent updates)
-    now = datetime.datetime.now()
-    next_check = now + datetime.timedelta(seconds=30)
     
     # Ensure basic agent data exists and add new fields if missing
     for agent_id, agent in list(agents.items()):
