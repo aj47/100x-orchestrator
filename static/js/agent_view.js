@@ -6,6 +6,9 @@ let eventSource;
 function initializeSSE() {
     if (eventSource) {
         eventSource.close();
+        }
+    } catch (error) {
+        console.error('Error updating agent views:', error);
     }
     
     eventSource = new EventSource('/tasks/stream');
@@ -34,8 +37,9 @@ function getOutputLength(debugElement) {
 }
 
 // Function to update agent views with new data
-function updateAgentViews(tasksData) {
-    for (const [agentId, agentData] of Object.entries(tasksData.agents)) {
+async function updateAgentViews(tasksData) {
+    try {
+        for (const [agentId, agentData] of Object.entries(tasksData.agents)) {
             const agentCard = document.getElementById(`agent-${agentId}`);
             if (!agentCard) continue;
 
@@ -119,7 +123,8 @@ function updateAgentViews(tasksData) {
         
         // Create temporary div to parse HTML
         const tempDiv = document.createElement('div');
-        tempDiv.innerHTML = await responseClone.text(); // Use cloned response
+        const responseText = await responseClone.text(); // Use cloned response
+        tempDiv.innerHTML = responseText;
         
         // Update each agent's output
         const agents = document.querySelectorAll('.agent-card');
