@@ -398,39 +398,40 @@ def main_loop():
                                                 model_type="review"
                                             )
                                     
-                                            try:
-                                                review_data = json.loads(review_response)
-                                                tasks_data['agents'][agent_id]['review_status'] = review_data['status']
-                                                tasks_data['agents'][agent_id]['review_feedback'].append({
-                                                    'type': 'llm',
-                                                    'feedback': review_data['feedback'],
-                                                    'suggestions': review_data['suggestions'],
-                                                    'timestamp': datetime.datetime.now().isoformat()
-                                                })
-                                        
-                                                if review_data['status'] == 'approved':
-                                                    # Create PR if approved
-                                                    pr = create_pull_request(agent_id, branch_name, pr_info)
-                                                    if pr:
-                                                        logging.info(f"Created PR: {pr.html_url}")
-                                                        tasks_data['agents'][agent_id]['pr_url'] = pr.html_url
-                                                        tasks_data['agents'][agent_id]['status'] = 'completed'
-                                                        tasks_data['agents'][agent_id]['completed_at'] = datetime.datetime.now().isoformat()
-                                                        # Clean up the session
-                                                        if agent_id in aider_sessions:
-                                                            aider_sessions[agent_id].cleanup()
-                                                            del aider_sessions[agent_id]
-                                                    else:
-                                                        logging.error("Failed to create PR")
+                                            review_data = json.loads(review_response)
+                                            tasks_data['agents'][agent_id]['review_status'] = review_data['status']
+                                            tasks_data['agents'][agent_id]['review_feedback'].append({
+                                                'type': 'llm',
+                                                'feedback': review_data['feedback'],
+                                                'suggestions': review_data['suggestions'],
+                                                'timestamp': datetime.datetime.now().isoformat()
+                                            })
+                                    
+                                            if review_data['status'] == 'approved':
+                                                # Create PR if approved
+                                                pr = create_pull_request(agent_id, branch_name, pr_info)
+                                                if pr:
+                                                    logging.info(f"Created PR: {pr.html_url}")
+                                                    tasks_data['agents'][agent_id]['pr_url'] = pr.html_url
+                                                    tasks_data['agents'][agent_id]['status'] = 'completed'
+                                                    tasks_data['agents'][agent_id]['completed_at'] = datetime.datetime.now().isoformat()
+                                                    # Clean up the session
+                                                    if agent_id in aider_sessions:
+                                                        aider_sessions[agent_id].cleanup()
+                                                        del aider_sessions[agent_id]
                                                 else:
-                                                    # Send feedback to agent
-                                                    feedback_message = f"Review feedback:\n{review_data['feedback']}\nSuggestions:\n{review_data['suggestions']}"
-                                                    aider_sessions[agent_id].send_message(feedback_message)
-                                                    tasks_data['agents'][agent_id]['status'] = 'in_progress'
-                                            
-                                                save_tasks(tasks_data)
+                                                    logging.error("Failed to create PR")
+                                            else:
+                                                # Send feedback to agent
+                                                feedback_message = f"Review feedback:\n{review_data['feedback']}\nSuggestions:\n{review_data['suggestions']}"
+                                                aider_sessions[agent_id].send_message(feedback_message)
+                                                tasks_data['agents'][agent_id]['status'] = 'in_progress'
+                                        
+                                            save_tasks(tasks_data)
+                                        except json.JSONDecodeError as e:
+                                            logging.error(f"Error parsing review response: {e}")
                                         except Exception as e:
-                                            logging.error(f"Error creating PR: {e}")
+                                            logging.error(f"Error in review process: {e}")
                                     else:
                                         logging.error("No PR info found in agent state")
                                 elif action:
