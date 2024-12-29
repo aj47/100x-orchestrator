@@ -23,15 +23,6 @@ function initializeSSE() {
     };
 }
 
-// Helper function to get output length from debug info
-function getOutputLength(debugElement) {
-    const lengthElement = debugElement.querySelector('.label');
-    if (lengthElement && lengthElement.textContent.includes('Output Length')) {
-        const lengthText = lengthElement.parentElement.textContent;
-        return parseInt(lengthText.split(':')[1].trim());
-    }
-    return 0;
-}
 
 // Function to update agent views with new data
 async function updateAgentViews(tasksData) {
@@ -212,27 +203,7 @@ function forceUpdate() {
     initializeSSE();
 }
 
-// Update toast show function
-function showToast(message, type = 'success') {
-    const toastEl = document.getElementById('deleteToast');
-    const toastBody = document.getElementById('toastMessage');
-    
-    // Remove existing classes
-    toastBody.classList.remove('success', 'error');
-    // Add appropriate class
-    toastBody.classList.add(type);
-    
-    // Add icon based on type
-    const icon = type === 'success' ? 'check-circle' : 'exclamation-circle';
-    toastBody.innerHTML = `
-        <i class="fas fa-${icon} me-2"></i>
-        ${message}
-    `;
-    
-    // Show toast
-    const toast = new bootstrap.Toast(toastEl);
-    toast.show();
-}
+import { showToast, displayError, displaySuccess } from './utils.js';
 
 // DOM Ready handlers
 document.addEventListener('DOMContentLoaded', () => {
