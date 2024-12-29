@@ -1,5 +1,5 @@
 import os, json, traceback, subprocess, sys, uuid
-from prompts import PROMPT_AIDER
+from prompts import PROMPT_AIDER, PROMPT_REVIEW
 from litellm_client import LiteLLMClient
 from prompt_processor import PromptProcessor
 from pathlib import Path
@@ -332,7 +332,6 @@ def main_loop():
                     if agent_session.is_ready():
                         session_logs = agent_session.get_output()
                         try:
-                            litellm_client = LiteLLMClient()
                             #if session_logs is empty or only newlines. replace it with "*aider started*"
                             if not session_logs or session_logs.isspace():
                                 session_logs = "*aider started*"
