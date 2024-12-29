@@ -43,12 +43,23 @@ class AgentSession:
             env['PYTHONIOENCODING'] = 'utf-8'
             startupinfo = subprocess.STARTUPINFO()
             startupinfo.dwFlags |= subprocess.STARTF_USESHOWWINDOW
+
+            # Start aider process with unbuffered output and console mode
+            # Get the configured aider model
+            from database import get_model_config
+            config = get_model_config()
+            aider_model = config.get('aider_model') if config else None
+            if not aider_model:
+                from database import get_model_config
+                config = get_model_config()
+                aider_model = config.get('aider_model') if config else 'openrouter/google/gemini-flash-1.5'
+
             cmd = [
                 'aider',
-                '--map-tokens', '1024',
+                '--map-tokens', '2024',
                 '--no-show-model-warnings',
                 '--yes',
-                '--model', 'openrouter/google/gemini-flash-1.5',
+                '--model', aider_model,
                 '--no-pretty',
             ]
             if self.aider_commands:

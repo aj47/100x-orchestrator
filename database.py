@@ -16,8 +16,8 @@ def init_db():
             CREATE TABLE IF NOT EXISTS model_config (
                 id INTEGER PRIMARY KEY AUTOINCREMENT,
                 orchestrator_model TEXT NOT NULL DEFAULT 'openrouter/google/gemini-flash-1.5',
-                aider_model TEXT NOT NULL DEFAULT 'anthropic/claude-3-haiku',
-                agent_model TEXT NOT NULL DEFAULT 'meta-llama/llama-3-70b',
+                aider_model TEXT NOT NULL DEFAULT 'openrouter/google/gemini-flash-1.5',
+                agent_model TEXT NOT NULL DEFAULT 'openrouter/google/gemini-flash-1.5',
                 created_at TEXT NOT NULL,
                 updated_at TEXT NOT NULL
             )

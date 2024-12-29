@@ -338,8 +338,10 @@ def main_loop():
                                 session_logs = "*aider started*"
                             follow_up_message = litellm_client.chat_completion(
                                 PROMPT_AIDER(agent_session.task),
-                                session_logs
+                                session_logs,
+                                model_type="agent"  # Use agent model for agent responses
                             )
+                            logging.info(f"Agent {agent_id} response: {follow_up_message}")
                             if agent_id in tasks_data['agents']:
                                 try:
                                     follow_up_data = json.loads(follow_up_message)
@@ -406,7 +408,9 @@ def main_loop():
                             else:
                                 logging.error(f"No prompt processor found for agent {agent_id}")
                         except Exception as e:
-                            logging.error(f"Error processing session summary: {e}")
+                            logging.error(f"Error processing session summary for agent {agent_id}:", exc_info=True)
+                            logging.error(f"Session logs length: {len(session_logs) if session_logs else 0}")
+                            logging.error(f"Task description: {agent_session.task[:200]}...")
             sleep(CHECK_INTERVAL)
         except Exception as e:
             logging.error(f"Error in main loop: {e}", exc_info=True)

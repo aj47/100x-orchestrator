@@ -1,4 +1,5 @@
 import os
+import json
 import logging
 from pathlib import Path
 from dotenv import load_dotenv
@@ -18,16 +19,23 @@ class LiteLLMClient:
         if not self.api_key:
             raise ValueError(f"OPENROUTER_API_KEY not found in {env_path}")
         
-    def chat_completion(self, system_message: str = "", user_message: str = "", model=None):
+    def chat_completion(self, system_message: str = "", user_message: str = "", model_type="orchestrator"):
         """Get a summary of the coding session logs using JSON mode"""
-        # If no model specified, use the default orchestrator model
-        if model is None:
-            from database import get_model_config
-            config = get_model_config()
-            if config and 'orchestrator_model' in config:
-                model = config['orchestrator_model']
-            else:
-                model = "openrouter/google/gemini-flash-1.5"
+        # Get the appropriate model based on type
+        from database import get_model_config
+        config = get_model_config()
+        
+        # Default models - all use Gemini Flash
+        DEFAULT_MODELS = {
+            "orchestrator": "openrouter/google/gemini-flash-1.5",  # Default model for orchestrator
+            "aider": "openrouter/google/gemini-flash-1.5",        # Default model for aider
+            "agent": "openrouter/google/gemini-flash-1.5"         # Default model for agent
+        }
+        
+        # Get model from config or use default
+        model = config.get(f"{model_type}_model", DEFAULT_MODELS[model_type]) if config else DEFAULT_MODELS[model_type]
+        
+        logging.info(f"Using {model_type} model: {model}")
         """Get a summary of the coding session logs using JSON mode"""
         try:
             response = completion(
@@ -40,8 +48,23 @@ class LiteLLMClient:
                 response_format={"type": "json_object"}
             )
             
-            return response.choices[0].message.content
+            # Strip markdown code blocks if present
+            content = response.choices[0].message.content
+            if content.startswith('```json') and content.endswith('```'):
+                content = content[7:-3].strip()  # Remove ```json and trailing ```
+            elif content.startswith('```') and content.endswith('```'):
+                content = content[3:-3].strip()  # Remove ``` and trailing ```
+            
+            return content
             
         except Exception as e:
-            logging.error(f"Error response from litellm: {str(e)}")
-            return f"Error generating summary: {str(e)}"
+            logging.error(f"Error in chat_completion:", exc_info=True)
+            logging.error(f"Model type: {model_type}")
+            logging.error(f"Model: {model}")
+            logging.error(f"System message length: {len(system_message)}")
+            logging.error(f"User message length: {len(user_message)}")
+            return json.dumps({
+                "error": str(e),
+                "model": model,
+                "model_type": model_type
+            })

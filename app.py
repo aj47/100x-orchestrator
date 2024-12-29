@@ -229,9 +229,19 @@ def get_model_config():
             config = cursor.fetchone()
             
             if config:
+                config_dict = dict(config)
+                # Ensure all required fields are present
+                required_fields = ['orchestrator_model', 'aider_model', 'agent_model']
+                for field in required_fields:
+                    if field not in config_dict:
+                        config_dict[field] = {
+                            'orchestrator_model': 'openrouter/google/gemini-flash-1.5',
+                            'aider_model': 'openrouter/google/gemini-flash-1.5',
+                            'agent_model': 'openrouter/google/gemini-flash-1.5'
+                        }[field]
                 return jsonify({
                     'success': True,
-                    'config': dict(config)
+                    'config': config_dict
                 })
             else:
                 # Return default values if no config exists
