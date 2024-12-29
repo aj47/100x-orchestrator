@@ -264,6 +264,44 @@ document.addEventListener('DOMContentLoaded', () => {
     header.querySelector('div').appendChild(helpButton);
 });
 
+// Handle review feedback submission
+document.addEventListener('submit', async (e) => {
+    if (e.target.classList.contains('review-form')) {
+        e.preventDefault();
+        const agentId = e.target.getAttribute('data-agent-id');
+        const formData = new FormData(e.target);
+        const feedback = formData.get('feedback');
+        
+        try {
+            const response = await fetch(`/submit_review/${agentId}`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                    feedback: feedback,
+                    type: 'manual'
+                })
+            });
+            
+            const result = await response.json();
+            
+            if (result.success) {
+                showToast('Review feedback submitted successfully', 'success');
+                // Close modal
+                const modal = bootstrap.Modal.getInstance(document.getElementById(`reviewModal-${agentId}`));
+                modal.hide();
+                // Refresh agent view
+                forceUpdate();
+            } else {
+                showToast(result.error || 'Failed to submit review', 'error');
+            }
+        } catch (error) {
+            showToast(`Error submitting review: ${error.message}`, 'error');
+        }
+    }
+});
+
 // Delete agent functionality
 document.getElementById('agentList').addEventListener('click', async (e) => {
     if (e.target.classList.contains('delete-agent-btn')) {

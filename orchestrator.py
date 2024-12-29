@@ -381,16 +381,51 @@ def main_loop():
                                     if pr_info:
                                         try:
                                             branch_name = f"agent-{agent_id[:8]}"
-                                            pr = create_pull_request(agent_id, branch_name, pr_info)
-                                            if pr:
-                                                logging.info(f"Created PR: {pr.html_url}")
-                                                tasks_data['agents'][agent_id]['pr_url'] = pr.html_url
-                                                tasks_data['agents'][agent_id]['status'] = 'completed'
-                                                tasks_data['agents'][agent_id]['completed_at'] = datetime.datetime.now().isoformat()
-                                                # Clean up the session
-                                                if agent_id in aider_sessions:
-                                                    aider_sessions[agent_id].cleanup()
-                                                    del aider_sessions[agent_id]
+                                            # Start review process
+                                            tasks_data['agents'][agent_id]['status'] = 'awaiting_review'
+                                            tasks_data['agents'][agent_id]['review_status'] = 'pending'
+                                            tasks_data['agents'][agent_id]['review_feedback'] = []
+                                            save_tasks(tasks_data)
+                                    
+                                            # Get LLM review
+                                            from litellm_client import LiteLLMClient
+                                            from prompts import PROMPT_REVIEW
+                                    
+                                            client = LiteLLMClient()
+                                            review_response = client.chat_completion(
+                                                system_message=PROMPT_REVIEW(),
+                                                user_message=f"Agent history:\n{history}",
+                                                model_type="review"
+                                            )
+                                    
+                                            try:
+                                                review_data = json.loads(review_response)
+                                                tasks_data['agents'][agent_id]['review_status'] = review_data['status']
+                                                tasks_data['agents'][agent_id]['review_feedback'].append({
+                                                    'type': 'llm',
+                                                    'feedback': review_data['feedback'],
+                                                    'suggestions': review_data['suggestions'],
+                                                    'timestamp': datetime.datetime.now().isoformat()
+                                                })
+                                        
+                                                if review_data['status'] == 'approved':
+                                                    # Create PR if approved
+                                                    pr = create_pull_request(agent_id, branch_name, pr_info)
+                                                    if pr:
+                                                        logging.info(f"Created PR: {pr.html_url}")
+                                                        tasks_data['agents'][agent_id]['pr_url'] = pr.html_url
+                                                        tasks_data['agents'][agent_id]['status'] = 'completed'
+                                                        tasks_data['agents'][agent_id]['completed_at'] = datetime.datetime.now().isoformat()
+                                                        # Clean up the session
+                                                        if agent_id in aider_sessions:
+                                                            aider_sessions[agent_id].cleanup()
+                                                            del aider_sessions[agent_id]
+                                                else:
+                                                    # Send feedback to agent
+                                                    feedback_message = f"Review feedback:\n{review_data['feedback']}\nSuggestions:\n{review_data['suggestions']}"
+                                                    aider_sessions[agent_id].send_message(feedback_message)
+                                                    tasks_data['agents'][agent_id]['status'] = 'in_progress'
+                                            
                                                 save_tasks(tasks_data)
                                             else:
                                                 logging.error("Failed to create PR")
