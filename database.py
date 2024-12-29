@@ -41,7 +41,10 @@ def init_db():
                 thought_history TEXT,
                 future TEXT,
                 last_action TEXT,
-                pr_url TEXT
+                pr_url TEXT,
+                error TEXT,
+                completed BOOLEAN DEFAULT 0,
+                agent_type TEXT DEFAULT 'default'
             )
         """)
         
@@ -80,7 +83,7 @@ def save_agent(agent_id: str, agent_data: Dict) -> bool:
                     :id, :workspace, :repo_path, :task, :status, :created_at, 
                     :last_updated, :aider_output, :last_critique, :progress, 
                     :thought, :progress_history, :thought_history, :future, 
-                    :last_action, :pr_url
+                    :last_action, :pr_url, :error, :completed, :agent_type
                 )
             """, {
                 'id': agent_id,
@@ -98,7 +101,10 @@ def save_agent(agent_id: str, agent_data: Dict) -> bool:
                 'thought_history': thought_history,
                 'future': agent_data.get('future', ''),
                 'last_action': agent_data.get('last_action', ''),
-                'pr_url': agent_data.get('pr_url', '')
+                'pr_url': agent_data.get('pr_url', ''),
+                'error': agent_data.get('error', ''),
+                'completed': agent_data.get('completed', 0),
+                'agent_type': agent_data.get('agent_type', 'default')
             })
             conn.commit()
             return True
