@@ -82,7 +82,9 @@ class PromptProcessor:
                     pr_data = json.loads(pr_info)
                     # Store PR info in agent state
                     self.agent_states[agent_id]['pr_info'] = pr_data
-                    self.agent_states[agent_id]['status'] = 'creating_pr'
+                    self.agent_states[agent_id]['status'] = 'awaiting_review'
+                    self.agent_states[agent_id]['review_status'] = 'pending'
+                    self.agent_states[agent_id]['review_feedback'] = []
                 except json.JSONDecodeError:
                     logging.error(f"Invalid PR info JSON: {pr_info}")
                 
