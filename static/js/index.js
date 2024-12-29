@@ -85,6 +85,12 @@ document.addEventListener('DOMContentLoaded', async () => {
         document.getElementById('githubToken').value = savedToken;
     }
 
+    // Load aider commands from localStorage if available
+    const savedCommands = localStorage.getItem('aider_commands');
+    if (savedCommands) {
+        document.getElementById('aiderCommands').value = savedCommands;
+    }
+
     // Initial overview update
     await updateOverview();
 
@@ -274,8 +280,12 @@ document.addEventListener('DOMContentLoaded', async () => {
 
             // Store GitHub token in sessionStorage
             const githubToken = document.getElementById('githubToken').value.trim();
+            const aiderCommands = document.getElementById('aiderCommands').value.trim();
             if (githubToken) {
                 sessionStorage.setItem('github_token', githubToken);
+            }
+            if (aiderCommands) {
+                localStorage.setItem('aider_commands', aiderCommands);
             }
 
             const response = await fetch('/create_agent', {
