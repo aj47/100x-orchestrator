@@ -391,6 +391,13 @@ def main_loop():
                                             from litellm_client import LiteLLMClient
                                             from prompts import PROMPT_REVIEW
                                     
+                                            # Get agent history from prompt processor
+                                            agent_state = processor.get_agent_state(agent_id)
+                                            history = "\n".join([
+                                                f"Progress: {r.progress}\nThought: {r.thought}\nAction: {r.action}\nFuture: {r.future}\n"
+                                                for r in processor.get_response_history(agent_id)
+                                            ])
+                                            
                                             client = LiteLLMClient()
                                             review_response = client.chat_completion(
                                                 system_message=PROMPT_REVIEW(),
