@@ -8,65 +8,88 @@ DATABASE_PATH = Path("tasks.db")
 
 def init_db():
     """Initialize the SQLite database with required tables."""
-    with sqlite3.connect(DATABASE_PATH) as conn:
-        cursor = conn.cursor()
+    try:
+        # Create database file if it doesn't exist
+        DATABASE_PATH.parent.mkdir(parents=True, exist_ok=True)
         
-        # Create model_config table
-        cursor.execute("""
-            CREATE TABLE IF NOT EXISTS model_config (
-                id INTEGER PRIMARY KEY AUTOINCREMENT,
-                orchestrator_model TEXT NOT NULL DEFAULT 'openrouter/google/gemini-flash-1.5',
-                aider_model TEXT NOT NULL DEFAULT 'openrouter/google/gemini-flash-1.5',
-                agent_model TEXT NOT NULL DEFAULT 'openrouter/google/gemini-flash-1.5',
-                created_at TEXT NOT NULL,
-                updated_at TEXT NOT NULL
-            )
-        """)
-        
-        # Create agents table
-        cursor.execute("""
-            CREATE TABLE IF NOT EXISTS agents (
-                id TEXT PRIMARY KEY,
-                workspace TEXT NOT NULL,
-                repo_path TEXT,
-                task TEXT NOT NULL,
-                status TEXT NOT NULL,
-                created_at TEXT NOT NULL,
-                last_updated TEXT NOT NULL,
-                aider_output TEXT,
-                last_critique TEXT,
-                progress TEXT,
-                thought TEXT,
-                progress_history TEXT,
-                thought_history TEXT,
-                future TEXT,
-                last_action TEXT,
-                pr_url TEXT,
-                error TEXT,
-                completed BOOLEAN DEFAULT 0,
-                agent_type TEXT DEFAULT 'default'
-            )
-        """)
-        
-        # Create tasks table
-        cursor.execute("""
-            CREATE TABLE IF NOT EXISTS tasks (
-                id INTEGER PRIMARY KEY AUTOINCREMENT,
-                title TEXT NOT NULL,
-                description TEXT NOT NULL,
-                created_at TEXT NOT NULL
-            )
-        """)
-        
-        # Create config table
-        cursor.execute("""
-            CREATE TABLE IF NOT EXISTS config (
-                key TEXT PRIMARY KEY,
-                value TEXT
-            )
-        """)
-        
-        conn.commit()
+        with sqlite3.connect(DATABASE_PATH) as conn:
+            cursor = conn.cursor()
+            
+            # Create model_config table
+            cursor.execute("""
+                CREATE TABLE IF NOT EXISTS model_config (
+                    id INTEGER PRIMARY KEY AUTOINCREMENT,
+                    orchestrator_model TEXT NOT NULL DEFAULT 'openrouter/google/gemini-flash-1.5',
+                    aider_model TEXT NOT NULL DEFAULT 'openrouter/google/gemini-flash-1.5',
+                    agent_model TEXT NOT NULL DEFAULT 'openrouter/google/gemini-flash-1.5',
+                    created_at TEXT NOT NULL,
+                    updated_at TEXT NOT NULL
+                )
+            """)
+            
+            # Create agents table
+            cursor.execute("""
+                CREATE TABLE IF NOT EXISTS agents (
+                    id TEXT PRIMARY KEY,
+                    workspace TEXT NOT NULL,
+                    repo_path TEXT,
+                    task TEXT NOT NULL,
+                    status TEXT NOT NULL,
+                    created_at TEXT NOT NULL,
+                    last_updated TEXT NOT NULL,
+                    aider_output TEXT,
+                    last_critique TEXT,
+                    progress TEXT,
+                    thought TEXT,
+                    progress_history TEXT,
+                    thought_history TEXT,
+                    future TEXT,
+                    last_action TEXT,
+                    pr_url TEXT,
+                    error TEXT,
+                    completed BOOLEAN DEFAULT 0,
+                    agent_type TEXT DEFAULT 'default'
+                )
+            """)
+            
+            # Create tasks table
+            cursor.execute("""
+                CREATE TABLE IF NOT EXISTS tasks (
+                    id INTEGER PRIMARY KEY AUTOINCREMENT,
+                    title TEXT NOT NULL,
+                    description TEXT NOT NULL,
+                    created_at TEXT NOT NULL
+                )
+            """)
+            
+            # Create config table
+            cursor.execute("""
+                CREATE TABLE IF NOT EXISTS config (
+                    key TEXT PRIMARY KEY,
+                    value TEXT
+                )
+            """)
+            
+            # Insert default model config if none exists
+            cursor.execute("SELECT COUNT(*) FROM model_config")
+            if cursor.fetchone()[0] == 0:
+                cursor.execute("""
+                    INSERT INTO model_config (
+                        orchestrator_model, aider_model, agent_model,
+                        created_at, updated_at
+                    ) VALUES (?, ?, ?, ?, ?)
+                """, (
+                    'openrouter/google/gemini-flash-1.5',
+                    'anthropic/claude-3-haiku',
+                    'meta-llama/llama-3-70b',
+                    datetime.now().isoformat(),
+                    datetime.now().isoformat()
+                ))
+            
+            conn.commit()
+    except Exception as e:
+        print(f"Error initializing database: {e}")
+        raise
 
 def save_agent(agent_id: str, agent_data: Dict) -> bool:
     """Save or update an agent in the database."""
