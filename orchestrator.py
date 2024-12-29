@@ -318,6 +318,7 @@ def update_agent_output(agent_id):
 def main_loop():
     """Main orchestration loop to manage agents."""
     logging.info("Starting main loop")
+    litellm_client = LiteLLMClient()  # Create LiteLLM client instance
     while True:
         try:
             tasks_data = load_tasks()
