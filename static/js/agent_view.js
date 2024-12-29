@@ -194,9 +194,8 @@ async function updateAgentViews(tasksData) {
                 }
             }
         });
-        } catch (error) {
-            console.error('Error parsing response:', error);
-        }
+    } catch (error) {
+        console.error('Error parsing response:', error);
     }
 }
 
