@@ -74,7 +74,8 @@ class PromptProcessor:
                 
                 pr_info = client.chat_completion(
                     system_message=PROMPT_PR(),
-                    user_message=f"Agent history:\n{history}"
+                    user_message=f"Agent history:\n{history}",
+                    model_type="agent"
                 )
                 
                 try:
