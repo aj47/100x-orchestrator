@@ -199,7 +199,6 @@ function updateAgentViews(tasksData) {
             }
         });
     }
-}
 
 // Function to force an immediate update
 function forceUpdate() {
