@@ -1,6 +1,27 @@
 // Global variables and state management
 const lastOutputLengths = {};
-let updateInterval;
+let eventSource;
+
+// Initialize SSE connection
+function initializeSSE() {
+    if (eventSource) {
+        eventSource.close();
+    }
+    
+    eventSource = new EventSource('/tasks/stream');
+    
+    eventSource.onmessage = (event) => {
+        const tasksData = JSON.parse(event.data);
+        updateAgentViews(tasksData);
+    };
+    
+    eventSource.onerror = (error) => {
+        console.error('SSE Error:', error);
+        eventSource.close();
+        // Attempt to reconnect after 5 seconds
+        setTimeout(initializeSSE, 5000);
+    };
+}
 
 // Helper function to get output length from debug info
 function getOutputLength(debugElement) {
@@ -12,14 +33,8 @@ function getOutputLength(debugElement) {
     return 0;
 }
 
-// Function to fetch updates via AJAX
-async function fetchUpdates() {
-    try {
-        const response = await fetch('/tasks/tasks.json');
-        const responseClone = response.clone(); // Clone the response
-        const tasksData = await response.json();
-        
-        // Update each agent's output
+// Function to update agent views with new data
+function updateAgentViews(tasksData) {
         for (const [agentId, agentData] of Object.entries(tasksData.agents)) {
             const agentCard = document.getElementById(`agent-${agentId}`);
             if (!agentCard) continue;
@@ -190,7 +205,11 @@ async function fetchUpdates() {
 
 // Function to force an immediate update
 function forceUpdate() {
-    fetchUpdates();
+    // Close existing SSE connection and establish a new one
+    if (eventSource) {
+        eventSource.close();
+    }
+    initializeSSE();
 }
 
 // Update toast show function
@@ -237,8 +256,8 @@ document.addEventListener('DOMContentLoaded', () => {
         console.log(`Initialized agent ${agentId} output length:`, lastOutputLengths[agentId]);
     });
 
-    // Set up updates for CLI output with a reasonable interval
-    setInterval(forceUpdate, 5000); // Check for updates every 5 seconds
+    // Initialize SSE connection
+    initializeSSE();
 
     // Hide loader
     const loader = document.querySelector('.page-loader');
