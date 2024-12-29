@@ -1,13 +1,42 @@
-from typing import Optional, Dict
+from typing import Optional, Dict, List
 from github import Github
 import logging
 from github_token import GitHubTokenManager
+from litellm_client import LiteLLMClient
+from prompts import PROMPT_PR, PROMPT_REVIEW
 
 class PullRequestManager:
     """Manages GitHub pull request operations"""
     
     def __init__(self):
         self.token_manager = GitHubTokenManager()
+        self.litellm_client = LiteLLMClient()
+
+    def generate_pr_info(self, agent_id: str, history: str) -> Optional[Dict]:
+        """Generate PR information using LLM"""
+        try:
+            pr_info = self.litellm_client.chat_completion(
+                system_message=PROMPT_PR(),
+                user_message=f"Agent history:\n{history}",
+                model_type="agent"
+            )
+            return json.loads(pr_info)
+        except Exception as e:
+            logging.error(f"Error generating PR info: {e}")
+            return None
+
+    def review_changes(self, history: str) -> Optional[Dict]:
+        """Review changes using LLM"""
+        try:
+            review_response = self.litellm_client.chat_completion(
+                system_message=PROMPT_REVIEW(),
+                user_message=f"Agent history:\n{history}",
+                model_type="review"
+            )
+            return json.loads(review_response)
+        except Exception as e:
+            logging.error(f"Error reviewing changes: {e}")
+            return None
     
     def create_pull_request(self, repo_url: str, branch_name: str, pr_info: Dict) -> Optional[Dict]:
         """Create a pull request with the given information"""
