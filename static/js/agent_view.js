@@ -6,9 +6,6 @@ let eventSource;
 function initializeSSE() {
     if (eventSource) {
         eventSource.close();
-        }
-    } catch (error) {
-        console.error('Error updating agent views:', error);
     }
     
     eventSource = new EventSource('/tasks/stream');
@@ -204,6 +201,7 @@ async function updateAgentViews(tasksData) {
             }
         });
     }
+}
 
 // Function to force an immediate update
 function forceUpdate() {
