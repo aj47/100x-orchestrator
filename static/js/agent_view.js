@@ -118,12 +118,13 @@ async function updateAgentViews(tasksData) {
             }
         }
         
-        // Create temporary div to parse HTML
-        const tempDiv = document.createElement('div');
-        const responseText = await responseClone.text(); // Use cloned response
-        tempDiv.innerHTML = responseText;
-        
-        // Update each agent's output
+        try {
+            // Create temporary div to parse HTML
+            const tempDiv = document.createElement('div');
+            const responseText = await responseClone.text(); // Use cloned response
+            tempDiv.innerHTML = responseText;
+            
+            // Update each agent's output
         const agents = document.querySelectorAll('.agent-card');
         agents.forEach(agent => {
             const agentId = agent.id.replace('agent-', '');
@@ -200,6 +201,9 @@ async function updateAgentViews(tasksData) {
                 }
             }
         });
+        } catch (error) {
+            console.error('Error parsing response:', error);
+        }
     }
 }
 
