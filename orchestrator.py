@@ -416,10 +416,16 @@ def main_loop():
                                     
                                             if review_data['status'] == 'approved':
                                                 # Create PR if approved
-                                                pr = create_pull_request(agent_id, branch_name, pr_info)
-                                                if pr:
-                                                    logging.info(f"Created PR: {pr.html_url}")
-                                                    tasks_data['agents'][agent_id]['pr_url'] = pr.html_url
+                                                from pull_request import PullRequestManager
+                                                pr_manager = PullRequestManager()
+                                                pr_result = pr_manager.create_pull_request(
+                                                    repository_url,
+                                                    branch_name,
+                                                    pr_info
+                                                )
+                                                if pr_result:
+                                                    logging.info(f"Created PR: {pr_result['url']}")
+                                                    tasks_data['agents'][agent_id]['pr_url'] = pr_result['url']
                                                     tasks_data['agents'][agent_id]['status'] = 'completed'
                                                     tasks_data['agents'][agent_id]['completed_at'] = datetime.datetime.now().isoformat()
                                                     # Clean up the session
