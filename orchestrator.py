@@ -388,44 +388,37 @@ def main_loop():
                                             save_tasks(tasks_data)
                                     
                                             # Get LLM review
+                                            from pull_request import PullRequestManager
+                                            pr_manager = PullRequestManager()
+                                            
                                             # Get agent history from prompt processor
-                                            agent_state = processor.get_agent_state(agent_id)
                                             history = "\n".join([
                                                 f"Progress: {r.progress}\nThought: {r.thought}\nAction: {r.action}\nFuture: {r.future}\n"
                                                 for r in processor.get_response_history(agent_id)
                                             ])
                                             
-                                            client = LiteLLMClient()
-                                            review_response = client.chat_completion(
-                                                system_message=PROMPT_REVIEW(),
-                                                user_message=f"Agent history:\n{history}",
-                                                model_type="review"
-                                            )
-                                    
-                                            review_data = json.loads(review_response)
-                                            tasks_data['agents'][agent_id]['review_status'] = review_data['status']
-                                            tasks_data['agents'][agent_id]['review_feedback'].append({
-                                                'type': 'llm',
-                                                'feedback': review_data['feedback'],
-                                                'suggestions': review_data['suggestions'],
-                                                'timestamp': datetime.datetime.now().isoformat()
-                                            })
-                                    
-                                            if review_data['status'] == 'approved':
-                                                # Create PR if approved
-                                                from pull_request import PullRequestManager
-                                                pr_manager = PullRequestManager()
-                                                # Get repository URL from tasks data
-                                                repository_url = tasks_data.get('repository_url')
-                                                if not repository_url:
-                                                    logging.error("No repository URL found in tasks data")
-                                                    continue
-                                                    
-                                                pr_result = pr_manager.create_pull_request(
-                                                    repository_url,
-                                                    branch_name,
-                                                    pr_info
-                                                )
+                                            review_data = pr_manager.review_changes(history)
+                                            if review_data:
+                                                tasks_data['agents'][agent_id]['review_status'] = review_data['status']
+                                                tasks_data['agents'][agent_id]['review_feedback'].append({
+                                                    'type': 'llm',
+                                                    'feedback': review_data['feedback'],
+                                                    'suggestions': review_data['suggestions'],
+                                                    'timestamp': datetime.datetime.now().isoformat()
+                                                })
+                                        
+                                                if review_data['status'] == 'approved':
+                                                    # Get repository URL from tasks data
+                                                    repository_url = tasks_data.get('repository_url')
+                                                    if not repository_url:
+                                                        logging.error("No repository URL found in tasks data")
+                                                        continue
+                                                        
+                                                    pr_result = pr_manager.create_pull_request(
+                                                        repository_url,
+                                                        branch_name,
+                                                        pr_info
+                                                    )
                                                 if pr_result:
                                                     logging.info(f"Created PR: {pr_result['url']}")
                                                     tasks_data['agents'][agent_id]['pr_url'] = pr_result['url']
