@@ -420,6 +420,8 @@ def main_loop():
                                                         if agent_id in aider_sessions:
                                                             aider_sessions[agent_id].cleanup()
                                                             del aider_sessions[agent_id]
+                                                    else:
+                                                        logging.error("Failed to create PR")
                                                 else:
                                                     # Send feedback to agent
                                                     feedback_message = f"Review feedback:\n{review_data['feedback']}\nSuggestions:\n{review_data['suggestions']}"
@@ -427,8 +429,6 @@ def main_loop():
                                                     tasks_data['agents'][agent_id]['status'] = 'in_progress'
                                             
                                                 save_tasks(tasks_data)
-                                            else:
-                                                logging.error("Failed to create PR")
                                         except Exception as e:
                                             logging.error(f"Error creating PR: {e}")
                                     else:
