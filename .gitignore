@@ -11,3 +11,4 @@ orchestrator_debug.log
 tasks/tasks.json
 flask_debug.log
 .coverage
+tasks.db
