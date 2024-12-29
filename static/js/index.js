@@ -143,11 +143,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         const githubToken = document.getElementById('githubToken').value;
 
         if (!repoUrl || !githubToken) {
-            const resultDiv = document.getElementById('result');
-            const alertDiv = resultDiv.querySelector('.alert');
-            resultDiv.style.display = 'block';
-            alertDiv.className = 'alert alert-danger';
-            alertDiv.textContent = 'Please enter both repository URL and GitHub token';
+            displayError('Please enter both repository URL and GitHub token');
             return;
         }
 
@@ -231,18 +227,10 @@ document.addEventListener('DOMContentLoaded', async () => {
             taskList.appendChild(issueListContainer);
 
             // Show success message
-            const resultDiv = document.getElementById('result');
-            const alertDiv = resultDiv.querySelector('.alert');
-            resultDiv.style.display = 'block';
-            alertDiv.className = 'alert alert-success';
-            alertDiv.textContent = `Loaded ${issues.length} issues from GitHub`;
+            displaySuccess(`Loaded ${issues.length} issues from GitHub`);
 
         } catch (error) {
-            const resultDiv = document.getElementById('result');
-            const alertDiv = resultDiv.querySelector('.alert');
-            resultDiv.style.display = 'block';
-            alertDiv.className = 'alert alert-danger';
-            alertDiv.textContent = `Error loading GitHub issues: ${error.message}`;
+            displayError(`Error loading GitHub issues: ${error.message}`);
         }
     });
 
