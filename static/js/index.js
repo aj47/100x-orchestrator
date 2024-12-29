@@ -79,6 +79,12 @@ document.getElementById('deleteAllAgents').addEventListener('click', async () =>
 });
 
 document.addEventListener('DOMContentLoaded', async () => {
+    // Load GitHub token from sessionStorage if available
+    const savedToken = sessionStorage.getItem('github_token');
+    if (savedToken) {
+        document.getElementById('githubToken').value = savedToken;
+    }
+
     // Initial overview update
     await updateOverview();
 
