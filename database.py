@@ -80,8 +80,8 @@ def init_db():
                     ) VALUES (?, ?, ?, ?, ?)
                 """, (
                     'openrouter/google/gemini-flash-1.5',
-                    'anthropic/claude-3-haiku',
-                    'meta-llama/llama-3-70b',
+                    'openrouter/google/gemini-flash-1.5',
+                    'openrouter/google/gemini-flash-1.5',
                     datetime.now().isoformat(),
                     datetime.now().isoformat()
                 ))

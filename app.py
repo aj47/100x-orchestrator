@@ -249,8 +249,8 @@ def get_model_config():
                     'success': True,
                     'config': {
                         'orchestrator_model': 'openrouter/google/gemini-flash-1.5',
-                        'aider_model': 'anthropic/claude-3-haiku',
-                        'agent_model': 'meta-llama/llama-3-70b'
+                        'aider_model': 'openrouter/google/gemini-flash-1.5',
+                        'agent_model': 'openrouter/google/gemini-flash-1.5'
                     }
                 })
     except Exception as e:
