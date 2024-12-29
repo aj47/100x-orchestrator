@@ -334,6 +334,8 @@ def main_loop():
                                                         'suggestions': review_data['suggestions'],
                                                         'timestamp': datetime.datetime.now().isoformat()
                                                     })
+                                                else:
+                                                    logging.error("Review data missing required fields")
                                             
                                                     if review_data['status'] == 'approved':
                                                         # Get repository URL from tasks data
