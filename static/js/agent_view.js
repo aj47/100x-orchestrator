@@ -35,7 +35,7 @@ function getOutputLength(debugElement) {
 
 // Function to update agent views with new data
 function updateAgentViews(tasksData) {
-        for (const [agentId, agentData] of Object.entries(tasksData.agents)) {
+    for (const [agentId, agentData] of Object.entries(tasksData.agents)) {
             const agentCard = document.getElementById(`agent-${agentId}`);
             if (!agentCard) continue;
 
@@ -198,8 +198,6 @@ function updateAgentViews(tasksData) {
                 }
             }
         });
-    } catch (error) {
-        console.error('Error fetching updates:', error);
     }
 }
 
