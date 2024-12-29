@@ -323,16 +323,35 @@ def main_loop():
                                             ])
                                             
                                             review_data = pr_manager.review_changes(history)
-                                            if review_data:
-                                                tasks_data['agents'][agent_id]['review_status'] = review_data['status']
+                                            if review_data and isinstance(review_data, dict):
+                                                # Validate required fields exist
+                                                required_fields = ['status', 'feedback', 'suggestions']
+                                                if all(field in review_data for field in required_fields):
+                                                    tasks_data['agents'][agent_id]['review_status'] = review_data['status']
+                                                    tasks_data['agents'][agent_id]['review_feedback'].append({
+                                                        'type': 'llm',
+                                                        'feedback': review_data['feedback'],
+                                                        'suggestions': review_data['suggestions'],
+                                                        'timestamp': datetime.datetime.now().isoformat()
+                                                    })
+                                            
+                                                    if review_data['status'] == 'approved':
+                                                else:
+                                                    logging.error(f"Review data missing required fields: {review_data}")
+                                                    tasks_data['agents'][agent_id]['review_status'] = 'failed'
+                                                    tasks_data['agents'][agent_id]['review_feedback'].append({
+                                                        'type': 'error',
+                                                        'feedback': 'Review response missing required fields',
+                                                        'timestamp': datetime.datetime.now().isoformat()
+                                                    })
+                                            else:
+                                                logging.error("Invalid or empty review data received")
+                                                tasks_data['agents'][agent_id]['review_status'] = 'failed'
                                                 tasks_data['agents'][agent_id]['review_feedback'].append({
-                                                    'type': 'llm',
-                                                    'feedback': review_data['feedback'],
-                                                    'suggestions': review_data['suggestions'],
+                                                    'type': 'error',
+                                                    'feedback': 'Failed to get valid review data',
                                                     'timestamp': datetime.datetime.now().isoformat()
                                                 })
-                                        
-                                                if review_data['status'] == 'approved':
                                                     # Get repository URL from tasks data
                                                     repository_url = tasks_data.get('repository_url')
                                                     if not repository_url:

@@ -34,7 +34,32 @@ class PullRequestManager:
                 user_message=f"Agent history:\n{history}",
                 model_type="review"
             )
-            return json.loads(review_response)
+            
+            # Parse and validate the response
+            try:
+                data = json.loads(review_response)
+                if not isinstance(data, dict):
+                    raise ValueError("Response must be a JSON object")
+                    
+                # Ensure required fields exist
+                required_fields = ['status', 'feedback', 'suggestions']
+                missing_fields = [field for field in required_fields if field not in data]
+                if missing_fields:
+                    raise ValueError(f"Missing required fields: {missing_fields}")
+                    
+                # Validate status field
+                if data['status'] not in ['approved', 'rejected', 'needs_changes']:
+                    data['status'] = 'needs_changes'  # Default to needs_changes for invalid status
+                    
+                return data
+                
+            except json.JSONDecodeError as e:
+                logging.error(f"Invalid JSON in review response: {e}")
+                return None
+            except ValueError as e:
+                logging.error(f"Invalid review response format: {e}")
+                return None
+                
         except Exception as e:
             logging.error(f"Error reviewing changes: {e}")
             return None
