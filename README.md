@@ -100,7 +100,7 @@ You need to set up environment variables to configure API keys and model choices
     ```
     MY_MODEL=provider/model_name
     ```
-
+    -   **Note**: LiteLLM model strings can be found [here](https://docs.litellm.ai/docs/providers).
 3. Add your `GITHUB_TOKEN` to the `.env` file:
 
     ```
