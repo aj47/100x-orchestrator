@@ -8,88 +8,62 @@ DATABASE_PATH = Path("tasks.db")
 
 def init_db():
     """Initialize the SQLite database with required tables."""
-    try:
-        # Create database file if it doesn't exist
-        DATABASE_PATH.parent.mkdir(parents=True, exist_ok=True)
+    with sqlite3.connect(DATABASE_PATH) as conn:
+        cursor = conn.cursor()
         
-        with sqlite3.connect(DATABASE_PATH) as conn:
-            cursor = conn.cursor()
-            
-            # Create model_config table
-            cursor.execute("""
-                CREATE TABLE IF NOT EXISTS model_config (
-                    id INTEGER PRIMARY KEY AUTOINCREMENT,
-                    orchestrator_model TEXT NOT NULL DEFAULT 'openrouter/google/gemini-flash-1.5',
-                    aider_model TEXT NOT NULL DEFAULT 'openrouter/google/gemini-flash-1.5',
-                    agent_model TEXT NOT NULL DEFAULT 'openrouter/google/gemini-flash-1.5',
-                    created_at TEXT NOT NULL,
-                    updated_at TEXT NOT NULL
-                )
-            """)
-            
-            # Create agents table
-            cursor.execute("""
-                CREATE TABLE IF NOT EXISTS agents (
-                    id TEXT PRIMARY KEY,
-                    workspace TEXT NOT NULL,
-                    repo_path TEXT,
-                    task TEXT NOT NULL,
-                    status TEXT NOT NULL,
-                    created_at TEXT NOT NULL,
-                    last_updated TEXT NOT NULL,
-                    aider_output TEXT,
-                    last_critique TEXT,
-                    progress TEXT,
-                    thought TEXT,
-                    progress_history TEXT,
-                    thought_history TEXT,
-                    future TEXT,
-                    last_action TEXT,
-                    pr_url TEXT,
-                    error TEXT,
-                    completed BOOLEAN DEFAULT 0,
-                    agent_type TEXT DEFAULT 'default'
-                )
-            """)
-            
-            # Create tasks table
-            cursor.execute("""
-                CREATE TABLE IF NOT EXISTS tasks (
-                    id INTEGER PRIMARY KEY AUTOINCREMENT,
-                    title TEXT NOT NULL,
-                    description TEXT NOT NULL,
-                    created_at TEXT NOT NULL
-                )
-            """)
-            
-            # Create config table
-            cursor.execute("""
-                CREATE TABLE IF NOT EXISTS config (
-                    key TEXT PRIMARY KEY,
-                    value TEXT
-                )
-            """)
-            
-            # Insert default model config if none exists
-            cursor.execute("SELECT COUNT(*) FROM model_config")
-            if cursor.fetchone()[0] == 0:
-                cursor.execute("""
-                    INSERT INTO model_config (
-                        orchestrator_model, aider_model, agent_model,
-                        created_at, updated_at
-                    ) VALUES (?, ?, ?, ?, ?)
-                """, (
-                    'openrouter/google/gemini-flash-1.5',
-                    'openrouter/google/gemini-flash-1.5',
-                    'openrouter/google/gemini-flash-1.5',
-                    datetime.now().isoformat(),
-                    datetime.now().isoformat()
-                ))
-            
-            conn.commit()
-    except Exception as e:
-        print(f"Error initializing database: {e}")
-        raise
+        # Create model_config table
+        cursor.execute("""
+            CREATE TABLE IF NOT EXISTS model_config (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                orchestrator_model TEXT NOT NULL DEFAULT 'openrouter/google/gemini-flash-1.5',
+                aider_model TEXT NOT NULL DEFAULT 'openrouter/google/gemini-flash-1.5',
+                agent_model TEXT NOT NULL DEFAULT 'openrouter/google/gemini-flash-1.5',
+                created_at TEXT NOT NULL,
+                updated_at TEXT NOT NULL
+            )
+        """)
+        
+        # Create agents table
+        cursor.execute("""
+            CREATE TABLE IF NOT EXISTS agents (
+                id TEXT PRIMARY KEY,
+                workspace TEXT NOT NULL,
+                repo_path TEXT,
+                task TEXT NOT NULL,
+                status TEXT NOT NULL,
+                created_at TEXT NOT NULL,
+                last_updated TEXT NOT NULL,
+                aider_output TEXT,
+                last_critique TEXT,
+                progress TEXT,
+                thought TEXT,
+                progress_history TEXT,
+                thought_history TEXT,
+                future TEXT,
+                last_action TEXT,
+                pr_url TEXT
+            )
+        """)
+        
+        # Create tasks table
+        cursor.execute("""
+            CREATE TABLE IF NOT EXISTS tasks (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                title TEXT NOT NULL,
+                description TEXT NOT NULL,
+                created_at TEXT NOT NULL
+            )
+        """)
+        
+        # Create config table
+        cursor.execute("""
+            CREATE TABLE IF NOT EXISTS config (
+                key TEXT PRIMARY KEY,
+                value TEXT
+            )
+        """)
+        
+        conn.commit()
 
 def save_agent(agent_id: str, agent_data: Dict) -> bool:
     """Save or update an agent in the database."""
@@ -106,7 +80,7 @@ def save_agent(agent_id: str, agent_data: Dict) -> bool:
                     :id, :workspace, :repo_path, :task, :status, :created_at, 
                     :last_updated, :aider_output, :last_critique, :progress, 
                     :thought, :progress_history, :thought_history, :future, 
-                    :last_action, :pr_url, :error, :completed, :agent_type
+                    :last_action, :pr_url
                 )
             """, {
                 'id': agent_id,
@@ -124,10 +98,7 @@ def save_agent(agent_id: str, agent_data: Dict) -> bool:
                 'thought_history': thought_history,
                 'future': agent_data.get('future', ''),
                 'last_action': agent_data.get('last_action', ''),
-                'pr_url': agent_data.get('pr_url', ''),
-                'error': agent_data.get('error', ''),
-                'completed': agent_data.get('completed', 0),
-                'agent_type': agent_data.get('agent_type', 'default')
+                'pr_url': agent_data.get('pr_url', '')
             })
             conn.commit()
             return True

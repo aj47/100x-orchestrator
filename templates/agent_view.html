@@ -20,33 +20,6 @@
             <h4>Loading Agents...</h4>
         </div>
     </div>
-    
-    <!-- Review Modal -->
-    {% for agent_id, agent in agents.items() %}
-    <div class="modal fade" id="reviewModal-{{ agent_id }}" tabindex="-1" aria-labelledby="reviewModalLabel-{{ agent_id }}" aria-hidden="true">
-        <div class="modal-dialog">
-            <div class="modal-content">
-                <div class="modal-header">
-                    <h5 class="modal-title" id="reviewModalLabel-{{ agent_id }}">
-                        <i class="fas fa-comment me-2"></i>Provide Review Feedback
-                    </h5>
-                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-                </div>
-                <div class="modal-body">
-                    <form class="review-form" data-agent-id="{{ agent_id }}">
-                        <div class="mb-3">
-                            <label for="feedback-{{ agent_id }}" class="form-label">Your Feedback</label>
-                            <textarea class="form-control" id="feedback-{{ agent_id }}" name="feedback" rows="5" required></textarea>
-                        </div>
-                        <button type="submit" class="btn btn-primary">
-                            <i class="fas fa-paper-plane me-1"></i>Submit Review
-                        </button>
-                    </form>
-                </div>
-            </div>
-        </div>
-    </div>
-    {% endfor %}
 
     <div class="container mt-5">
         <div class="d-flex justify-content-between align-items-center mb-3">
@@ -117,44 +90,6 @@
                             </div>
 
                             <div class="mt-3">
-                                {% if agent.status == 'awaiting_review' %}
-                                <div class="alert alert-warning">
-                                    <i class="fas fa-clipboard-check me-2"></i>
-                                    Awaiting review - 
-                                    <button class="btn btn-sm btn-outline-secondary ms-2" data-bs-toggle="modal" data-bs-target="#reviewModal-{{ agent_id }}">
-                                        <i class="fas fa-comment me-1"></i>Provide Feedback
-                                    </button>
-                                </div>
-                                {% endif %}
-                                
-                                {% if agent.review_feedback %}
-                                <div class="review-feedback mt-3">
-                                    <h6><i class="fas fa-comments me-2"></i>Review Feedback</h6>
-                                    {% for feedback in agent.review_feedback %}
-                                    <div class="card mb-2">
-                                        <div class="card-body">
-                                            <div class="d-flex justify-content-between">
-                                                <small class="text-muted">
-                                                    {{ feedback.type|capitalize }} Review - {{ feedback.timestamp }}
-                                                </small>
-                                                <span class="badge bg-{{ 'success' if feedback.status == 'approved' else 'warning' }}">
-                                                    {{ feedback.status }}
-                                                </span>
-                                            </div>
-                                            <p class="mt-2">{{ feedback.feedback }}</p>
-                                            {% if feedback.suggestions %}
-                                            <ul class="mt-2">
-                                                {% for suggestion in feedback.suggestions %}
-                                                <li>{{ suggestion }}</li>
-                                                {% endfor %}
-                                            </ul>
-                                            {% endif %}
-                                        </div>
-                                    </div>
-                                    {% endfor %}
-                                </div>
-                                {% endif %}
-                                
                                 <div id="pr-info-{{ agent_id }}" class="pr-info-section" style="display: {{ 'block' if agent.pr_url else 'none' }}">
                                     <div class="alert alert-success">
                                         <i class="fas fa-check-circle me-2"></i>

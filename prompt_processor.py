@@ -3,6 +3,7 @@ import logging
 from typing import Dict, List, Optional
 from dataclasses import dataclass, field
 from datetime import datetime
+from github import Github
 
 @dataclass
 class AgentResponse:
@@ -60,23 +61,29 @@ class PromptProcessor:
             # Process action
             action = agent_response.action.strip()
             if action == '/finish':
-                from pull_request import PullRequestManager
+                # Generate PR info using LiteLLM
+                from litellm_client import LiteLLMClient
+                from prompts import PROMPT_PR
                 
+                client = LiteLLMClient()
                 # Get full history of responses for context
                 history = "\n".join([
                     f"Progress: {r.progress}\nThought: {r.thought}\nAction: {r.action}\nFuture: {r.future}\n"
                     for r in self.response_history[agent_id]
                 ])
                 
-                pr_manager = PullRequestManager()
-                pr_data = pr_manager.generate_pr_info(agent_id, history)
+                pr_info = client.chat_completion(
+                    system_message=PROMPT_PR(),
+                    user_message=f"Agent history:\n{history}"
+                )
                 
-                if pr_data:
+                try:
+                    pr_data = json.loads(pr_info)
                     # Store PR info in agent state
                     self.agent_states[agent_id]['pr_info'] = pr_data
-                    self.agent_states[agent_id]['status'] = 'awaiting_review'
-                    self.agent_states[agent_id]['review_status'] = 'pending'
-                    self.agent_states[agent_id]['review_feedback'] = []
+                    self.agent_states[agent_id]['status'] = 'creating_pr'
+                except json.JSONDecodeError:
+                    logging.error(f"Invalid PR info JSON: {pr_info}")
                 
                 return action
                 

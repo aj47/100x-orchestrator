@@ -78,43 +78,7 @@ document.getElementById('deleteAllAgents').addEventListener('click', async () =>
     }
 });
 
-// Storage helper functions
-function saveToStorage(key, value, useSession = false) {
-    const storage = useSession ? sessionStorage : localStorage;
-    if (value) {
-        storage.setItem(key, value);
-    }
-}
-
-function loadFromStorage(key, useSession = false) {
-    const storage = useSession ? sessionStorage : localStorage;
-    return storage.getItem(key);
-}
-
-function loadStoredValues() {
-    // Load GitHub token from sessionStorage
-    const savedToken = loadFromStorage('github_token', true);
-    if (savedToken) {
-        document.getElementById('githubToken').value = savedToken;
-    }
-
-    // Load aider commands from localStorage
-    const savedCommands = loadFromStorage('aider_commands');
-    if (savedCommands) {
-        document.getElementById('aiderCommands').value = savedCommands;
-    }
-
-    // Load repo URL from localStorage
-    const savedRepo = loadFromStorage('repo_url');
-    if (savedRepo) {
-        document.getElementById('repoUrl').value = savedRepo;
-    }
-}
-
 document.addEventListener('DOMContentLoaded', async () => {
-    // Load all stored values
-    loadStoredValues();
-
     // Initial overview update
     await updateOverview();
 
@@ -302,26 +266,17 @@ document.addEventListener('DOMContentLoaded', async () => {
 
             const agentCount = parseInt(document.getElementById('agentCount').value, 10);
 
-            // Store form values
-            const githubToken = document.getElementById('githubToken').value.trim();
-            const aiderCommands = document.getElementById('aiderCommands').value.trim();
-            const repoUrl = document.getElementById('repoUrl').value.trim();
-
-            saveToStorage('github_token', githubToken, true);
-            saveToStorage('aider_commands', aiderCommands);
-            saveToStorage('repo_url', repoUrl);
-
             const response = await fetch('/create_agent', {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
-                    'X-GitHub-Token': sessionStorage.getItem('github_token') || ''
                 },
                 body: JSON.stringify({
                     repo_url: document.getElementById('repoUrl').value,
                     tasks: tasks,
                     num_agents: agentCount,
-                    aider_commands: document.getElementById('aiderCommands').value.trim()
+                    aider_commands: document.getElementById('aiderCommands').value.trim(),
+                    github_token: document.getElementById('githubToken').value.trim()
                 })
             });
 

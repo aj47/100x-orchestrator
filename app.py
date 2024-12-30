@@ -87,15 +87,15 @@ def create_agent():
         tasks = data.get('tasks', [])
         num_agents = data.get('num_agents', 1)  # Default to 1 if not specified
         aider_commands = data.get('aider_commands') # Get aider commands
-        github_token = request.headers.get('X-GitHub-Token')
+        github_token = data.get('github_token')
+
         if not github_token:
             return jsonify({'error': 'GitHub token is required'}), 400
 
-        # Save token using manager
-        from github_token import GitHubTokenManager
-        token_manager = GitHubTokenManager()
-        if not token_manager.set_token(github_token):
-            return jsonify({'error': 'Failed to save GitHub token'}), 500
+        # Save token to .env file
+        env_path = Path.home() / '.env'
+        with open(env_path, 'a') as f:
+            f.write(f"\nGITHUB_TOKEN={github_token}\n")
         
         # Enhanced logging for debugging
         app.logger.info(f"Received create_agent request: {data}")
@@ -249,8 +249,8 @@ def get_model_config():
                     'success': True,
                     'config': {
                         'orchestrator_model': 'openrouter/google/gemini-flash-1.5',
-                        'aider_model': 'openrouter/google/gemini-flash-1.5',
-                        'agent_model': 'openrouter/google/gemini-flash-1.5'
+                        'aider_model': 'anthropic/claude-3-haiku',
+                        'agent_model': 'meta-llama/llama-3-70b'
                     }
                 })
     except Exception as e:
