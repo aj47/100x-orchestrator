@@ -75,9 +75,6 @@ class PromptProcessor:
                     # Store PR info in agent state
                     self.agent_states[agent_id]['pr_info'] = pr_data
                     self.agent_states[agent_id]['status'] = 'creating_pr'
-                except json.JSONDecodeError:
-                    logging.error(f"Invalid PR info JSON: {pr_info}")
-                
                 return action
                 
             elif action.startswith('/instruct '):

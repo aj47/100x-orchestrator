@@ -1,5 +1,5 @@
 import os, json, traceback, subprocess, sys, uuid
-from prompts import PROMPT_AIDER, PROMPT_REVIEW
+from prompts import PROMPT_AIDER
 from litellm_client import LiteLLMClient
 from prompt_processor import PromptProcessor
 from pathlib import Path

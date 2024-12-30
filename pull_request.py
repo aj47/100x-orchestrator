@@ -4,7 +4,7 @@ from github import Github
 import logging
 from github_token import GitHubTokenManager
 from litellm_client import LiteLLMClient
-from prompts import PROMPT_PR, PROMPT_REVIEW
+from prompts import PROMPT_PR
 
 class PullRequestManager:
     """Manages GitHub pull request operations"""
@@ -26,19 +26,6 @@ class PullRequestManager:
             logging.error(f"Error generating PR info: {e}")
             return None
 
-    def review_changes(self, history: str) -> Optional[Dict]:
-        """Review changes using LLM"""
-        try:
-            review_response = self.litellm_client.chat_completion(
-                system_message=PROMPT_REVIEW(),
-                user_message=f"Agent history:\n{history}",
-                model_type="review"
-            )
-            return json.loads(review_response)
-        except Exception as e:
-            logging.error(f"Error reviewing changes: {e}")
-            return None
-    
     def create_pull_request(self, repo_url: str, branch_name: str, pr_info: Dict) -> Optional[Dict]:
         """Create a pull request with the given information"""
         try:
