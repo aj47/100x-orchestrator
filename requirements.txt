@@ -8,4 +8,3 @@ requests>=2.31.0
 pytest>=7.4.3
 pytest-cov>=4.1.0
 PyGithub>=2.1.1
-sqlite3>=3.0.0
