@@ -56,46 +56,78 @@ The 100x-orchestrator system consists of three key components:
 ## Installation
 
 1. Clone the repository:
-```bash
-git clone https://github.com/yourusername/100x-orchestrator.git
-cd 100x-orchestrator
-```
+
+   ```bash
+   git clone https://github.com/yourusername/100x-orchestrator.git
+   cd 100x-orchestrator
+   ```
 
 2. Create and activate a virtual environment:
-```bash
-python -m venv .venv
-.venv\Scripts\activate  # On Windows
-source .venv/bin/activate  # On Unix/MacOS
-```
+
+   ```bash
+   python -m venv .venv
+   .venv\Scripts\activate  # On Windows
+   source .venv/bin/activate  # On Unix/MacOS
+   ```
 
 3. Install dependencies:
-```bash
-pip install -r requirements.txt
-```
+
+   ```bash
+   pip install -r requirements.txt
+   ```
 
 ## Configuration
 
-1. Set up your environment variables:
-```bash
-set LITELLM_MODEL=anthropic/claude-3-5-sonnet-20240620  # On Windows
-# export LITELLM_MODEL=anthropic/claude-3-5-sonnet-20240620  # On Unix/MacOS
-```
+### Environment Variables
 
-2. The system uses tasks.json for configuration:
-```json
-{
-    "tasks": [],
-    "agents": {},
-    "repository_url": ""
-}
-```
+1. Create a `.env` file in your home directory:
 
-## Usage
+   ```bash
+   touch ~/.env
+   ```
+
+2. Add your `OPENROUTER_API_KEY` to the `.env` file:
+
+   ```
+   OPENROUTER_API_KEY=your_openrouter_api_key
+   ```
+
+3. Add your `GITHUB_TOKEN` to the `.env` file:
+
+   ```
+   GITHUB_TOKEN=your_github_token
+   ```
+
+   - **Note**: The GitHub token requires `repo` scope. You can create one at [GitHub Settings - Personal access tokens](https://github.com/settings/tokens).
+
+### Database
+
+The system uses an SQLite database (`tasks.db`) to store:
+
+-   Agent configurations
+-   Task details
+-   Model configurations
+-   General configurations
+
+The database is automatically initialized when you first run the application.
+
+### Model Configuration
+
+You can configure the default models for the Orchestrator, Aider, and Agent components. By default, all use `openrouter/google/gemini-flash-1.5`.
+
+To change the defaults:
+
+1. Go to the "Configuration" section in the web interface.
+2. Enter the desired LiteLLM model strings.
+3. Click "Update Configuration".
+
+### Usage
 
 1. Start the web server:
-```bash
-python app.py
-```
+
+   ```bash
+   python app.py
+   ```
 
 2. Access the web interface at `http://localhost:5000`
 
