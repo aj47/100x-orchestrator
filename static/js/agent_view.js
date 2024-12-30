@@ -44,8 +44,8 @@ async function fetchUpdates() {
                     });
                 
                     // Also update header progress if this is the progress field
-                    if (field === 'progress') {
-                        const headerProgress = agentCard.querySelector('[data-field="header-progress"]');
+                    if (field === 'task') {
+                        const headerProgress = agentCard.querySelector('[data-field="header-task"]');
                         if (headerProgress) {
                             headerProgress.innerHTML = value;
                         }
@@ -95,11 +95,6 @@ async function fetchUpdates() {
                 }
             }
 
-            // Update timestamps
-            const lastUpdated = agentCard.querySelector('.card-footer div:last-child');
-            if (lastUpdated && agentData.last_updated) {
-                lastUpdated.innerHTML = `<i class="fas fa-clock me-1"></i>Last Updated: ${agentData.last_updated}`;
-            }
         }
         
         // Create temporary div to parse HTML
