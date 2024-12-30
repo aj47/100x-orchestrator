@@ -9,15 +9,16 @@ class LiteLLMClient:
     """Client for interacting with LLMs to get summaries with JSON mode"""
     
     def __init__(self):
-        # Load environment variables from ~/.env
-        env_path = Path.home() / '.env'
+        # Load environment variables from project directory
+        env_path = Path(__file__).parent / '.env'
         if not load_dotenv(env_path):
             logging.warning(f"Could not load {env_path}")
             
-        self.api_key = os.getenv('OPENROUTER_API_KEY')
+        self.openrouter_api_key = os.getenv('OPENROUTER_API_KEY')
+        self.deepseek_api_key = os.getenv('DEEPSEEK_API_KEY')
         
-        if not self.api_key:
-            raise ValueError(f"OPENROUTER_API_KEY not found in {env_path}")
+        if not self.openrouter_api_key and not self.deepseek_api_key:
+            raise ValueError(f"Neither OPENROUTER_API_KEY nor DEEPSEEK_API_KEY found in {env_path}")
         
     def chat_completion(self, system_message: str = "", user_message: str = "", model_type="orchestrator"):
         """Get a summary of the coding session logs using JSON mode"""
@@ -25,11 +26,11 @@ class LiteLLMClient:
         from database import get_model_config
         config = get_model_config()
         
-        # Default models - all use Gemini Flash
+        # Default models configuration
         DEFAULT_MODELS = {
-            "orchestrator": "openrouter/google/gemini-flash-1.5",  # Default model for orchestrator
-            "aider": "openrouter/google/gemini-flash-1.5",        # Default model for aider
-            "agent": "openrouter/google/gemini-flash-1.5"         # Default model for agent
+            "orchestrator": "openrouter/google/gemini-flash-1.5" if self.openrouter_api_key else "deepseek/deepseek-chat",
+            "aider": "openrouter/google/gemini-flash-1.5" if self.openrouter_api_key else "deepseek/deepseek-chat",
+            "agent": "openrouter/google/gemini-flash-1.5" if self.openrouter_api_key else "deepseek/deepseek-chat"
         }
         
         # Get model from config or use default
@@ -44,7 +45,7 @@ class LiteLLMClient:
                     {"role": "system", "content": system_message},
                     {"role": "user", "content": user_message}
                 ],
-                api_key=self.api_key,
+                api_key=self.deepseek_api_key if "deepseek" in model else self.openrouter_api_key,
                 response_format={"type": "json_object"}
             )
             

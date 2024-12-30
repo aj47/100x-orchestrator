@@ -100,9 +100,13 @@ def create_agent():
         # Enhanced logging for debugging
         app.logger.info(f"Received create_agent request: {data}")
         
-        if not repo_url or not tasks:
-            app.logger.error("Missing repository URL or tasks")
-            return jsonify({'error': 'Repository URL and tasks are required'}), 400
+        if not repo_url:
+            app.logger.error("Missing repository URL")
+            return jsonify({'error': 'Repository URL is required'}), 400
+            
+        if not tasks:
+            app.logger.error("Missing tasks")
+            return jsonify({'error': 'Tasks are required'}), 400
         
         # Ensure tasks is a list
         if isinstance(tasks, str):
@@ -114,8 +118,11 @@ def create_agent():
         # Initialize agents for each task
         created_agents = []
         for task_description in tasks:
-            # Set environment variable for repo URL
+            # Extract branch name if specified in URL
+         
+            # Set environment variables for repo URL and branch
             os.environ['REPOSITORY_URL'] = repo_url
+            
             
             app.logger.info(f"Attempting to initialize agent for task: {task_description}")
             
@@ -123,8 +130,8 @@ def create_agent():
             try:
                 # task_text = f"{task_description['title']}\n\nDetails:\n{task_description['description']}"
                 task_text = task_description['title']
-                if (task_description['description']):
-                    task_text.append(f"\n\n{task_description['description']}")
+                if task_description['description']:
+                    task_text = task_text + f"\n\n{task_description['description']}"
                 agent_ids = initialiseCodingAgent(
                     repository_url=repo_url, 
                     task_description=task_text,
