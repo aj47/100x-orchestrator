@@ -1,4 +1,5 @@
 import os, json, traceback, subprocess, sys, uuid
+from pull_request import PullRequestManager
 from prompts import PROMPT_AIDER
 from litellm_client import LiteLLMClient
 from prompt_processor import PromptProcessor
@@ -241,6 +242,7 @@ def update_agent_output(agent_id):
         return False
 
 def main_loop():
+    pr_manager = PullRequestManager()
     """Main orchestration loop to manage agents."""
     logging.info("Starting main loop")
     litellm_client = LiteLLMClient()  # Create LiteLLM client instance
@@ -306,7 +308,11 @@ def main_loop():
                                     if pr_info:
                                         try:
                                             branch_name = f"agent-{agent_id[:8]}"
-                                            pr = create_pull_request(agent_id, branch_name, pr_info)
+                                            pr = pr_manager.create_pull_request(
+                                                    tasks_data.get('repository_url'),
+                                                    branch_name,
+                                                    pr_info
+                                                )
                                             if pr:
                                                 logging.info(f"Created PR: {pr.html_url}")
                                                 tasks_data['agents'][agent_id]['pr_url'] = pr.html_url
