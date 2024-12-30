@@ -80,25 +80,34 @@ The 100x-orchestrator system consists of three key components:
 
 ### Environment Variables
 
+You need to set up environment variables to configure API keys and model choices.
+
 1. Create a `.env` file in your home directory:
 
-   ```bash
-   touch ~/.env
-   ```
+    ```bash
+    touch ~/.env
+    ```
 
-2. Add your `OPENROUTER_API_KEY` to the `.env` file:
+2. Add your API keys and model preferences to the `.env` file using LiteLLM notation. You can specify any model and its associated API key. For example:
 
-   ```
-   OPENROUTER_API_KEY=your_openrouter_api_key
-   ```
+    ```
+    OPENROUTER_API_KEY=your_openrouter_api_key
+    ANY_OTHER_API_KEY=your_other_api_key
+    ```
+
+    You can set the default models for Orchestrator, Aider, and Agent components in the web interface under the "Configuration" section. Use LiteLLM model strings to specify your preferred models. For example:
+
+    ```
+    MY_MODEL=provider/model_name
+    ```
 
 3. Add your `GITHUB_TOKEN` to the `.env` file:
 
-   ```
-   GITHUB_TOKEN=your_github_token
-   ```
+    ```
+    GITHUB_TOKEN=your_github_token
+    ```
 
-   - **Note**: The GitHub token requires `repo` scope. You can create one at [GitHub Settings - Personal access tokens](https://github.com/settings/tokens).
+    -   **Note**: The GitHub token requires `repo` scope to enable all necessary repository operations. You can create a token at [GitHub Settings - Personal access tokens](https://github.com/settings/tokens). The exact usage of this token may require code inspection to confirm.
 
 ### Database
 
