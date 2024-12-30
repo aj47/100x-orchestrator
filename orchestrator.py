@@ -1,5 +1,5 @@
 import os, json, traceback, subprocess, sys, uuid
-from prompts import PROMPT_AIDER
+from prompts import PROMPT_AIDER, PROMPT_REVIEW
 from litellm_client import LiteLLMClient
 from prompt_processor import PromptProcessor
 from pathlib import Path
@@ -197,81 +197,6 @@ def get_github_token():
         logging.error(f"Invalid GitHub token: {e}")
         return None
 
-def create_pull_request(agent_id, branch_name, pr_info):
-    """Create a pull request for the agent's changes."""
-    try:
-        token = get_github_token()
-        if not token:
-            return None
-        g = Github(token)
-        tasks_data = load_tasks()
-        repo_url = tasks_data.get('repository_url', '')
-        if not repo_url:
-            logging.error("No repository URL found")
-            return None
-        agent_data = tasks_data['agents'].get(agent_id)
-        if not agent_data:
-            logging.error(f"No agent data found for {agent_id}")
-            return None
-        repo_path = agent_data.get('repo_path')
-        if not repo_path:
-            logging.error("No repo path found for agent")
-            return None
-        repo_parts = repo_url.rstrip('/').split('/')
-        repo_name = '/'.join(repo_parts[-2:]).replace('.git', '')
-        current_dir = os.getcwd()
-        
-        try:
-            # Check if PR already exists
-            repo = g.get_repo(repo_name)
-            existing_prs = repo.get_pulls(state='open', head=f"{repo_parts[-2]}:{branch_name}")
-            if existing_prs.totalCount > 0:
-                logging.info(f"PR already exists: {existing_prs[0].html_url}")
-                return existing_prs[0]
-                
-            # Prepare and push changes
-            os.chdir(repo_path)
-            subprocess.run(["git", "config", "user.name", "GitHub Actions"], check=True)
-            subprocess.run(["git", "config", "user.email", "actions@github.com"], check=True)
-            subprocess.run(["git", "add", "."], check=True)
-            subprocess.run(["git", "commit", "-m", f"Changes by Agent {agent_id}"], check=False)
-            remote_url = f"https://x-access-token:{token}@github.com/{repo_name}.git"
-            subprocess.run(["git", "remote", "set-url", "origin", remote_url], check=True)
-            subprocess.run(["git", "push", "-u", "origin", branch_name], check=True)
-        finally:
-            os.chdir(current_dir)
-            
-        # Create PR
-        pr = repo.create_pull(
-            title=pr_info.get('title', f'Changes by Agent {agent_id}'),
-            body=pr_info.get('description', 'Automated changes'),
-            head=branch_name,
-            base='main'
-        )
-        
-        # Add labels if specified
-        if pr_info.get('labels'):
-            try:
-                pr.add_to_labels(*pr_info['labels'])
-            except Exception as e:
-                logging.warning(f"Could not add labels: {e}")
-                
-        # Add reviewers if specified and they are collaborators
-        if pr_info.get('reviewers'):
-            try:
-                # Filter reviewers to only collaborators
-                collaborators = {collab.login.lower() for collab in repo.get_collaborators()}
-                valid_reviewers = [r for r in pr_info['reviewers'] if r.lower() in collaborators]
-                if valid_reviewers:
-                    pr.create_review_request(reviewers=valid_reviewers)
-            except Exception as e:
-                logging.warning(f"Could not add reviewers: {e}")
-                
-        return pr
-    except Exception as e:
-        logging.error(f"Error creating pull request: {e}")
-        return None
-
 def cloneRepository(repository_url: str) -> bool:
     """Clone git repository using subprocess."""
     try:
@@ -318,6 +243,7 @@ def update_agent_output(agent_id):
 def main_loop():
     """Main orchestration loop to manage agents."""
     logging.info("Starting main loop")
+    litellm_client = LiteLLMClient()  # Create LiteLLM client instance
     while True:
         try:
             tasks_data = load_tasks()
@@ -332,7 +258,6 @@ def main_loop():
                     if agent_session.is_ready():
                         session_logs = agent_session.get_output()
                         try:
-                            litellm_client = LiteLLMClient()
                             #if session_logs is empty or only newlines. replace it with "*aider started*"
                             if not session_logs or session_logs.isspace():
                                 session_logs = "*aider started*"
@@ -381,21 +306,66 @@ def main_loop():
                                     if pr_info:
                                         try:
                                             branch_name = f"agent-{agent_id[:8]}"
-                                            pr = create_pull_request(agent_id, branch_name, pr_info)
-                                            if pr:
-                                                logging.info(f"Created PR: {pr.html_url}")
-                                                tasks_data['agents'][agent_id]['pr_url'] = pr.html_url
-                                                tasks_data['agents'][agent_id]['status'] = 'completed'
-                                                tasks_data['agents'][agent_id]['completed_at'] = datetime.datetime.now().isoformat()
-                                                # Clean up the session
-                                                if agent_id in aider_sessions:
-                                                    aider_sessions[agent_id].cleanup()
-                                                    del aider_sessions[agent_id]
-                                                save_tasks(tasks_data)
+                                            # Start review process
+                                            tasks_data['agents'][agent_id]['status'] = 'awaiting_review'
+                                            tasks_data['agents'][agent_id]['review_status'] = 'pending'
+                                            tasks_data['agents'][agent_id]['review_feedback'] = []
+                                            save_tasks(tasks_data)
+                                    
+                                            # Get LLM review
+                                            from pull_request import PullRequestManager
+                                            pr_manager = PullRequestManager()
+                                            
+                                            # Get agent history from prompt processor
+                                            history = "\n".join([
+                                                f"Progress: {r.progress}\nThought: {r.thought}\nAction: {r.action}\nFuture: {r.future}\n"
+                                                for r in processor.get_response_history(agent_id)
+                                            ])
+                                            
+                                            review_data = pr_manager.review_changes(history)
+                                            if review_data:
+                                                tasks_data['agents'][agent_id]['review_status'] = review_data['status']
+                                                tasks_data['agents'][agent_id]['review_feedback'].append({
+                                                    'type': 'llm',
+                                                    'feedback': review_data['feedback'],
+                                                    'suggestions': review_data['suggestions'],
+                                                    'timestamp': datetime.datetime.now().isoformat()
+                                                })
+                                        
+                                                if review_data['status'] == 'approved':
+                                                    # Get repository URL from tasks data
+                                                    repository_url = tasks_data.get('repository_url')
+                                                    if not repository_url:
+                                                        logging.error("No repository URL found in tasks data")
+                                                        continue
+                                                        
+                                                    pr_result = pr_manager.create_pull_request(
+                                                        repository_url,
+                                                        branch_name,
+                                                        pr_info
+                                                    )
+                                                if pr_result:
+                                                    logging.info(f"Created PR: {pr_result['url']}")
+                                                    tasks_data['agents'][agent_id]['pr_url'] = pr_result['url']
+                                                    tasks_data['agents'][agent_id]['status'] = 'completed'
+                                                    tasks_data['agents'][agent_id]['completed_at'] = datetime.datetime.now().isoformat()
+                                                    # Clean up the session
+                                                    if agent_id in aider_sessions:
+                                                        aider_sessions[agent_id].cleanup()
+                                                        del aider_sessions[agent_id]
+                                                else:
+                                                    logging.error("Failed to create PR")
                                             else:
-                                                logging.error("Failed to create PR")
+                                                # Send feedback to agent
+                                                feedback_message = f"Review feedback:\n{review_data['feedback']}\nSuggestions:\n{review_data['suggestions']}"
+                                                aider_sessions[agent_id].send_message(feedback_message)
+                                                tasks_data['agents'][agent_id]['status'] = 'in_progress'
+                                        
+                                            save_tasks(tasks_data)
+                                        except json.JSONDecodeError as e:
+                                            logging.error(f"Error parsing review response: {e}")
                                         except Exception as e:
-                                            logging.error(f"Error creating PR: {e}")
+                                            logging.error(f"Error in review process: {e}")
                                     else:
                                         logging.error("No PR info found in agent state")
                                 elif action:

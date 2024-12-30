@@ -28,3 +28,15 @@ The response should be in this JSON schema:
     "reviewers": ["list", "of", "suggested", "reviewers"]
 }
 """
+
+def PROMPT_REVIEW() -> str:
+    return """You are an expert code reviewer. Analyze the following changes and provide feedback.
+The response should be in this JSON schema:
+{
+    "status": "approved" | "changes_requested",
+    "feedback": "Detailed feedback about the changes",
+    "suggestions": ["list", "of", "specific", "suggestions", "for", "improvement"]
+}
+If the changes are perfect and require no improvements, set status to "approved".
+Otherwise, provide constructive feedback and set status to "changes_requested".
+"""
