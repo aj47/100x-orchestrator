@@ -29,7 +29,7 @@ async function fetchUpdates() {
             if (agentState) {
                 // Update all fields using data attributes
                 const fields = {
-                    'task': agentData.task || agentCard.dataset.task || 'No task assigned', // Use task from data or fallback
+                    'thought': agentData.thought || '',
                     'progress': agentData.progress || '',
                     'future': agentData.future || '',
                     'action': agentData.last_action || ''
@@ -40,7 +40,7 @@ async function fetchUpdates() {
                     // Update all elements with this data-field, both in agent state and footer
                     const elements = agentCard.querySelectorAll(`[data-field="${field}"]`);
                     elements.forEach(element => {
-                        element.innerHTML = value || (field === 'task' ? 'No task assigned' : 'Planning...');
+                        element.innerHTML = value || (field === 'thought' ? 'Thinking...' : 'Planning...');
                     });
                 
                     // Also update header progress if this is the progress field
@@ -52,8 +52,8 @@ async function fetchUpdates() {
                     }
                 });
 
-                // Toggle visibility based on progress (for collapsed view)
-                agentState.style.display = agentData.progress ? 'block' : 'none';
+                // Toggle visibility based on thought
+                agentState.style.display = agentData.thought ? 'block' : 'none';
             }
 
             // Update CLI output if it has changed
