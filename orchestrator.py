@@ -309,7 +309,7 @@ def main_loop():
                                         try:
                                             branch_name = f"agent-{agent_id[:8]}"
                                             pr = pr_manager.create_pull_request(
-                                                    tasks_data.get('repository_url'),
+                                                    agent_id,
                                                     branch_name,
                                                     pr_info
                                                 )
