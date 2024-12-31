@@ -124,7 +124,7 @@ def create_agent():
                 # task_text = f"{task_description['title']}\n\nDetails:\n{task_description['description']}"
                 task_text = task_description['title']
                 if (task_description['description']):
-                    task_text.append(f"\n\n{task_description['description']}")
+                    task_text += f"\n\n{task_description['description']}"
                 agent_ids = initialiseCodingAgent(
                     repository_url=repo_url, 
                     task_description=task_text,
