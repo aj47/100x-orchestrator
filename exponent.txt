@@ -1,45 +1,185 @@
-100x-orchestrator: AI Agent Orchestration System
+# 100x-orchestrator: AI Agent Orchestration System
 
-Overview:
-A sophisticated orchestration system that manages multiple AI coding agents working on software development tasks. The system uses Aider (an AI coding assistant) to handle coding tasks and provides a web interface for monitoring and managing these agents.
+## Project Overview
+100x-orchestrator is a sophisticated web-based system for managing multiple AI coding agents. It implements a multi-layered architecture that enables automated software development tasks through coordinated AI agents, with a focus on real-time monitoring and efficient task management.
 
-Key Components:
+## Core Architecture
 
-1. Orchestrator (orchestrator.py)
-- Manages multiple AI coding agents
-- Handles workspace creation and git repository cloning
-- Monitors agent progress and provides critiques
-- Maintains agent sessions and outputs
-- Uses Aider for code generation and modifications
+### 1. Orchestrator Layer (orchestrator.py)
+- Central control system managing multiple AI coding agents
+- Implements agent lifecycle management (creation, monitoring, deletion)
+- Handles git repository cloning and branch management
+- Creates isolated workspaces for each agent
+- Coordinates inter-agent communication
+- Processes agent outputs and updates through a main loop
+- Uses LiteLLM for AI model integration
+- Manages GitHub integration for repository operations
 
-2. Configuration Manager (config.py)
-- Handles system configuration
-- Manages repository URLs
-- Tracks tasks and their status
-- Controls agent count per task
-- Persists configuration in JSON format
+### 2. Agent Layer (agent_session.py)
+- Individual AI coding agents with isolated workspaces
+- Each agent runs in its own process with dedicated Aider instance
+- Maintains separate git branches for parallel development
+- Real-time output streaming and processing
+- Progress and thought tracking
+- Automated pull request generation
+- Configurable model selection per agent
 
-3. Web Interface (app.py)
-- Flask-based web application
-- Provides agent creation and management
-- Displays agent status and progress
-- Allows task assignment and monitoring
-- Supports agent deletion and cleanup
+### 3. Integration Layer (app.py, database.py)
+- Flask-based web interface with real-time updates
+- SQLite database for persistent storage
+- GitHub integration for repository and PR management
+- LiteLLM integration for AI model communication
+- Configurable model settings for different components
 
-Key Features:
-- Multi-agent task handling
-- Git integration
-- Real-time progress monitoring
-- Workspace isolation
-- Configuration management
-- Web-based control interface
-- Automated code critiquing
-- Session management
+## Key Features
 
-Technical Stack:
-- Python
-- Flask
-- Aider
-- Git
-- JSON for configuration
-- Threading for concurrent operations
+1. Multi-Agent Management
+   - Dynamic agent creation and deletion
+   - Configurable number of agents per task
+   - Isolated workspace per agent
+   - Individual git branch management
+   - Real-time agent monitoring
+
+2. Task Processing
+   - GitHub issue integration
+   - Automated repository cloning
+   - Task-specific workspace setup
+   - Progress tracking and monitoring
+   - Automated pull request creation
+   - Custom Aider command support
+
+3. Real-Time Monitoring
+   - Live agent output streaming
+   - Progress and thought history
+   - Status updates and action logging
+   - Interactive web interface
+   - Keyboard shortcuts for quick actions
+
+4. Safety and Reliability
+   - Workspace isolation
+   - Comprehensive error handling
+   - Session management
+   - Automated cleanup
+   - Secure GitHub token handling
+
+## Technical Implementation
+
+1. Core Components:
+   - orchestrator.py: Main orchestration logic and agent management
+   - app.py: Flask web interface with real-time updates
+   - agent_session.py: Individual agent process management
+   - database.py: SQLite database integration with structured schema
+   - prompt_processor.py: AI prompt handling and response processing
+   - pull_request.py: GitHub PR management
+   - litellm_client.py: AI model integration with OpenRouter
+
+2. Database Schema:
+   - model_config: Stores AI model configurations
+   - agents: Manages agent states and metadata
+   - tasks: Stores task definitions and status
+   - config: System-wide configuration storage
+
+3. AI Integration:
+   - LiteLLM for model management
+   - Default model: openrouter/google/gemini-flash-1.5
+   - Configurable models for orchestrator, aider, and agent
+   - JSON-formatted prompt responses
+   - Error handling and response processing
+
+4. Web Interface Components:
+   - Modern dark theme UI
+   - Real-time updates via AJAX
+   - Interactive agent cards
+   - Progress monitoring
+   - Configuration management
+   - Task creation and management
+
+5. Testing Framework:
+   - Pytest-based test suite
+   - Fixtures for temporary workspaces
+   - Mock configurations for testing
+   - Integration tests for core components
+
+6. Technologies:
+   - Python 3.8+
+   - Flask (Web Framework)
+   - SQLite (Database)
+   - Git (Version Control)
+   - LiteLLM (AI Model Integration)
+   - Aider (AI Coding Assistant)
+   - Bootstrap 5 (Frontend Framework)
+
+3. Data Management:
+   - SQLite database for configuration and state
+   - JSON-based task and agent data
+   - File-based workspace management
+
+## Web Interface
+
+1. Main Dashboard (index.html)
+   - Agent creation interface
+   - GitHub repository integration
+   - Task management
+   - Configuration settings
+
+2. Agent View (agent_view.html)
+   - Real-time agent monitoring
+   - Live output streaming
+   - Progress tracking
+   - Action history
+   - Pull request status
+
+3. Configuration (config_view.html)
+   - Model selection
+   - Agent settings
+   - System configuration
+
+## Security and Configuration
+
+1. Environment Configuration:
+   - API keys management
+   - GitHub token integration
+   - Model configuration
+   - Environment-specific settings
+
+2. Security Features:
+   - Isolated agent workspaces
+   - Secure API key handling
+   - Protected git operations
+   - Controlled resource access
+
+## Workflow
+
+1. Task Initialization:
+   - Repository URL submission
+   - Task description definition
+   - Agent count configuration
+   - Workspace creation
+
+2. Agent Operation:
+   - Repository cloning
+   - Branch creation
+   - Task processing
+   - Progress monitoring
+   - Pull request creation
+
+3. Task Completion:
+   - Code changes review
+   - Pull request submission
+   - Workspace cleanup
+   - Session termination
+
+## System Requirements
+
+1. Software Dependencies:
+   - Python 3.8+
+   - Git
+   - Required Python packages (from requirements.txt)
+
+2. Configuration Requirements:
+   - GitHub API token
+   - AI model API keys
+   - Environment variables setup
+   - Database initialization
+
+This system represents a sophisticated approach to automated software development, leveraging AI agents for efficient and coordinated code generation and modification while maintaining proper version control and monitoring capabilities.
