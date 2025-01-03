@@ -78,18 +78,18 @@ def test_agent_session_send_message(mock_popen, agent_session, mock_process):
     agent_session.process = mock_process
     
     # Test successful message send
-    result = agent_session.send_message("Test message")
+    result = agent_session.send_message("Test message", "test_action") # Added agent_action
     assert result is True
     agent_session.process.stdin.write.assert_called_once_with("Test message\n")
     
     # Test with broken pipe
     agent_session.process.stdin.write.side_effect = BrokenPipeError()
-    result = agent_session.send_message("Test message")
+    result = agent_session.send_message("Test message", "test_action") # Added agent_action
     assert result is False
     
     # Test with no process
     agent_session.process = None
-    result = agent_session.send_message("Test message")
+    result = agent_session.send_message("Test message", "test_action") # Added agent_action
     assert result is False
 
 def test_agent_session_is_ready(agent_session):
@@ -189,3 +189,4 @@ def test_echo_message(agent_session):
     # Test with error
     agent_session.output_buffer = None
     agent_session._echo_message(test_message)  # Should not raise exception
+

@@ -55,7 +55,7 @@ class LiteLLMClient:
             elif content.startswith('```') and content.endswith('```'):
                 content = content[3:-3].strip()  # Remove ``` and trailing ```
             
-            return content
+            return json.dumps({"content": content}) # Wrap in JSON
             
         except Exception as e:
             logging.error(f"Error in chat_completion:", exc_info=True)
