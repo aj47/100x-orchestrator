@@ -4,6 +4,9 @@ from typing import Dict, List, Optional
 from dataclasses import dataclass, field
 from datetime import datetime
 
+# Configure logger for this module
+logger = logging.getLogger(__name__)
+
 @dataclass
 class AgentResponse:
     """Store individual agent responses"""
@@ -29,7 +32,14 @@ class PromptProcessor:
             # Validate required fields
             required_fields = ['progress', 'thought', 'action', 'future']
             if not all(field in data for field in required_fields):
-                logging.error(f"Missing required fields in response: {response}")
+                logger.error(f"Missing required fields in response: {response}")
+                return None
+            
+            # Validate action is an allowed command
+            action = data['action'].strip()
+            allowed_commands = ['/instruct', '/ls', '/git', '/add', '/finish', '/run', '/map', '/test']
+            if not any(action.startswith(cmd) for cmd in allowed_commands):
+                logger.error(f"Invalid command in action: {action}")
                 return None
             
             # Create and store response object
@@ -84,10 +94,10 @@ class PromptProcessor:
                 return action
                 
         except json.JSONDecodeError:
-            logging.error(f"Invalid JSON response: {response}")
+            logger.error(f"Invalid JSON response: {response}")
             return None
         except Exception as e:
-            logging.error(f"Error processing response: {e}")
+            logger.error(f"Error processing response: {e}")
             return None
             
     def get_agent_state(self, agent_id: str) -> Dict:
