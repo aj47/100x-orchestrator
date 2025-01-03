@@ -330,7 +330,7 @@ def main_loop():
                                     else:
                                         logging.error("No PR info found in agent state")
                                 elif action:
-                                    if agent_session.send_message(action):
+                                    if agent_session.send_message(action, "instruct"):
                                         logging.info(f"Sending action: {action} to {agent_id}")
                                     else:
                                         logging.error(f"Failed to send action to agent {agent_id}")
