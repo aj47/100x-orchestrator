@@ -18,7 +18,6 @@ async function fetchUpdates() {
         const response = await fetch('/tasks/tasks.json');
         const responseClone = response.clone(); // Clone the response
         const tasksData = await response.json();
-            console.log(tasksData)
         // Update each agent's output
         for (const [agentId, agentData] of Object.entries(tasksData.agents)) {
             const agentCard = document.getElementById(`agent-${agentId}`);
@@ -123,12 +122,6 @@ async function fetchUpdates() {
                     
                     // Check if output has changed
                     if (newText.length > lastOutputLengths[agentId]) {
-                        console.log(`Agent ${agentId} output updated:`, {
-                            previousLength: lastOutputLengths[agentId],
-                            newLength: newText.length,
-                            diff: newText.substring(lastOutputLengths[agentId])
-                        });
-                        
                         // Update the output
                         currentOutput.innerHTML = newOutput.innerHTML;
                         lastOutputLengths[agentId] = newText.length;
@@ -162,10 +155,6 @@ async function fetchUpdates() {
                     
                     if (currentLength !== newLength) {
                         currentDebug.innerHTML = newDebug.innerHTML;
-                        console.log(`Agent ${agentId} debug info updated:`, {
-                            previousLength: currentLength,
-                            newLength: newLength
-                        });
                     }
                 }
                 
@@ -174,7 +163,6 @@ async function fetchUpdates() {
                 const newCritique = newAgentCard.querySelector('.progress-section:last-child');
                 if (currentCritique && newCritique && currentCritique.innerHTML !== newCritique.innerHTML) {
                     currentCritique.innerHTML = newCritique.innerHTML;
-                    console.log(`Agent ${agentId} critique updated`);
                 }
             }
         });
@@ -229,19 +217,15 @@ document.addEventListener('DOMContentLoaded', () => {
         // Store initial output lengths
         const agentCard = output.closest('.agent-card');
         if (!agentCard || !agentCard.id) {
-            console.error('Found agent card without ID:', agentCard);
-            console.error('Parent HTML:', agentCard?.parentElement?.innerHTML);
             return;
         }
         
         const agentId = agentCard.id.replace('agent-', '');
         if (!agentId) {
-            console.error('Invalid agent ID from card:', agentCard);
             return;
         }
         
         lastOutputLengths[agentId] = output.textContent.length;
-        console.log(`Initialized agent ${agentId} output length:`, lastOutputLengths[agentId]);
     });
 
     // Set up updates for CLI output with a reasonable interval

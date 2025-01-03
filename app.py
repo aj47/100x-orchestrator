@@ -57,24 +57,12 @@ def agent_view():
     tasks_data = load_tasks()
     agents = tasks_data.get('agents', {})
     
-    # Log agent data before processing
-    app.logger.info(f"Processing {len(agents)} agents")
-    for agent_id, agent in agents.items():
-        if not agent_id:
-            app.logger.error(f"Found agent without ID: {agent}")
-        else:
-            app.logger.debug(f"Agent {agent_id} data: {agent}")
-    
     # Calculate time until next check (reduced to 30 seconds for more frequent updates)
     now = datetime.datetime.now()
     next_check = now + datetime.timedelta(seconds=30)
     
     # Ensure basic agent data exists and add new fields if missing
     for agent_id, agent in list(agents.items()):
-        if not agent_id:
-            app.logger.error(f"Skipping agent without ID: {agent}")
-            continue
-            
         # Ensure basic fields exist
         agent.setdefault('aider_output', '')
         agent.setdefault('last_updated', None)
@@ -87,9 +75,6 @@ def agent_view():
     
     # Save updated tasks data
     save_tasks(tasks_data)
-    
-    # Log template variables being passed
-    app.logger.debug(f"Rendering template with agents: {agents.keys()}")
     
     return render_template('agent_view.html', 
                            agents=agents)
