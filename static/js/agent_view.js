@@ -18,170 +18,146 @@ async function fetchUpdates() {
         const response = await fetch('/tasks/tasks.json');
         const responseClone = response.clone(); // Clone the response
         const tasksData = await response.json();
-        
-        // Update each agent's output
+
+        // Update each agent's output and history
         for (const [agentId, agentData] of Object.entries(tasksData.agents)) {
-            const agentCard = document.getElementById(`agent-${agentId}`);
-            if (!agentCard) continue;
-
-            // Find agent state container
-            const agentState = agentCard.querySelector('.agent-state');
-            if (agentState) {
-                // Update all fields using data attributes
-                const fields = {
-                    'thought': agentData.thought || '',
-                    'progress': agentData.progress || '',
-                    'future': agentData.future || '',
-                    'action': agentData.last_action || ''
-                };
-
-                // Update each field
-                Object.entries(fields).forEach(([field, value]) => {
-                    // Update all elements with this data-field, both in agent state and footer
-                    const elements = agentCard.querySelectorAll(`[data-field="${field}"]`);
-                    elements.forEach(element => {
-                        element.innerHTML = value || (field === 'thought' ? 'Thinking...' : 'Planning...');
-                    });
-                
-                    // Also update header progress if this is the progress field
-                    if (field === 'task') {
-                        const headerProgress = agentCard.querySelector('[data-field="header-task"]');
-                        if (headerProgress) {
-                            headerProgress.innerHTML = value;
-                        }
-                    }
-                });
-
-                // Toggle visibility based on thought
-                agentState.style.display = agentData.thought ? 'block' : 'none';
-            }
-
-            // Update CLI output if it has changed
-            const outputElement = agentCard.querySelector('.cli-output');
-
-            if (outputElement && agentData.aider_output) {
-                const currentText = outputElement.textContent || '';
-                
-                // Only update if output has changed
-                if (agentData.aider_output !== currentText) {
-                    outputElement.innerHTML = agentData.aider_output;
-                    outputElement.scrollTop = outputElement.scrollHeight;
-                    
-                    // Flash effect for new content
-                    outputElement.style.transition = 'background-color 0.5s';
-                    outputElement.style.backgroundColor = '#2e4052';
-                    setTimeout(() => {
-                        outputElement.style.backgroundColor = '#1e1e1e';
-                    }, 500);
-                }
-            }
-
-            // Update status and timestamps
-            const statusBadge = agentCard.querySelector('.badge');
-            if (statusBadge && agentData.status) {
-                statusBadge.textContent = agentData.status;
-                statusBadge.className = `badge ${agentData.status === 'in_progress' ? 'bg-primary' : 
-                                    agentData.status === 'pending' ? 'bg-warning' : 'bg-success'}`;
-            }
-
-            // Update PR info if it exists
-            const prInfoSection = agentCard.querySelector('#pr-info-' + agentId);
-            if (prInfoSection && agentData.pr_url) {
-                prInfoSection.style.display = 'block';
-                const prLink = prInfoSection.querySelector('a.alert-link');
-                if (prLink) {
-                    prLink.href = agentData.pr_url;
-                    prLink.textContent = 'View on GitHub';
-                }
-            }
-
+            updateAgentCard(agentId, agentData, responseClone);
         }
-        
-        // Create temporary div to parse HTML
-        const tempDiv = document.createElement('div');
-        tempDiv.innerHTML = await responseClone.text(); // Use cloned response
-        
-        // Update each agent's output
-        const agents = document.querySelectorAll('.agent-card');
-        agents.forEach(agent => {
-            const agentId = agent.id.replace('agent-', '');
-            const newAgentCard = tempDiv.querySelector(`#agent-${agentId}`);
-            
-            if (newAgentCard) {
-                // Update CLI output if it has changed
-                const currentOutput = agent.querySelector('.cli-output');
-                const newOutput = newAgentCard.querySelector('.cli-output');
-                
-                if (currentOutput && newOutput) {
-                    const currentText = currentOutput.textContent || '';
-                    const newText = newOutput.textContent || '';
-                    
-                    // Initialize last output length if not exists
-                    if (!(agentId in lastOutputLengths)) {
-                        lastOutputLengths[agentId] = currentText.length;
-                    }
-                    
-                    // Check if output has changed
-                    if (newText.length > lastOutputLengths[agentId]) {
-                        console.log(`Agent ${agentId} output updated:`, {
-                            previousLength: lastOutputLengths[agentId],
-                            newLength: newText.length,
-                            diff: newText.substring(lastOutputLengths[agentId])
-                        });
-                        
-                        // Update the output
-                        currentOutput.innerHTML = newOutput.innerHTML;
-                        lastOutputLengths[agentId] = newText.length;
-                        
-                        // Auto-scroll to bottom of output
-                        currentOutput.scrollTop = currentOutput.scrollHeight;
-                        
-                        // Flash the output box to indicate new content
-                        currentOutput.style.transition = 'background-color 0.5s';
-                        currentOutput.style.backgroundColor = '#2e4052';
-                        setTimeout(() => {
-                            currentOutput.style.backgroundColor = '#1e1e1e';
-                        }, 500);
-                    }
-                }
-                
-                // Update status badge
-                const currentStatus = agent.querySelector('.badge');
-                const newStatus = newAgentCard.querySelector('.badge');
-                if (currentStatus && newStatus) {
-                    currentStatus.className = newStatus.className;
-                    currentStatus.textContent = newStatus.textContent;
-                }
-                
-                // Update debug info
-                const currentDebug = agent.querySelector('.debug-info');
-                const newDebug = newAgentCard.querySelector('.debug-info');
-                if (currentDebug && newDebug) {
-                    const currentLength = getOutputLength(currentDebug);
-                    const newLength = getOutputLength(newDebug);
-                    
-                    if (currentLength !== newLength) {
-                        currentDebug.innerHTML = newDebug.innerHTML;
-                        console.log(`Agent ${agentId} debug info updated:`, {
-                            previousLength: currentLength,
-                            newLength: newLength
-                        });
-                    }
-                }
-                
-                // Update last critique if it exists
-                const currentCritique = agent.querySelector('.progress-section:last-child');
-                const newCritique = newAgentCard.querySelector('.progress-section:last-child');
-                if (currentCritique && newCritique && currentCritique.innerHTML !== newCritique.innerHTML) {
-                    currentCritique.innerHTML = newCritique.innerHTML;
-                    console.log(`Agent ${agentId} critique updated`);
-                }
-            }
-        });
     } catch (error) {
         console.error('Error fetching updates:', error);
     }
 }
+
+// Function to update a single agent's card
+function updateAgentCard(agentId, agentData, responseClone) {
+    const agentCard = document.getElementById(`agent-${agentId}`);
+    if (!agentCard) return;
+
+    // Update agent state
+    updateAgentState(agentCard, agentData);
+
+    // Update CLI output
+    updateCliOutput(agentCard, agentData);
+
+    // Update status and timestamps
+    updateStatusBadge(agentCard, agentData);
+
+    // Update PR info
+    updatePrInfo(agentCard, agentData);
+
+    // Update history
+    updateHistory(agentCard, agentData);
+
+    // Update debug info (using cloned response)
+    updateDebugInfo(agentCard, responseClone);
+}
+
+
+// Function to update agent state
+function updateAgentState(agentCard, agentData) {
+    const agentState = agentCard.querySelector('.agent-state');
+    if (agentState) {
+        const fields = {
+            'thought': agentData.thought || '',
+            'progress': agentData.progress || '',
+            'future': agentData.future || '',
+            'action': agentData.last_action || ''
+        };
+
+        Object.entries(fields).forEach(([field, value]) => {
+            const elements = agentCard.querySelectorAll(`[data-field="${field}"]`);
+            elements.forEach(element => {
+                element.innerHTML = value || (field === 'thought' ? 'Thinking...' : 'Planning...');
+            });
+            if (field === 'task') {
+                const headerProgress = agentCard.querySelector('[data-field="header-task"]');
+                if (headerProgress) {
+                    headerProgress.innerHTML = value;
+                }
+            }
+        });
+        agentState.style.display = agentData.thought ? 'block' : 'none';
+    }
+}
+
+// Function to update CLI output
+function updateCliOutput(agentCard, agentData) {
+    const outputElement = agentCard.querySelector('.cli-output');
+    if (outputElement && agentData.aider_output) {
+        const currentText = outputElement.textContent || '';
+        if (agentData.aider_output !== currentText) {
+            outputElement.innerHTML = agentData.aider_output;
+            outputElement.scrollTop = outputElement.scrollHeight;
+            outputElement.style.transition = 'background-color 0.5s';
+            outputElement.style.backgroundColor = '#2e4052';
+            setTimeout(() => {
+                outputElement.style.backgroundColor = '#1e1e1e';
+            }, 500);
+        }
+    }
+}
+
+// Function to update status badge
+function updateStatusBadge(agentCard, agentData) {
+    const statusBadge = agentCard.querySelector('.badge');
+    if (statusBadge && agentData.status) {
+        statusBadge.textContent = agentData.status;
+        statusBadge.className = `badge ${agentData.status === 'in_progress' ? 'bg-primary' :
+            agentData.status === 'pending' ? 'bg-warning' : 'bg-success'}`;
+    }
+}
+
+// Function to update PR info
+function updatePrInfo(agentCard, agentData) {
+    const prInfoSection = agentCard.querySelector('#pr-info-' + agentId);
+    if (prInfoSection && agentData.pr_url) {
+        prInfoSection.style.display = 'block';
+        const prLink = prInfoSection.querySelector('a.alert-link');
+        if (prLink) {
+            prLink.href = agentData.pr_url;
+            prLink.textContent = 'View on GitHub';
+        }
+    }
+}
+
+// Function to update history
+function updateHistory(agentCard, agentData) {
+    const historySection = agentCard.querySelector('.agent-history');
+    if (historySection && agentData.history) {
+        const historyList = historySection.querySelector('ul');
+        historyList.innerHTML = ''; // Clear existing history
+
+        agentData.history.forEach(entry => {
+            const listItem = document.createElement('li');
+            listItem.innerHTML = `<strong>Progress:</strong> ${entry.progress || 'N/A'}<br><strong>Thought:</strong> ${entry.thought || 'N/A'}`;
+            historyList.appendChild(listItem);
+        });
+    }
+}
+
+// Function to update debug info
+function updateDebugInfo(agentCard, responseClone) {
+    const agentId = agentCard.id.replace('agent-', '');
+    const currentDebug = agentCard.querySelector('.debug-info');
+    
+    responseClone.text().then(html => {
+        const tempDiv = document.createElement('div');
+        tempDiv.innerHTML = html;
+        const newDebug = tempDiv.querySelector(`#agent-${agentId} .debug-info`);
+        if (currentDebug && newDebug) {
+            const currentLength = getOutputLength(currentDebug);
+            const newLength = getOutputLength(newDebug);
+            if (currentLength !== newLength) {
+                currentDebug.innerHTML = newDebug.innerHTML;
+                console.log(`Agent ${agentId} debug info updated:`, {
+                    previousLength: currentLength,
+                    newLength: newLength
+                });
+            }
+        }
+    });
+}
+
 
 // Function to force an immediate update
 function forceUpdate() {
@@ -192,20 +168,13 @@ function forceUpdate() {
 function showToast(message, type = 'success') {
     const toastEl = document.getElementById('deleteToast');
     const toastBody = document.getElementById('toastMessage');
-    
-    // Remove existing classes
     toastBody.classList.remove('success', 'error');
-    // Add appropriate class
     toastBody.classList.add(type);
-    
-    // Add icon based on type
     const icon = type === 'success' ? 'check-circle' : 'exclamation-circle';
     toastBody.innerHTML = `
         <i class="fas fa-${icon} me-2"></i>
         ${message}
     `;
-    
-    // Show toast
     const toast = new bootstrap.Toast(toastEl);
     toast.show();
 }
@@ -221,15 +190,22 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     });
 
-    // Initial scroll to bottom
+    // Initial scroll to bottom and history setup
     const outputs = document.querySelectorAll('.cli-output');
     outputs.forEach(output => {
         output.scrollTop = output.scrollHeight;
-        
-        // Store initial output lengths
         const agentId = output.closest('.agent-card').id.replace('agent-', '');
         lastOutputLengths[agentId] = output.textContent.length;
         console.log(`Initialized agent ${agentId} output length:`, lastOutputLengths[agentId]);
+
+        // Add history toggle
+        const historyToggle = output.closest('.agent-card').querySelector('.history-toggle');
+        if (historyToggle) {
+            historyToggle.addEventListener('click', () => {
+                const history = output.closest('.agent-card').querySelector('.agent-history');
+                history.classList.toggle('show');
+            });
+        }
     });
 
     // Set up updates for CLI output with a reasonable interval
@@ -264,28 +240,21 @@ document.getElementById('agentList').addEventListener('click', async (e) => {
     if (e.target.classList.contains('delete-agent-btn')) {
         const agentId = e.target.getAttribute('data-agent-id');
         const agentCard = document.getElementById(`agent-${agentId}`);
-        
         try {
             const response = await fetch(`/delete_agent/${agentId}`, {
                 method: 'DELETE'
             });
-            
             const result = await response.json();
-            
             if (result.success) {
                 if (agentCard) {
-                    // Add fade out animation
                     agentCard.style.transition = 'all 0.5s ease-out';
                     agentCard.style.opacity = '0';
                     agentCard.style.transform = 'translateY(20px)';
-                    
-                    // Remove after animation
                     setTimeout(() => {
                         agentCard.remove();
                         delete lastOutputLengths[agentId];
                     }, 500);
                 }
-                
                 showToast(`Agent ${agentId} deleted successfully`, 'success');
             } else {
                 showToast(result.error || `Failed to delete agent ${agentId}`, 'error');
@@ -312,9 +281,7 @@ document.getElementById('deleteAllAgents').addEventListener('click', async () =>
             const response = await fetch(`/delete_agent/${agentId}`, {
                 method: 'DELETE'
             });
-            
             const result = await response.json();
-            
             if (result.success) {
                 agent.style.transition = 'all 0.5s ease-out';
                 agent.style.opacity = '0';
@@ -330,14 +297,12 @@ document.getElementById('deleteAllAgents').addEventListener('click', async () =>
         }
     }
 
-    // Show result message
     showToast(
-        `Deleted ${successCount} agent${successCount !== 1 ? 's' : ''}` + 
+        `Deleted ${successCount} agent${successCount !== 1 ? 's' : ''}` +
         (errorCount > 0 ? `. Failed to delete ${errorCount} agent${errorCount !== 1 ? 's' : ''}.` : '.'),
         errorCount > 0 ? 'error' : 'success'
     );
 
-    // Refresh page if all agents were deleted successfully
     if (errorCount === 0) {
         setTimeout(() => location.reload(), 1000);
     }
@@ -345,26 +310,22 @@ document.getElementById('deleteAllAgents').addEventListener('click', async () =>
 
 // Keyboard shortcuts
 document.addEventListener('keydown', (e) => {
-    // Don't trigger shortcuts if user is typing in an input
     if (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA') {
         return;
     }
 
-    switch(e.key.toLowerCase()) {
+    switch (e.key.toLowerCase()) {
         case 'r':
-            // Force refresh
             e.preventDefault();
             forceUpdate();
             showToast('Refreshing agents...', 'info');
             break;
         case '?':
-            // Show help modal
             e.preventDefault();
             const helpModal = new bootstrap.Modal(document.getElementById('helpModal'));
             helpModal.show();
             break;
         case 'escape':
-            // Close all modals
             const modals = document.querySelectorAll('.modal');
             modals.forEach(modal => {
                 const bsModal = bootstrap.Modal.getInstance(modal);
