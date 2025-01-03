@@ -35,6 +35,7 @@ class AgentSession:
             'output_buffer_max_length': 10000
         }
         self.config = {**default_config, **(config or {})}
+        self.action_history = []
 
     def start(self) -> bool:
         try:
@@ -177,6 +178,7 @@ class AgentSession:
                 else:
                     return False
             sanitized_message = message.replace('"', '\\"')
+            self.log_action("send_message", {"message": sanitized_message})
             self.process.stdin.write(sanitized_message + "\n")
             self.process.stdin.flush()
             return True
@@ -184,6 +186,13 @@ class AgentSession:
             return False
         except Exception as e:
             return False
+
+    def log_action(self, action: str, parameters: dict = None):
+        timestamp = datetime.datetime.now().isoformat()
+        self.action_history.append({"action": action, "timestamp": timestamp, "parameters": parameters or {}})
+
+    def get_action_history(self):
+        return self.action_history
 
     def _format_output_line(self, line: str) -> str:
         if not line.strip():
