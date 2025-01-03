@@ -70,7 +70,9 @@ def test_chat_completion_success(mock_get_config, mock_completion, client, mock_
     )
     
     # Verify the result
-    assert json.loads(result)["content"]["result"] == "test response"
+    result_json = json.loads(result)
+    content_json = json.loads(result_json["content"])
+    assert content_json["result"] == "test response"
 
 @patch('litellm_client.completion')
 @patch('database.get_model_config')
@@ -89,7 +91,9 @@ def test_chat_completion_with_markdown(mock_get_config, mock_completion, client,
         system_message="test",
         user_message="test"
     )
-    assert json.loads(result)["content"]["result"] == "test"
+    result_json = json.loads(result)
+    content_json = json.loads(result_json["content"])
+    assert content_json["result"] == "test"
 
 @patch('litellm_client.completion')
 @patch('database.get_model_config')
@@ -134,7 +138,9 @@ def test_chat_completion_without_config(mock_get_config, mock_completion, client
     mock_completion.assert_called_once()
     call_args = mock_completion.call_args[1]
     assert call_args["model"] == "openrouter/google/gemini-flash-1.5"
-    assert json.loads(result)["content"]["result"] == "test"
+    result_json = json.loads(result)
+    content_json = json.loads(result_json["content"])
+    assert content_json["result"] == "test"
 
 @patch('litellm_client.completion')
 @patch('database.get_model_config')
