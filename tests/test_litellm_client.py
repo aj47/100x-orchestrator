@@ -70,7 +70,7 @@ def test_chat_completion_success(mock_get_config, mock_completion, client, mock_
     )
     
     # Verify the result
-    assert json.loads(result)["result"] == "test response"
+    assert json.loads(result)["content"]["result"] == "test response"
 
 @patch('litellm_client.completion')
 @patch('database.get_model_config')
@@ -89,7 +89,7 @@ def test_chat_completion_with_markdown(mock_get_config, mock_completion, client,
         system_message="test",
         user_message="test"
     )
-    assert json.loads(result)["result"] == "test"
+    assert json.loads(result)["content"]["result"] == "test"
 
 @patch('litellm_client.completion')
 @patch('database.get_model_config')
@@ -134,7 +134,7 @@ def test_chat_completion_without_config(mock_get_config, mock_completion, client
     mock_completion.assert_called_once()
     call_args = mock_completion.call_args[1]
     assert call_args["model"] == "openrouter/google/gemini-flash-1.5"
-    assert json.loads(result)["result"] == "test"
+    assert json.loads(result)["content"]["result"] == "test"
 
 @patch('litellm_client.completion')
 @patch('database.get_model_config')
@@ -157,8 +157,6 @@ def test_chat_completion_with_non_json_response(mock_get_config, mock_completion
 
     # The result should be a JSON string containing an error message
     assert isinstance(result, str)
-    try:
-        error_response = json.loads(result)
-        assert "error" in error_response
-    except json.JSONDecodeError:
-        pytest.fail("Result should be valid JSON")
+    error_response = json.loads(result)
+    assert "content" in error_response
+    assert error_response["content"] == "This is not JSON"
