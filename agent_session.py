@@ -198,14 +198,7 @@ class AgentSession:
                 .replace('\n', '<br>')
                 .replace(' ', '&nbsp;')
         )
-        if line.startswith('>'):
-            return f'<div class="output-line agent-response">{formatted_line}</div>'
-        elif line.startswith('?'):
-            return f'<div class="output-line agent-question">{formatted_line}</div>'
-        elif 'Error:' in line:
-            return f'<div class="output-line error-message">{formatted_line}</div>'
-        else:
-            return f'<div class="output-line">{formatted_line}</div>'
+        return f'\n\n{formatted_line}\n\n'
 
     def cleanup(self) -> None:
         try:
