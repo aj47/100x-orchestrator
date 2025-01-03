@@ -18,7 +18,7 @@ async function fetchUpdates() {
         const response = await fetch('/tasks/tasks.json');
         const responseClone = response.clone(); // Clone the response
         const tasksData = await response.json();
-        
+            console.log(tasksData)
         // Update each agent's output
         for (const [agentId, agentData] of Object.entries(tasksData.agents)) {
             const agentCard = document.getElementById(`agent-${agentId}`);
