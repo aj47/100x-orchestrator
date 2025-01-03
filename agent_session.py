@@ -20,7 +20,7 @@ def normalize_path(path_str):
         return None
 
 class AgentSession:
-    def __init__(self, workspace_path, task, config=None, aider_commands=None):
+    def __init__(self, workspace_path, task, config=None, aider_commands=None, agent_action=None):
         self.workspace_path = normalize_path(workspace_path)
         self.task = task
         self.aider_commands = aider_commands
@@ -35,6 +35,8 @@ class AgentSession:
             'output_buffer_max_length': 10000
         }
         self.config = {**default_config, **(config or {})}
+        self.agent_action = agent_action
+
 
     def start(self) -> bool:
         try:
@@ -122,7 +124,22 @@ class AgentSession:
                     message_buffer.append(line.strip())
                     if '>' in line or '?' in line:
                         if message_buffer:
+                            # Append agent action if available
+                            agent_action_log = ""
+                            if self.agent_action:
+                                try:
+                                    agent_action_log = f"[AGENT ACTION]: {self.agent_action}"
+                                except Exception as e:
+                                    print(f"Error appending agent action: {e}")
+                            log_entry = " ".join(message_buffer) + " " + agent_action_log
                             message_buffer = []
+                            with self._buffer_lock:
+                                self.output_buffer.seek(0, 2)
+                                self.output_buffer.write(log_entry + "\n")
+                            try:
+                                pipe.flush()
+                            except ValueError:
+                                break
                 with self._buffer_lock:
                     self.output_buffer.seek(0, 2)
                     self.output_buffer.write(line)
