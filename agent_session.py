@@ -169,7 +169,7 @@ class AgentSession:
         except Exception as e:
             return False
 
-    def send_message(self, message: str, timeout: int = 10) -> bool:
+    def send_message(self, message: str, agent_action: str, timeout: int = 10) -> bool:
         try:
             if not self.process or self.process.poll() is not None:
                 if self.start():
@@ -177,6 +177,9 @@ class AgentSession:
                 else:
                     return False
             sanitized_message = message.replace('"', '\\"')
+            with self._buffer_lock:
+                self.output_buffer.seek(0, 2)
+                self.output_buffer.write(self._format_output_line(f"Agent Action: {agent_action}\n"))
             self.process.stdin.write(sanitized_message + "\n")
             self.process.stdin.flush()
             return True
