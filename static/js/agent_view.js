@@ -227,7 +227,19 @@ document.addEventListener('DOMContentLoaded', () => {
         output.scrollTop = output.scrollHeight;
         
         // Store initial output lengths
-        const agentId = output.closest('.agent-card').id.replace('agent-', '');
+        const agentCard = output.closest('.agent-card');
+        if (!agentCard || !agentCard.id) {
+            console.error('Found agent card without ID:', agentCard);
+            console.error('Parent HTML:', agentCard?.parentElement?.innerHTML);
+            return;
+        }
+        
+        const agentId = agentCard.id.replace('agent-', '');
+        if (!agentId) {
+            console.error('Invalid agent ID from card:', agentCard);
+            return;
+        }
+        
         lastOutputLengths[agentId] = output.textContent.length;
         console.log(`Initialized agent ${agentId} output length:`, lastOutputLengths[agentId]);
     });

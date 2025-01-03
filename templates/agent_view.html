@@ -36,7 +36,11 @@
 
         <div id="agentList">
             {% for agent_id, agent in agents.items() %}
-            <div class="card agent-card mb-2" id="agent-{{ agent_id }}">
+            {% if not agent_id %}
+                <!-- DEBUG: Found agent without ID -->
+                <div style="display: none;">DEBUG: Agent without ID: {{ agent }}</div>
+            {% endif %}
+            <div class="card agent-card mb-2" id="agent-{{ agent_id }}" data-agent-id="{{ agent_id }}">
                 <div class="card-header py-2 d-flex justify-content-between align-items-center" data-bs-toggle="collapse" data-bs-target="#collapse-{{ agent_id }}" style="cursor: pointer;">
                     <div class="d-flex align-items-center">
                         <i class="fas fa-chevron-right me-2 collapse-icon"></i>
