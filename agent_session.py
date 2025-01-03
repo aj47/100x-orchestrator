@@ -8,6 +8,7 @@ import logging
 from pathlib import Path
 import time
 import re
+from database import save_agent_actions, load_agent_actions
 
 def normalize_path(path_str):
     if not path_str:
@@ -20,14 +21,14 @@ def normalize_path(path_str):
         return None
 
 class AgentSession:
-    def __init__(self, workspace_path, task, config=None, aider_commands=None):
+    def __init__(self, workspace_path, task, config=None, aider_commands=None, agent_id=None):
         self.workspace_path = normalize_path(workspace_path)
         self.task = task
         self.aider_commands = aider_commands
         self.output_buffer = io.StringIO()
         self.process = None
         self._stop_event = threading.Event()
-        self.session_id = str(uuid.uuid4())[:8]
+        self.session_id = str(uuid.uuid4())[:8] if agent_id is None else agent_id
         self._buffer_lock = threading.Lock()
         self.aider_commands = aider_commands
         default_config = {
@@ -35,6 +36,7 @@ class AgentSession:
             'output_buffer_max_length': 10000
         }
         self.config = {**default_config, **(config or {})}
+        self.action_history = load_agent_actions(self.session_id) or []
 
     def start(self) -> bool:
         try:
@@ -177,8 +179,12 @@ class AgentSession:
                 else:
                     return False
             sanitized_message = message.replace('"', '\\"')
-            self.process.stdin.write(sanitized_message + "\n")
+            full_message = f"""User: {sanitized_message}
+Action History: {json.dumps(self.action_history)}"""
+            self.process.stdin.write(full_message + "\n")
             self.process.stdin.flush()
+            self.action_history.append(sanitized_message)
+            save_agent_actions(self.session_id, self.action_history)
             return True
         except (BrokenPipeError, IOError) as pipe_error:
             return False
@@ -227,3 +233,4 @@ class AgentSession:
                     pass
         except Exception as e:
             pass
+
