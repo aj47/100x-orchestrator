@@ -241,6 +241,28 @@ def update_agent_output(agent_id):
         logging.error(f"Error updating agent output: {e}", exc_info=True)
         return False
 
+def create_pull_request(agent_id: str, branch_name: str, pr_info: dict) -> dict:
+    """Create a pull request on GitHub."""
+    try:
+        token = get_github_token()
+        if not token:
+            return None
+        g = Github(token)
+        repo = g.get_repo("your_repo_name") # Replace with your repo name
+        pr = repo.create_pull(
+            title=pr_info.get('title'),
+            body=pr_info.get('body'),
+            head=branch_name,
+            base="main" # Replace with your main branch name
+        )
+        return {
+            'html_url': pr.html_url,
+            'state': pr.state
+        }
+    except Exception as e:
+        logging.error(f"Error creating pull request: {e}", exc_info=True)
+        return None
+
 def main_loop():
     pr_manager = PullRequestManager()
     """Main orchestration loop to manage agents."""
