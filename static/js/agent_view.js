@@ -94,6 +94,13 @@ async function fetchUpdates() {
                 }
             }
 
+            // Update repository name
+            const repoNameElement = agentCard.querySelector('.repo-name');
+            if (repoNameElement && agentData.repo_name) {
+                repoNameElement.textContent = agentData.repo_name;
+            } else if (repoNameElement) {
+                repoNameElement.textContent = "Repository name unavailable";
+            }
         }
         
         // Create temporary div to parse HTML
