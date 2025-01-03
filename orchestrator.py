@@ -124,15 +124,21 @@ def initialiseCodingAgent(repository_url: str = None, task_description: str = No
             original_dir = Path.cwd()
             repo_dir = None
             full_repo_path = None
+            repo_name = "Repository name unavailable"
+            try:
+                if repository_url:
+                    repo_name = repository_url.rstrip('/').split('/')[-1]
+                    if repo_name.endswith('.git'):
+                        repo_name = repo_name[:-4]
+            except Exception as e:
+                logging.error(f"Error extracting repository name: {e}")
+
             try:
                 os.chdir(workspace_dirs["repo"])
                 if not repository_url:
                     logging.error("No repository URL provided")
                     shutil.rmtree(agent_workspace)
                     continue
-                repo_name = repository_url.rstrip('/').split('/')[-1]
-                if repo_name.endswith('.git'):
-                    repo_name = repo_name[:-4]
                 if not cloneRepository(repository_url):
                     logging.error("Failed to clone repository")
                     shutil.rmtree(agent_workspace)
@@ -176,7 +182,8 @@ def initialiseCodingAgent(repository_url: str = None, task_description: str = No
                 'progress_history': [],
                 'thought_history': [],
                 'future': '',
-                'last_action': ''
+                'last_action': '',
+                'repo_name': repo_name
             }
             tasks_data['repository_url'] = repository_url
             save_tasks(tasks_data)
