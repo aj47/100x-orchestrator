@@ -97,6 +97,7 @@ def delete_agent(agent_id):
 def initialiseCodingAgent(repository_url: str = None, task_description: str = None, num_agents: int = None, aider_commands: str = None):
     """Initialise coding agents with configurable agent count."""
     logging.info("Starting agent initialization")
+    logging.debug(f"Initializing {num_agents} agents for task: {task_description}")
     num_agents = num_agents or DEFAULT_AGENTS_PER_TASK
     if not task_description:
         logging.error("No task description provided")
@@ -107,6 +108,7 @@ def initialiseCodingAgent(repository_url: str = None, task_description: str = No
         agent_config = tasks_data.get('config', {}).get('agent_session', {})
         for i in range(num_agents):
             agent_id = str(uuid.uuid4())
+            logging.debug(f"Creating new agent with ID: {agent_id}")
             agent_workspace = Path(tempfile.mkdtemp(prefix=f"agent_{agent_id}_")).resolve()
             workspace_dirs = {
                 "src": agent_workspace / "src",
@@ -160,6 +162,7 @@ def initialiseCodingAgent(repository_url: str = None, task_description: str = No
                 prompt_processors[agent_id] = prompt_processor
             finally:
                 os.chdir(original_dir)
+            logging.debug(f"Storing agent {agent_id} in tasks data")
             tasks_data['agents'][agent_id] = {
                 'workspace': normalize_path(agent_workspace),
                 'repo_path': normalize_path(full_repo_path) if full_repo_path else None,
