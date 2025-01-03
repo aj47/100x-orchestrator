@@ -103,6 +103,13 @@
                         <span class="text-truncate" data-field="thought">{{ agent.progress or 'Thinking...' }}</span>
                                 </small>
                             </div>
+                            <div class="mt-3">
+                                <h6><i class="fas fa-history me-2"></i>Agent History</h6>
+                                <div class="collapse" id="history-{{ agent_id }}">
+                                    <ul class="list-group" id="history-list-{{ agent_id }}">
+                                        </ul>
+                                </div>
+                            </div>
                         </div>
                     </div>
                 </div>

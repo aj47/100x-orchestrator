@@ -304,5 +304,21 @@ def remove_agent(agent_id):
             'error': str(e)
         }), 500
 
+@app.route('/agent/<agent_id>/history')
+def get_agent_history(agent_id):
+    """Get the history of an agent's state."""
+    try:
+        from database import get_agent
+        agent_data = get_agent(agent_id)
+        if agent_data:
+            return jsonify({
+                'success': True,
+                'history': agent_data.get('progress_history', []) + agent_data.get('thought_history', [])
+            })
+        else:
+            return jsonify({'success': False, 'error': 'Agent not found'}), 404
+    except Exception as e:
+        return jsonify({'success': False, 'error': str(e)}), 500
+
 if __name__ == '__main__':
     app.run(debug=True)
