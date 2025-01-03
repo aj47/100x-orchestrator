@@ -44,7 +44,7 @@
                 <div class="card-header py-2 d-flex justify-content-between align-items-center" data-bs-toggle="collapse" data-bs-target="#collapse-{{ agent_id }}" style="cursor: pointer;">
                     <div class="d-flex align-items-center">
                         <i class="fas fa-chevron-right me-2 collapse-icon"></i>
-                        <span class="text-muted small me-2">Agent *{{ agent_id[-4:] }}</span>
+                        <span class="text-muted small me-2">Agent <span data-field="agent-id">{{ agent_id[-4:] }}</span> <span class="repo-name" data-field="repo-name"></span></span>
                         <i class="fas fa-tasks me-2"></i>
                         <span class="current-progress text-truncate" data-field="header-progress" style="max-width: 400px;">{{ agent.task }}</span>
                     </div>

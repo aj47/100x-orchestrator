@@ -31,7 +31,8 @@ async function fetchUpdates() {
                     'thought': agentData.thought || '',
                     'progress': agentData.progress || '',
                     'future': agentData.future || '',
-                    'action': agentData.last_action || ''
+                    'action': agentData.last_action || '',
+                    'repo-name': agentData.repo_name || ''
                 };
 
                 // Update each field
