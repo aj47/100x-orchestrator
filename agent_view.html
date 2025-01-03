@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Agent View</title>
+    <link rel="stylesheet" href="/static/css/styles.css">
+</head>
+<body>
+    <div class="container">
+        <div id="agent-info">
+            <!-- Display repository name here -->
+            <h1 class="repo-name" id="repo-name"></h1>
+            <div id="no-repo-message" class="no-repo-message" style="display: none;">Repository information not found.</div>
+        </div>
+
+        <!-- Rest of your agent view content -->
+        <div id="agent-output" class="cli-output"></div>
+        </div>
+    </div>
+
+    <script>
+        // Get the agent ID from the URL parameters
+        const urlParams = new URLSearchParams(window.location.search);
+        const agentId = urlParams.get('agentId');
+
+        // Fetch agent data from the server
+        fetch(`/agent/${agentId}`)
+            .then(response => response.json())
+            .then(data => {
+                // Display repository name
+                const repoNameElement = document.getElementById('repo-name');
+                const noRepoMessageElement = document.getElementById('no-repo-message');
+
+                if (data.repository) {
+                    repoNameElement.textContent = data.repository;
+                } else {
+                    noRepoMessageElement.style.display = 'block';
+                }
+            })
+            .catch(error => {
+                console.error('Error fetching agent data:', error);
+                // Handle error appropriately (e.g., display an error message)
+            });
+    </script>
+</body>
+</html>
