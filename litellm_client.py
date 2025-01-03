@@ -1,6 +1,7 @@
 import os
 import json
 import logging
+import litellm
 from pathlib import Path
 from dotenv import load_dotenv
 from litellm import completion
@@ -18,8 +19,10 @@ class LiteLLMClient:
         
         if not self.api_key:
             raise ValueError(f"OPENROUTER_API_KEY not found in {env_path}")
+
+        litellm.success_callback=["helicone"]
         
-    def chat_completion(self, system_message: str = "", user_message: str = "", model_type="orchestrator"):
+    def chat_completion(self, system_message: str = "", user_message: str = "", model_type="orchestrator", agent_id=0):
         """Get a summary of the coding session logs using JSON mode"""
         # Get the appropriate model based on type
         from database import get_model_config
@@ -45,6 +48,9 @@ class LiteLLMClient:
                     {"role": "user", "content": user_message}
                 ],
                 api_key=self.api_key,
+                metadata={
+                    "agent_id": agent_id
+                },
                 response_format={"type": "json_object"}
             )
             

@@ -21,7 +21,8 @@ class PullRequestManager:
             pr_info = self.litellm_client.chat_completion(
                 system_message=PROMPT_PR(),
                 user_message=f"Agent history:\n{history}",
-                model_type="agent"
+                model_type="agent",
+                agent_id=agent_id
             )
             return json.loads(pr_info)
         except Exception as e:

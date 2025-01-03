@@ -305,4 +305,4 @@ def remove_agent(agent_id):
         }), 500
 
 if __name__ == '__main__':
-    app.run(debug=True)
+    app.run(debug=True, use_reloader=False)
