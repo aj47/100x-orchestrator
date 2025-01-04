@@ -91,6 +91,17 @@
                                 {% endif %}
                             </div>
 
+                            <h6><i class="fas fa-code-branch me-2"></i>Repository URL</h6>
+                            <div>
+                                <span data-field="repo-url">
+                                    {% if agent.repo_url %}
+                                        <a href="{{ agent.repo_url }}" target="_blank">{{ agent.repo_url }}</a>
+                                    {% else %}
+                                        Repository URL not found
+                                    {% endif %}
+                                </span>
+                            </div>
+
                             <div class="mt-3">
                                 <div id="pr-info-{{ agent_id }}" class="pr-info-section" style="display: {{ 'block' if agent.pr_url else 'none' }}">
                                     <div class="alert alert-success">
@@ -104,7 +115,7 @@
                                 </div>
                                 <small class="text-muted">
                                     <i class="fas fa-clock me-1"></i>Last Updated: {{ agent.last_updated or 'Never' }}
-                        <span class="text-truncate" data-field="thought">{{ agent.progress or 'Thinking...' }}</span>
+                                    <span class="text-truncate" data-field="thought">{{ agent.progress or 'Thinking...' }}</span>
                                 </small>
                             </div>
                         </div>
