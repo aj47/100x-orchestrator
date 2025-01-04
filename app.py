@@ -47,8 +47,11 @@ def index():
 
 @app.route('/tasks/tasks.json')
 def serve_tasks_json():
-    """Serve tasks data in JSON format from database."""
+    """Serve tasks data in JSON format from database, including repository URL."""
     tasks_data = load_tasks()
+    # Add repository URL to the response.  This assumes the URL is stored in tasks_data['repo_url']
+    # You might need to adjust this based on how you store the repository URL.
+    tasks_data['repo_url'] = tasks_data.get('repo_url', None) # Handle missing repo_url gracefully
     return jsonify(tasks_data)
 
 @app.route('/agents')
@@ -56,7 +59,8 @@ def agent_view():
     """Render the agent view with all agent details."""
     tasks_data = load_tasks()
     agents = tasks_data.get('agents', {})
-    
+    repo_url = tasks_data.get('repo_url', None) # Get repo URL from tasks data
+
     # Calculate time until next check (reduced to 30 seconds for more frequent updates)
     now = datetime.datetime.now()
     next_check = now + datetime.timedelta(seconds=30)
@@ -77,7 +81,8 @@ def agent_view():
     save_tasks(tasks_data)
     
     return render_template('agent_view.html', 
-                           agents=agents)
+                           agents=agents,
+                           repo_url=repo_url) # Pass repo_url to template
 
 @app.route('/create_agent', methods=['POST'])
 def create_agent():
@@ -141,6 +146,10 @@ def create_agent():
                     app.logger.warning(f"Failed to create agents for task: {task_description}")
             except Exception as task_error:
                 app.logger.error(f"Error initializing agent for task {task_description}: {task_error}", exc_info=True)
+        
+        # Store repo URL in tasks data
+        tasks_data['repo_url'] = repo_url
+        save_tasks(tasks_data)
         
         # Start main loop in a separate thread if not already running
         def check_and_start_main_loop():

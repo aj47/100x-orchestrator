@@ -18,6 +18,8 @@ async function fetchUpdates() {
         const response = await fetch('/tasks/tasks.json');
         const responseClone = response.clone(); // Clone the response
         const tasksData = await response.json();
+        const repoUrl = tasksData.repo_url; // Get repo URL from tasksData
+
         // Update each agent's output
         for (const [agentId, agentData] of Object.entries(tasksData.agents)) {
             const agentCard = document.getElementById(`agent-${agentId}`);
@@ -166,6 +168,13 @@ async function fetchUpdates() {
                 }
             }
         });
+
+        // Update repo URL display
+        const repoUrlElement = document.getElementById('repo-url');
+        if (repoUrlElement) {
+            repoUrlElement.textContent = repoUrl || 'N/A';
+            repoUrlElement.href = repoUrl || '#'; // Set href to '#' if no URL
+        }
     } catch (error) {
         console.error('Error fetching updates:', error);
     }
