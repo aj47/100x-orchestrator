@@ -16,8 +16,13 @@ function getOutputLength(debugElement) {
 async function fetchUpdates() {
     try {
         const response = await fetch('/tasks/tasks.json');
-        const responseClone = response.clone(); // Clone the response
+        if (!response.ok) {
+            throw new Error(`HTTP error! status: ${response.status}`);
+        }
         const tasksData = await response.json();
+        if (!tasksData || !tasksData.agents) {
+            throw new Error("Invalid JSON response from /tasks/tasks.json");
+        }
         // Update each agent's output
         for (const [agentId, agentData] of Object.entries(tasksData.agents)) {
             const agentCard = document.getElementById(`agent-${agentId}`);
@@ -94,11 +99,16 @@ async function fetchUpdates() {
                 }
             }
 
+            // Update repo name
+            const repoNameElement = agentCard.querySelector('.repo-name');
+            if (repoNameElement) {
+                repoNameElement.textContent = agentData.repo_name || "Repository not found";
+            }
         }
         
         // Create temporary div to parse HTML
         const tempDiv = document.createElement('div');
-        tempDiv.innerHTML = await responseClone.text(); // Use cloned response
+        tempDiv.innerHTML = await response.text(); // Use cloned response
         
         // Update each agent's output
         const agents = document.querySelectorAll('.agent-card');
@@ -168,6 +178,8 @@ async function fetchUpdates() {
         });
     } catch (error) {
         console.error('Error fetching updates:', error);
+        // Add error handling here, e.g., display an error message to the user
+        showToast(`Error fetching agent updates: ${error.message}`, 'error');
     }
 }
 
