@@ -47,8 +47,14 @@ def index():
 
 @app.route('/tasks/tasks.json')
 def serve_tasks_json():
-    """Serve tasks data in JSON format from database."""
+    """Serve tasks data in JSON format from database, including repo name."""
     tasks_data = load_tasks()
+    agents = tasks_data.get('agents', {})
+    
+    # Add repo_name to each agent.  REPLACE THIS with your actual logic to get the repo name.
+    for agent_id, agent_data in agents.items():
+        agent_data['repo_name'] = "Repository not found" # Placeholder - replace with your logic
+
     return jsonify(tasks_data)
 
 @app.route('/agents')
@@ -72,6 +78,7 @@ def agent_view():
         agent.setdefault('thought', '')
         agent.setdefault('future', '')
         agent.setdefault('last_action', '')
+        agent.setdefault('repo_name', 'Repository not found') # Default value
     
     # Save updated tasks data
     save_tasks(tasks_data)

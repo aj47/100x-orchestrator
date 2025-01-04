@@ -47,7 +47,7 @@
                         <span class="text-muted small me-2">Agent *{{ agent_id[-4:] }}</span>
                         <i class="fas fa-tasks me-2"></i>
                         <span class="current-progress text-truncate" data-field="header-progress" style="max-width: 400px;">{{ agent.task }}</span>
-                    </div>
+                        <span class="repo-name ms-2">({{ agent.repo_name }})</span> </div>
                     <button class="btn btn-sm btn-outline-danger delete-agent-btn" data-agent-id="{{ agent_id }}">
                         <i class="fas fa-times"></i>
                     </button>
@@ -140,45 +140,3 @@
 
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/js/all.min.js"></script>
-    <script src="/static/js/agent_view.js"></script>
-    <!-- Help Modal -->
-    <div class="modal fade" id="helpModal" tabindex="-1" aria-labelledby="helpModalLabel" aria-hidden="true">
-        <div class="modal-dialog">
-            <div class="modal-content">
-                <div class="modal-header">
-                    <h5 class="modal-title" id="helpModalLabel">
-                        <i class="fas fa-keyboard me-2"></i>Keyboard Shortcuts
-                    </h5>
-                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-                </div>
-                <div class="modal-body">
-                    <div class="list-group">
-                        <div class="list-group-item">
-                            <div class="d-flex justify-content-between align-items-center">
-                                <span><kbd>R</kbd></span>
-                                <span>Force refresh all agents</span>
-                            </div>
-                        </div>
-                        <div class="list-group-item">
-                            <div class="d-flex justify-content-between align-items-center">
-                                <span><kbd>?</kbd></span>
-                                <span>Show this help dialog</span>
-                            </div>
-                        </div>
-                        <div class="list-group-item">
-                            <div class="d-flex justify-content-between align-items-center">
-                                <span><kbd>Esc</kbd></span>
-                                <span>Close dialogs</span>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-                <div class="modal-footer">
-                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
-                </div>
-            </div>
-        </div>
-    </div>
-</body>
-
-</html>
