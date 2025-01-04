@@ -433,3 +433,9 @@ body {
 .cli-output .user-message {
     color: #007bff; /* OKBLUE */
 }
+
+/* Added rule for h1 */
+h1 {
+    width: 100%;
+    display: block;
+}
