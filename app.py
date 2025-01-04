@@ -3,6 +3,12 @@ import sqlite3
 from pathlib import Path
 from flask import Flask, render_template, request, jsonify, send_from_directory
 from werkzeug.serving import WSGIRequestHandler
+import os
+import threading
+import json
+from pathlib import Path
+import datetime
+from urllib.parse import urlparse
 
 # Database configuration
 DATABASE_PATH = Path("tasks.db")
@@ -20,11 +26,6 @@ from orchestrator import (
     delete_agent,
     aider_sessions  # Add this import
 )
-import os
-import threading
-import json
-from pathlib import Path
-import datetime
 
 app = Flask(__name__)
 
@@ -56,7 +57,9 @@ def agent_view():
     """Render the agent view with all agent details."""
     tasks_data = load_tasks()
     agents = tasks_data.get('agents', {})
-    
+    repo_url = tasks_data.get('repo_url', None) # Get repo URL from tasks data
+    repo_name = extract_repo_name(repo_url) # Extract repo name
+
     # Calculate time until next check (reduced to 30 seconds for more frequent updates)
     now = datetime.datetime.now()
     next_check = now + datetime.timedelta(seconds=30)
@@ -77,7 +80,23 @@ def agent_view():
     save_tasks(tasks_data)
     
     return render_template('agent_view.html', 
-                           agents=agents)
+                           agents=agents, 
+                           repo_name=repo_name) # Pass repo_name to template
+
+def extract_repo_name(repo_url):
+    """Extracts the repository name from a GitHub URL."""
+    if not repo_url:
+        return None
+    try:
+        parsed_url = urlparse(repo_url)
+        path_parts = parsed_url.path.split('/')
+        if len(path_parts) >= 2:
+            return path_parts[-2] + "/" + path_parts[-1].replace(".git","") #Handle .git suffix
+        else:
+            return None
+    except Exception as e:
+        print(f"Error extracting repo name: {e}")
+        return None
 
 @app.route('/create_agent', methods=['POST'])
 def create_agent():
@@ -110,6 +129,7 @@ def create_agent():
         
         # Load existing tasks
         tasks_data = load_tasks()
+        tasks_data['repo_url'] = repo_url # Store repo URL in tasks data
         
         # Initialize agents for each task
         created_agents = []
