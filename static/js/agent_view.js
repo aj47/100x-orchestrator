@@ -12,6 +12,21 @@ function getOutputLength(debugElement) {
     return 0;
 }
 
+// Function to show/hide the agent state history
+function showHistory(agentId) {
+    const historyContainer = document.getElementById(`agent-history-${agentId}`);
+    const toggleButton = document.getElementById(`toggle-history-${agentId}`);
+
+    if (historyContainer.style.display === 'none') {
+        historyContainer.style.display = 'block';
+        toggleButton.textContent = 'Hide History';
+    } else {
+        historyContainer.style.display = 'none';
+        toggleButton.textContent = 'Show History';
+    }
+}
+
+
 // Function to fetch updates via AJAX
 async function fetchUpdates() {
     try {
@@ -25,6 +40,8 @@ async function fetchUpdates() {
 
             // Find agent state container
             const agentState = agentCard.querySelector('.agent-state');
+            const historyContainer = document.getElementById(`agent-history-${agentId}`);
+
             if (agentState) {
                 // Update all fields using data attributes
                 const fields = {
@@ -41,7 +58,7 @@ async function fetchUpdates() {
                     elements.forEach(element => {
                         element.innerHTML = value || (field === 'thought' ? 'Thinking...' : 'Planning...');
                     });
-                
+
                     // Also update header progress if this is the progress field
                     if (field === 'task') {
                         const headerProgress = agentCard.querySelector('[data-field="header-task"]');
@@ -60,12 +77,12 @@ async function fetchUpdates() {
 
             if (outputElement && agentData.aider_output) {
                 const currentText = outputElement.textContent || '';
-                
+
                 // Only update if output has changed
                 if (agentData.aider_output !== currentText) {
                     outputElement.innerHTML = agentData.aider_output;
                     outputElement.scrollTop = outputElement.scrollHeight;
-                    
+
                     // Flash effect for new content
                     outputElement.style.transition = 'background-color 0.5s';
                     outputElement.style.backgroundColor = '#2e4052';
@@ -79,7 +96,7 @@ async function fetchUpdates() {
             const statusBadge = agentCard.querySelector('.badge');
             if (statusBadge && agentData.status) {
                 statusBadge.textContent = agentData.status;
-                statusBadge.className = `badge ${agentData.status === 'in_progress' ? 'bg-primary' : 
+                statusBadge.className = `badge ${agentData.status === 'in_progress' ? 'bg-primary' :
                                     agentData.status === 'pending' ? 'bg-warning' : 'bg-success'}`;
             }
 
@@ -94,41 +111,56 @@ async function fetchUpdates() {
                 }
             }
 
+            // Update history
+            if (historyContainer && agentData.history) {
+                historyContainer.innerHTML = ''; // Clear existing history
+                agentData.history.forEach(state => {
+                    const stateDiv = document.createElement('div');
+                    stateDiv.classList.add('agent-state-item');
+                    stateDiv.innerHTML = `
+                        <div>Thought: ${state.thought || 'N/A'}</div>
+                        <div>Progress: ${state.progress || 'N/A'}</div>
+                        <div>Future: ${state.future || 'N/A'}</div>
+                        <div>Action: ${state.action || 'N/A'}</div>
+                    `;
+                    historyContainer.appendChild(stateDiv);
+                });
+            }
         }
-        
+
         // Create temporary div to parse HTML
         const tempDiv = document.createElement('div');
         tempDiv.innerHTML = await responseClone.text(); // Use cloned response
-        
+
         // Update each agent's output
         const agents = document.querySelectorAll('.agent-card');
         agents.forEach(agent => {
             const agentId = agent.id.replace('agent-', '');
             const newAgentCard = tempDiv.querySelector(`#agent-${agentId}`);
-            
+
             if (newAgentCard) {
                 // Update CLI output if it has changed
                 const currentOutput = agent.querySelector('.cli-output');
                 const newOutput = newAgentCard.querySelector('.cli-output');
-                
+
                 if (currentOutput && newOutput) {
                     const currentText = currentOutput.textContent || '';
                     const newText = newOutput.textContent || '';
-                    
+
                     // Initialize last output length if not exists
                     if (!(agentId in lastOutputLengths)) {
                         lastOutputLengths[agentId] = currentText.length;
                     }
-                    
+
                     // Check if output has changed
                     if (newText.length > lastOutputLengths[agentId]) {
                         // Update the output
                         currentOutput.innerHTML = newOutput.innerHTML;
                         lastOutputLengths[agentId] = newText.length;
-                        
+
                         // Auto-scroll to bottom of output
                         currentOutput.scrollTop = currentOutput.scrollHeight;
-                        
+
                         // Flash the output box to indicate new content
                         currentOutput.style.transition = 'background-color 0.5s';
                         currentOutput.style.backgroundColor = '#2e4052';
@@ -137,7 +169,7 @@ async function fetchUpdates() {
                         }, 500);
                     }
                 }
-                
+
                 // Update status badge
                 const currentStatus = agent.querySelector('.badge');
                 const newStatus = newAgentCard.querySelector('.badge');
@@ -145,19 +177,19 @@ async function fetchUpdates() {
                     currentStatus.className = newStatus.className;
                     currentStatus.textContent = newStatus.textContent;
                 }
-                
+
                 // Update debug info
                 const currentDebug = agent.querySelector('.debug-info');
                 const newDebug = newAgentCard.querySelector('.debug-info');
                 if (currentDebug && newDebug) {
                     const currentLength = getOutputLength(currentDebug);
                     const newLength = getOutputLength(newDebug);
-                    
+
                     if (currentLength !== newLength) {
                         currentDebug.innerHTML = newDebug.innerHTML;
                     }
                 }
-                
+
                 // Update last critique if it exists
                 const currentCritique = agent.querySelector('.progress-section:last-child');
                 const newCritique = newAgentCard.querySelector('.progress-section:last-child');
@@ -180,19 +212,19 @@ function forceUpdate() {
 function showToast(message, type = 'success') {
     const toastEl = document.getElementById('deleteToast');
     const toastBody = document.getElementById('toastMessage');
-    
+
     // Remove existing classes
     toastBody.classList.remove('success', 'error');
     // Add appropriate class
     toastBody.classList.add(type);
-    
+
     // Add icon based on type
     const icon = type === 'success' ? 'check-circle' : 'exclamation-circle';
     toastBody.innerHTML = `
         <i class="fas fa-${icon} me-2"></i>
         ${message}
     `;
-    
+
     // Show toast
     const toast = new bootstrap.Toast(toastEl);
     toast.show();
@@ -213,18 +245,18 @@ document.addEventListener('DOMContentLoaded', () => {
     const outputs = document.querySelectorAll('.cli-output');
     outputs.forEach(output => {
         output.scrollTop = output.scrollHeight;
-        
+
         // Store initial output lengths
         const agentCard = output.closest('.agent-card');
         if (!agentCard || !agentCard.id) {
             return;
         }
-        
+
         const agentId = agentCard.id.replace('agent-', '');
         if (!agentId) {
             return;
         }
-        
+
         lastOutputLengths[agentId] = output.textContent.length;
     });
 
@@ -260,28 +292,28 @@ document.getElementById('agentList').addEventListener('click', async (e) => {
     if (e.target.classList.contains('delete-agent-btn')) {
         const agentId = e.target.getAttribute('data-agent-id');
         const agentCard = document.getElementById(`agent-${agentId}`);
-        
+
         try {
             const response = await fetch(`/delete_agent/${agentId}`, {
                 method: 'DELETE'
             });
-            
+
             const result = await response.json();
-            
+
             if (result.success) {
                 if (agentCard) {
                     // Add fade out animation
                     agentCard.style.transition = 'all 0.5s ease-out';
                     agentCard.style.opacity = '0';
                     agentCard.style.transform = 'translateY(20px)';
-                    
+
                     // Remove after animation
                     setTimeout(() => {
                         agentCard.remove();
                         delete lastOutputLengths[agentId];
                     }, 500);
                 }
-                
+
                 showToast(`Agent ${agentId} deleted successfully`, 'success');
             } else {
                 showToast(result.error || `Failed to delete agent ${agentId}`, 'error');
@@ -308,9 +340,9 @@ document.getElementById('deleteAllAgents').addEventListener('click', async () =>
             const response = await fetch(`/delete_agent/${agentId}`, {
                 method: 'DELETE'
             });
-            
+
             const result = await response.json();
-            
+
             if (result.success) {
                 agent.style.transition = 'all 0.5s ease-out';
                 agent.style.opacity = '0';
@@ -328,7 +360,7 @@ document.getElementById('deleteAllAgents').addEventListener('click', async () =>
 
     // Show result message
     showToast(
-        `Deleted ${successCount} agent${successCount !== 1 ? 's' : ''}` + 
+        `Deleted ${successCount} agent${successCount !== 1 ? 's' : ''}` +
         (errorCount > 0 ? `. Failed to delete ${errorCount} agent${errorCount !== 1 ? 's' : ''}.` : '.'),
         errorCount > 0 ? 'error' : 'success'
     );
@@ -346,7 +378,7 @@ document.addEventListener('keydown', (e) => {
         return;
     }
 
-    switch(e.key.toLowerCase()) {
+    switch (e.key.toLowerCase()) {
         case 'r':
             // Force refresh
             e.preventDefault();
