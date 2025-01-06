@@ -191,6 +191,10 @@ def update_model_config():
                 'error': 'Missing required fields. Need orchestrator_model, aider_model, and agent_model'
             }), 400
         
+        # Get existing config to preserve aider_prompt_suffix if not provided
+        existing_config = get_model_config()
+        aider_prompt_suffix = data.get('aider_prompt_suffix', existing_config.get('aider_prompt_suffix', ''))
+        
         # Save to database
         with sqlite3.connect(DATABASE_PATH) as conn:
             cursor = conn.cursor()
@@ -200,12 +204,13 @@ def update_model_config():
             cursor.execute("""
                 INSERT INTO model_config (
                     orchestrator_model, aider_model, agent_model, 
-                    created_at, updated_at
-                ) VALUES (?, ?, ?, ?, ?)
+                    aider_prompt_suffix, created_at, updated_at
+                ) VALUES (?, ?, ?, ?, ?, ?)
             """, (
                 data['orchestrator_model'],
                 data['aider_model'],
                 data['agent_model'],
+                aider_prompt_suffix,
                 datetime.datetime.now().isoformat(),
                 datetime.datetime.now().isoformat()
             ))

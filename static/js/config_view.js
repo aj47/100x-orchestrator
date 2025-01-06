@@ -14,7 +14,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 orchestrator_model: document.getElementById('orchestratorModel').value.trim(),
                 aider_model: document.getElementById('aiderModel').value.trim(),
                 agent_model: document.getElementById('agentModel').value.trim(),
-                aider_prompt_suffix: document.getElementById('aiderPromptSuffix').value.trim()
+                aider_prompt_suffix: document.getElementById('aiderPromptSuffix').value.trim() || ''
             };
 
 
