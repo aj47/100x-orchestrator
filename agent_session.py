@@ -47,9 +47,20 @@ class AgentSession:
             # Start aider process with unbuffered output and console mode
             # Get the configured aider model and prompt suffix
             from database import get_model_config
-            config = get_model_config()
-            aider_model = config.get('aider_model') if config else 'openrouter/google/gemini-flash-1.5'
-            aider_prompt_suffix = config.get('aider_prompt_suffix', '') if config else ''
+            try:
+                config = get_model_config()
+                if not config:
+                    logging.warning("No model config found, using defaults")
+                    config = {
+                        'aider_model': 'openrouter/google/gemini-flash-1.5',
+                        'aider_prompt_suffix': ''
+                    }
+                aider_model = config.get('aider_model', 'openrouter/google/gemini-flash-1.5')
+                aider_prompt_suffix = config.get('aider_prompt_suffix', '')
+            except Exception as e:
+                logging.error(f"Error getting model config: {e}")
+                aider_model = 'openrouter/google/gemini-flash-1.5'
+                aider_prompt_suffix = ''
             
             # Log the configuration being used
             logging.info(f"Starting Aider with model: {aider_model}")
