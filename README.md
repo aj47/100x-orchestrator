@@ -74,7 +74,10 @@ The 100x-orchestrator system consists of three key components:
 
    ```bash
    pip install -r requirements.txt
+   pipx install aider-chat
    ```
+
+   **Note**: Currently, this project only works with the OpenRouter provider.
 
 ## Configuration
 
@@ -165,9 +168,9 @@ To change the defaults:
 
 ## Technical Stack
 
-- Python 3.8+
+- Python 3.10+
 - Flask
-- Aider
+- [Aider](https://aider.chat/): AI coding assistant
 - Git
 - LiteLLM
 - Threading
