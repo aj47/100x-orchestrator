@@ -26,7 +26,14 @@ document.addEventListener('DOMContentLoaded', () => {
                 body: JSON.stringify(configData)
             });
 
+            if (!response.ok) {
+                throw new Error(`HTTP error! status: ${response.status}`);
+            }
+
             const data = await response.json();
+            if (!data) {
+                throw new Error('No data received from server');
+            }
             
             resultDiv.style.display = 'block';
             if (data.success) {
@@ -50,8 +57,16 @@ async function loadCurrentConfig() {
     
     try {
         const response = await fetch('/config/models');
-        const {success, config, error} = await response.json();
-        
+        if (!response.ok) {
+            throw new Error(`HTTP error! status: ${response.status}`);
+        }
+
+        const result = await response.json();
+        if (!result) {
+            throw new Error('No data received from server');
+        }
+
+        const {success, config, error} = result;
         if (!success) {
             throw new Error(error || 'Failed to load config');
         }
