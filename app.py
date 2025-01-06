@@ -239,33 +239,35 @@ def get_model_config():
             if config:
                 config_dict = dict(config)
                 # Ensure all required fields are present
-                required_fields = ['orchestrator_model', 'aider_model', 'agent_model']
+                required_fields = ['orchestrator_model', 'aider_model', 'agent_model', 'aider_prompt_suffix']
                 for field in required_fields:
                     if field not in config_dict:
                         config_dict[field] = {
                             'orchestrator_model': 'openrouter/google/gemini-flash-1.5',
                             'aider_model': 'openrouter/google/gemini-flash-1.5',
-                            'agent_model': 'openrouter/google/gemini-flash-1.5'
+                            'agent_model': 'openrouter/google/gemini-flash-1.5',
+                            'aider_prompt_suffix': ''
                         }[field]
-                return jsonify({
+                return {
                     'success': True,
                     'config': config_dict
-                })
+                }
             else:
                 # Return default values if no config exists
-                return jsonify({
+                return {
                     'success': True,
                     'config': {
                         'orchestrator_model': 'openrouter/google/gemini-flash-1.5',
                         'aider_model': 'openrouter/google/gemini-flash-1.5',
-                        'agent_model': 'openrouter/google/gemini-flash-1.5'
+                        'agent_model': 'openrouter/google/gemini-flash-1.5',
+                        'aider_prompt_suffix': ''
                     }
-                })
+                }
     except Exception as e:
-        return jsonify({
+        return {
             'success': False,
             'error': str(e)
-        }), 500
+        }, 500
 
 @app.route('/config')
 def config_view():
