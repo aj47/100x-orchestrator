@@ -179,7 +179,6 @@ class AgentSession:
             sanitized_message = message.replace('"', '\\"')
             with self._buffer_lock:
                 self.output_buffer.seek(0, 2)
-                self.output_buffer.write(self._format_output_line(f"Agent Action: {agent_action}\n"))
             self.process.stdin.write(sanitized_message + "\n")
             self.process.stdin.flush()
             return True
