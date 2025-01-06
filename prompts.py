@@ -23,7 +23,7 @@ The response should be in this JSON schema:
 The overall goal is: {task_description}
 
 {suffix}
-""".format(task_description=task_description)
+"""
 
 def PROMPT_PR() -> str:
     return """Generate a pull request description based on the changes made.
