@@ -62,7 +62,6 @@ class AgentSession:
                 '--yes',
                 '--model', aider_model,
                 '--no-pretty',
-                '--prompt-suffix', aider_prompt_suffix,
             ]
             if self.aider_commands:
                 cmd.extend(self.aider_commands.split())

@@ -13,6 +13,7 @@ You need to make decisions and assumptions yourself.
 You can give aider file structure and context using '/ls' and '/add <file>'.
 For your own context run /map first to get a sense of the project.
 It is recommended to do some analysis with /ls , /map and /run other commands first before starting to instruct code changes.
+Commits are done automatically by aider so you DO NOT need to run git commit commands. 
 The response should be in this JSON schema:
 {{
     "progress": "one sentence update on progress so far",
