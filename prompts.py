@@ -17,7 +17,7 @@ The response should be in this JSON schema:
 {{
     "progress": "one sentence update on progress so far",
     "thought": "one sentence rationale",
-    "action":  "/instruct <message>" | "/ls" | "/git <git command>" | "/add <file>" | "/finish" | "/run <shell_command>" | "/map" | "/test",
+    "action":  "/instruct <message>" | "/ls" | "/git <git command>" | "/add <file>" | "/finish" | "/run <shell_command>" | "/map",
     "future": "one sentence prediction",
 }}
 The overall goal is: {task_description}
