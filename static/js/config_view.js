@@ -10,17 +10,22 @@ document.addEventListener('DOMContentLoaded', () => {
         const alertDiv = resultDiv.querySelector('.alert');
         
         try {
+            const configData = {
+                orchestrator_model: document.getElementById('orchestratorModel').value,
+                aider_model: document.getElementById('aiderModel').value,
+                agent_model: document.getElementById('agentModel').value,
+                aider_prompt_suffix: document.getElementById('aiderPromptSuffix').value
+            };
+
+            // Save to localStorage
+            localStorage.setItem('modelConfig', JSON.stringify(configData));
+
             const response = await fetch('/config/models', {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
                 },
-                body: JSON.stringify({
-                    orchestrator_model: document.getElementById('orchestratorModel').value,
-                    aider_model: document.getElementById('aiderModel').value,
-                    agent_model: document.getElementById('agentModel').value,
-                    aider_prompt_suffix: document.getElementById('aiderPromptSuffix').value
-                })
+                body: JSON.stringify(configData)
             });
 
             const data = await response.json();
@@ -53,28 +58,31 @@ async function loadCurrentConfig() {
             throw new Error(error || 'Failed to load config');
         }
 
+        // Load from localStorage if available
+        const localConfig = JSON.parse(localStorage.getItem('modelConfig') || '{}');
+        
         currentConfig.innerHTML = `
             <div class="row">
                 ${['orchestrator', 'aider', 'agent'].map(type => `
                     <div class="col-md-4">
                         <h6>${type.charAt(0).toUpperCase() + type.slice(1)} Model</h6>
-                        <p>${config[`${type}_model`]}</p>
+                        <p>${localConfig[`${type}_model`] || config[`${type}_model`]}</p>
                     </div>
                 `).join('')}
             </div>
-            ${config.aider_prompt_suffix ? `
+            ${(localConfig.aider_prompt_suffix || config.aider_prompt_suffix) ? `
             <div class="mt-3">
                 <h6>Additional Instructions</h6>
-                <pre class="bg-light text-dark p-2 rounded">${config.aider_prompt_suffix}</pre>
+                <pre class="bg-light text-dark p-2 rounded">${localConfig.aider_prompt_suffix || config.aider_prompt_suffix}</pre>
             </div>
             ` : ''}
         `;
 
-        // Populate form fields
+        // Populate form fields from localStorage if available, otherwise from server config
         ['orchestrator', 'aider', 'agent'].forEach(type => {
-            document.getElementById(`${type}Model`).value = config[`${type}_model`];
+            document.getElementById(`${type}Model`).value = localConfig[`${type}_model`] || config[`${type}_model`];
         });
-        document.getElementById('aiderPromptSuffix').value = config.aider_prompt_suffix || '';
+        document.getElementById('aiderPromptSuffix').value = localConfig.aider_prompt_suffix || config.aider_prompt_suffix || '';
     } catch (error) {
         currentConfig.innerHTML = `
             <div class="alert alert-danger">
