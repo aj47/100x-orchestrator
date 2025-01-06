@@ -102,8 +102,11 @@ async function fetchUpdates() {
         
         // Update each agent's output
         const agents = document.querySelectorAll('.agent-card');
-        agents.forEach(agent => {
+        for (let i = 0; i < agents.length; i++) {
+            const agent = agents[i];
             const agentId = agent.id.replace('agent-', '');
+            if (agentId === "{{ agent_id }}")
+                continue;
             const newAgentCard = tempDiv.querySelector(`#agent-${agentId}`);
             
             if (newAgentCard) {
@@ -165,7 +168,7 @@ async function fetchUpdates() {
                     currentCritique.innerHTML = newCritique.innerHTML;
                 }
             }
-        });
+        };
     } catch (error) {
         console.error('Error fetching updates:', error);
     }
