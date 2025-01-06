@@ -45,14 +45,15 @@ class AgentSession:
             startupinfo.dwFlags |= subprocess.STARTF_USESHOWWINDOW
 
             # Start aider process with unbuffered output and console mode
-            # Get the configured aider model
+            # Get the configured aider model and prompt suffix
             from database import get_model_config
             config = get_model_config()
-            aider_model = config.get('aider_model') if config else None
-            if not aider_model:
-                from database import get_model_config
-                config = get_model_config()
-                aider_model = config.get('aider_model') if config else 'openrouter/google/gemini-flash-1.5'
+            aider_model = config.get('aider_model') if config else 'openrouter/google/gemini-flash-1.5'
+            aider_prompt_suffix = config.get('aider_prompt_suffix', '') if config else ''
+            
+            # Log the configuration being used
+            logging.info(f"Starting Aider with model: {aider_model}")
+            logging.info(f"Using prompt suffix: {aider_prompt_suffix}")
 
             cmd = [
                 'aider',
@@ -61,6 +62,7 @@ class AgentSession:
                 '--yes',
                 '--model', aider_model,
                 '--no-pretty',
+                '--prompt-suffix', aider_prompt_suffix,
             ]
             if self.aider_commands:
                 cmd.extend(self.aider_commands.split())
