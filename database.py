@@ -22,6 +22,7 @@ def init_db():
                     orchestrator_model TEXT NOT NULL DEFAULT 'openrouter/google/gemini-flash-1.5',
                     aider_model TEXT NOT NULL DEFAULT 'openrouter/google/gemini-flash-1.5',
                     agent_model TEXT NOT NULL DEFAULT 'openrouter/google/gemini-flash-1.5',
+                    aider_prompt_suffix TEXT DEFAULT '',
                     created_at TEXT NOT NULL,
                     updated_at TEXT NOT NULL
                 )
@@ -75,13 +76,14 @@ def init_db():
             if cursor.fetchone()[0] == 0:
                 cursor.execute("""
                     INSERT INTO model_config (
-                        orchestrator_model, aider_model, agent_model,
+                        orchestrator_model, aider_model, agent_model, aider_prompt_suffix,
                         created_at, updated_at
-                    ) VALUES (?, ?, ?, ?, ?)
+                    ) VALUES (?, ?, ?, ?, ?, ?)
                 """, (
                     'openrouter/google/gemini-flash-1.5',
                     'openrouter/google/gemini-flash-1.5',
                     'openrouter/google/gemini-flash-1.5',
+                    '',
                     datetime.now().isoformat(),
                     datetime.now().isoformat()
                 ))

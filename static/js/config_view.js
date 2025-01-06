@@ -11,10 +11,10 @@ document.addEventListener('DOMContentLoaded', () => {
         
         try {
             const configData = {
-                orchestrator_model: document.getElementById('orchestratorModel').value,
-                aider_model: document.getElementById('aiderModel').value,
-                agent_model: document.getElementById('agentModel').value,
-                aider_prompt_suffix: document.getElementById('aiderPromptSuffix').value
+                orchestrator_model: document.getElementById('orchestratorModel').value.trim(),
+                aider_model: document.getElementById('aiderModel').value.trim(),
+                agent_model: document.getElementById('agentModel').value.trim(),
+                aider_prompt_suffix: document.getElementById('aiderPromptSuffix').value.trim()
             };
 
             // Save to localStorage
