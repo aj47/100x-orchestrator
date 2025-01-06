@@ -2,10 +2,9 @@
 def PROMPT_AIDER(task_description: str) -> str:
     from database import get_model_config
     config = get_model_config()
-    prefix = config.get('aider_prompt_prefix', '') if config else ''
+    suffix = config.get('aider_prompt_suffix', '') if config else ''
     
-    return f"""{prefix}
-You are an expert software developer manager.
+    return f"""You are an expert software developer manager.
 You are talking to Aider, an AI programming assistant.
 Do not write code. 
 Only give instructions and commands.
@@ -22,6 +21,8 @@ The response should be in this JSON schema:
     "future": "one sentence prediction",
 }}
 The overall goal is: {task_description}
+
+{suffix}
 """.format(task_description=task_description)
 
 def PROMPT_PR() -> str:
