@@ -4,6 +4,10 @@ def PROMPT_AIDER(task_description: str) -> str:
     config = get_model_config()
     suffix = config.get('aider_prompt_suffix', '') if config else ''
     
+    # Ensure suffix has proper formatting if it exists
+    if suffix and not suffix.startswith('\n'):
+        suffix = '\n' + suffix
+    
     return f"""You are an expert software developer manager.
 You are talking to Aider, an AI programming assistant.
 Do not write code. 
