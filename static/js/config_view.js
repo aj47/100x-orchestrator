@@ -18,7 +18,8 @@ document.addEventListener('DOMContentLoaded', () => {
                 body: JSON.stringify({
                     orchestrator_model: document.getElementById('orchestratorModel').value,
                     aider_model: document.getElementById('aiderModel').value,
-                    agent_model: document.getElementById('agentModel').value
+                    agent_model: document.getElementById('agentModel').value,
+                    aider_prompt_prefix: document.getElementById('aiderPromptPrefix').value
                 })
             });
 
@@ -61,12 +62,19 @@ async function loadCurrentConfig() {
                     </div>
                 `).join('')}
             </div>
+            ${config.aider_prompt_prefix ? `
+            <div class="mt-3">
+                <h6>Aider Prompt Prefix</h6>
+                <pre class="bg-light text-dark p-2 rounded">${config.aider_prompt_prefix}</pre>
+            </div>
+            ` : ''}
         `;
 
         // Populate form fields
         ['orchestrator', 'aider', 'agent'].forEach(type => {
             document.getElementById(`${type}Model`).value = config[`${type}_model`];
         });
+        document.getElementById('aiderPromptPrefix').value = config.aider_prompt_prefix || '';
     } catch (error) {
         currentConfig.innerHTML = `
             <div class="alert alert-danger">

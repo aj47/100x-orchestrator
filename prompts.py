@@ -1,6 +1,11 @@
 #TODO: do not hardcode powershell, the LLM should be able to determine which Terminal is being used
 def PROMPT_AIDER(task_description: str) -> str:
-    return """You are an expert software developer manager.
+    from database import get_model_config
+    config = get_model_config()
+    prefix = config.get('aider_prompt_prefix', '') if config else ''
+    
+    return f"""{prefix}
+You are an expert software developer manager.
 You are talking to Aider, an AI programming assistant.
 Do not write code. 
 Only give instructions and commands.
