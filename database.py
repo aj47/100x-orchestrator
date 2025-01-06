@@ -12,8 +12,20 @@ def init_db():
         # Create database file if it doesn't exist
         DATABASE_PATH.parent.mkdir(parents=True, exist_ok=True)
         
+        # Check if database exists
+        db_exists = DATABASE_PATH.exists()
+        
         with sqlite3.connect(DATABASE_PATH) as conn:
             cursor = conn.cursor()
+            
+            # Enable foreign key support
+            cursor.execute("PRAGMA foreign_keys = ON")
+            
+            # Log database status
+            if db_exists:
+                print("Database exists, checking tables...")
+            else:
+                print("Creating new database...")
             
             # Create model_config table
             cursor.execute("""
@@ -71,9 +83,15 @@ def init_db():
                 )
             """)
             
+            # Verify tables exist
+            cursor.execute("SELECT name FROM sqlite_master WHERE type='table'")
+            tables = [row[0] for row in cursor.fetchall()]
+            print(f"Existing tables: {tables}")
+            
             # Insert default model config if none exists
             cursor.execute("SELECT COUNT(*) FROM model_config")
             if cursor.fetchone()[0] == 0:
+                print("Inserting default model config...")
                 cursor.execute("""
                     INSERT INTO model_config (
                         orchestrator_model, aider_model, agent_model, aider_prompt_suffix,
@@ -89,8 +107,10 @@ def init_db():
                 ))
             
             conn.commit()
+            print("Database initialization complete")
     except Exception as e:
         print(f"Error initializing database: {e}")
+        print("Database schema may be corrupted. Try deleting tasks.db and restarting.")
         raise
 
 def save_agent(agent_id: str, agent_data: Dict) -> bool:

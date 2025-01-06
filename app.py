@@ -305,4 +305,12 @@ def remove_agent(agent_id):
         }), 500
 
 if __name__ == '__main__':
-    app.run(debug=True, use_reloader=False)
+    try:
+        # Verify database is initialized
+        from database import init_db
+        init_db()
+        
+        app.run(debug=True, use_reloader=False)
+    except Exception as e:
+        print(f"Fatal error during startup: {e}")
+        print("Try deleting tasks.db and restarting the application")
