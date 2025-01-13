@@ -41,8 +41,10 @@ class AgentSession:
             env = os.environ.copy()
             env['PYTHONUNBUFFERED'] = '1'
             env['PYTHONIOENCODING'] = 'utf-8'
-            startupinfo = subprocess.STARTUPINFO()
-            startupinfo.dwFlags |= subprocess.STARTF_USESHOWWINDOW
+            startupinfo = None
+            if sys.platform == 'win32':
+                startupinfo = subprocess.STARTUPINFO()
+                startupinfo.dwFlags |= subprocess.STARTF_USESHOWWINDOW
 
             # Start aider process with unbuffered output and console mode
             # Get the configured aider model and prompt suffix
@@ -88,7 +90,7 @@ class AgentSession:
                 bufsize=1,
                 universal_newlines=True,
                 env=env,
-                creationflags=subprocess.CREATE_NO_WINDOW
+                creationflags=subprocess.CREATE_NO_WINDOW if sys.platform == 'win32' else 0
             )
             stdout_thread = threading.Thread(
                 target=self._read_output, 
