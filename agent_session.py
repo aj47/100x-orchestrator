@@ -80,7 +80,7 @@ class AgentSession:
                 cmd.extend(self.aider_commands.split())
             self.process = subprocess.Popen(
                 cmd,
-                shell=True,
+                shell=False,
                 cwd=str(Path(self.workspace_path).resolve()),
                 stdout=subprocess.PIPE,
                 stderr=subprocess.PIPE,
