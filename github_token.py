@@ -35,8 +35,30 @@ class GitHubTokenManager:
             
         try:
             env_path = Path.home() / '.env'
-            with open(env_path, 'a') as f:
-                f.write(f"\nGITHUB_TOKEN={token}\n")
+            lines = []
+            token_exists = False
+            
+            # Read existing file if it exists
+            if env_path.exists():
+                with open(env_path, 'r') as f:
+                    lines = f.readlines()
+                
+                # Check if token already exists
+                for i, line in enumerate(lines):
+                    if line.startswith('GITHUB_TOKEN='):
+                        # Update existing token line
+                        lines[i] = f'GITHUB_TOKEN={token}\n'
+                        token_exists = True
+                        break
+            
+            # If token didn't exist, append it
+            if not token_exists:
+                lines.append(f'GITHUB_TOKEN={token}\n')
+            
+            # Write all lines back to file
+            with open(env_path, 'w') as f:
+                f.writelines(lines)
+                
             self.token = token
             os.environ['GITHUB_TOKEN'] = token
             return True
