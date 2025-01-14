@@ -197,6 +197,7 @@ def update_model_config():
         
         # Save to database
         with sqlite3.connect(DATABASE_PATH) as conn:
+            conn.execute("PRAGMA foreign_keys = ON")
             cursor = conn.cursor()
             # Delete any existing config
             cursor.execute("DELETE FROM model_config")
