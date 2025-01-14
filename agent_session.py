@@ -159,13 +159,15 @@ class AgentSession:
 
     def _echo_message(self, message: str) -> None:
         try:
-            echo_line = self._format_output_line(f"{message}")
-            echo_line = echo_line.replace('class="output-line"', 'class="output-line user-message"')
-            with threading.Lock():
+            # Create a user message with proper formatting
+            formatted_message = f"User: {message}"
+            echo_line = self._format_output_line(formatted_message)
+            echo_line = echo_line.replace('output-line', 'output-line user-message')
+            with self._buffer_lock:
                 self.output_buffer.seek(0, 2)
                 self.output_buffer.write(echo_line)
         except Exception as e:
-            pass
+            logging.error(f"Error echoing message: {e}")
 
     def is_ready(self) -> bool:
         try:
@@ -183,7 +185,7 @@ class AgentSession:
         except Exception as e:
             return False
 
-    def send_message(self, message: str, agent_action: str, timeout: int = 10) -> bool:
+    def send_message(self, message: str, timeout: int = 10) -> bool:
         try:
             if not self.process or self.process.poll() is not None:
                 if self.start():
@@ -204,6 +206,17 @@ class AgentSession:
     def _format_output_line(self, line: str) -> str:
         if not line.strip():
             return ''
+        
+        # Determine CSS class based on line content
+        if line.startswith('>'):
+            css_class = 'output-line agent-response'
+        elif line.startswith('?'):
+            css_class = 'output-line agent-question'
+        elif 'error' in line.lower():
+            css_class = 'output-line error-message'
+        else:
+            css_class = 'output-line'
+            
         formatted_line = (
             line.replace('&', '&amp;')
                 .replace('<', '&lt;')
@@ -211,7 +224,7 @@ class AgentSession:
                 .replace('\n', '<br>')
                 .replace(' ', '&nbsp;')
         )
-        return f'\n\n{formatted_line}\n\n'
+        return f'<div class="{css_class}">{formatted_line}</div>'
 
     def cleanup(self) -> None:
         try:
