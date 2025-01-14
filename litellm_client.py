@@ -23,7 +23,6 @@ class LiteLLMClient:
         litellm.success_callback=["helicone"]
         
     def chat_completion(self, system_message: str = "", user_message: str = "", model_type="orchestrator", agent_id=0):
-        """Get a summary of the coding session logs using JSON mode"""
         # Get the appropriate model based on type
         from database import get_model_config
         config = get_model_config()
@@ -39,7 +38,6 @@ class LiteLLMClient:
         model = config.get(f"{model_type}_model", DEFAULT_MODELS[model_type]) if config else DEFAULT_MODELS[model_type]
         
         logging.info(f"Using {model_type} model: {model}")
-        """Get a summary of the coding session logs using JSON mode"""
         try:
             response = completion(
                 model=model,

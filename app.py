@@ -30,7 +30,7 @@ app = Flask(__name__)
 
 # Configure basic logging
 logging.basicConfig(
-    level=logging.DEBUG,
+    level=logging.WARNING,
     format='%(asctime)s - %(message)s',
     handlers=[
         logging.StreamHandler()
