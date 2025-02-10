@@ -1,5 +1,7 @@
 # 100x-orchestrator
 
+JOIN DISCORD FOR DISCUSSIONS https://discord.gg/UvptJDrCKS
+
 A web-based orchestration system for managing AI coding agents with advanced multi-layered architecture.
 
 ## Architecture Overview
