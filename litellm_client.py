@@ -9,16 +9,24 @@ from litellm import completion
 class LiteLLMClient:
     """Client for interacting with LLMs to get summaries with JSON mode"""
     
-    def __init__(self):
-        # Load environment variables from ~/.env
+    def __init__(self, provider: str = "openrouter"):
+        # Configuration for API keys
+        self.api_key_config = {
+            "openrouter": os.getenv("OPENROUTER_API_KEY"),
+            "togetherai": os.getenv("TOGETHERAI_API_KEY"),
+            # Add more providers as needed
+        }
+
+        # Load environment variables from ~/.env (fallback)
         env_path = Path.home() / '.env'
         if not load_dotenv(env_path):
             logging.warning(f"Could not load {env_path}")
-            
-        self.api_key = os.getenv('OPENROUTER_API_KEY')
-        
+
+        self.provider = provider
+        self.api_key = self.api_key_config.get(provider)
+
         if not self.api_key:
-            raise ValueError(f"OPENROUTER_API_KEY not found in {env_path}")
+            raise ValueError(f"API key for provider '{provider}' not found in environment variables or config.")
 
         litellm.success_callback=["helicone"]
         
@@ -37,7 +45,7 @@ class LiteLLMClient:
         # Get model from config or use default
         model = config.get(f"{model_type}_model", DEFAULT_MODELS[model_type]) if config else DEFAULT_MODELS[model_type]
         
-        logging.info(f"Using {model_type} model: {model}")
+        logging.info(f"Using {model_type} model: {model} with provider: {self.provider}")
         try:
             response = completion(
                 model=model,
@@ -70,5 +78,6 @@ class LiteLLMClient:
             return json.dumps({
                 "error": str(e),
                 "model": model,
-                "model_type": model_type
+                "model_type": model_type,
+                "provider": self.provider
             })
