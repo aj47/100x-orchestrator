@@ -15,35 +15,13 @@ class LiteLLMClient:
         if not load_dotenv(env_path):
             logging.warning(f"Could not load {env_path}")
             
-        self.openrouter_key = os.getenv('OPENROUTER_API_KEY')
-        self.together_key = os.getenv('TOGETHERAI_API_KEY')
+        self.api_key = os.getenv('OPENROUTER_API_KEY')
         
-        if not self.openrouter_key:
-            logging.warning(f"OPENROUTER_API_KEY not found in {env_path}")
-        if not self.together_key:
-            logging.warning(f"TOGETHERAI_API_KEY not found in {env_path}")
+        if not self.api_key:
+            raise ValueError(f"OPENROUTER_API_KEY not found in {env_path}")
 
         litellm.success_callback=["helicone"]
         
-    def _select_api_key(self, model: str, model_type: str) -> str:
-        """
-        Return the appropriate API key based on the model.
-        If the model string indicates a Together AI provider (e.g. starts with "together_ai/"),
-        return the TOGETHERAI_API_KEY; otherwise, return the OPENROUTER_API_KEY.
-        """
-        if model.startswith("together_ai/") or "together" in model.lower():
-            if self.together_key:
-                return self.together_key
-            else:
-                logging.error("TOGETHERAI_API_KEY not found")
-                raise ValueError("TOGETHERAI_API_KEY not found")
-        else:
-            if self.openrouter_key:
-                return self.openrouter_key
-            else:
-                logging.error("OPENROUTER_API_KEY not found")
-                raise ValueError("OPENROUTER_API_KEY not found")
-
     def chat_completion(self, system_message: str = "", user_message: str = "", model_type="orchestrator", agent_id=0):
         # Get the appropriate model based on type
         from database import get_model_config
@@ -61,14 +39,13 @@ class LiteLLMClient:
         
         logging.info(f"Using {model_type} model: {model}")
         try:
-            api_key = self._select_api_key(model, model_type)
             response = completion(
                 model=model,
                 messages=[
                     {"role": "system", "content": system_message},
                     {"role": "user", "content": user_message}
                 ],
-                api_key=api_key,
+                api_key=self.api_key,
                 metadata={
                     "agent_id": agent_id
                 },
