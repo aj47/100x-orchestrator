@@ -79,7 +79,10 @@ The 100x-orchestrator system consists of three key components:
    pipx install aider-chat
    ```
 
-   **Note**: Currently, this project only works with the OpenRouter provider.
+   **Note**: This project now supports multiple providers. You can configure API keys for any provider following the LiteLLM notation. For example, set your keys in the `.env` file like:
+   
+   OPENROUTER_API_KEY=your_openrouter_api_key
+   ANY_OTHER_API_KEY=your_other_provider_api_key
 
 ## Configuration
 
@@ -104,6 +107,10 @@ You need to set up environment variables to configure API keys and model choices
 
     ```
     MY_MODEL=provider/model_name
+    
+You can set default models for the Orchestrator, Aider, and Agent components by providing LiteLLM model strings. These strings now support multiple providers. For example:
+   
+MY_MODEL=together_ai/OpenAssistant/llama2-70b-oasst-sft-v10
     ```
     -   **Note**: LiteLLM model strings can be found [here](https://docs.litellm.ai/docs/providers).
 3. Add your `GITHUB_TOKEN` to the `.env` file:
