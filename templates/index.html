@@ -6,6 +6,12 @@
     <title>100x-orchestrator</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet">
     <link href="/static/css/styles.css" rel="stylesheet">
+    <style>
+        .task-list-container {
+            max-height: 200px; /* Adjust as needed */
+            overflow-y: auto;
+        }
+    </style>
 </head>
 <body class="bg-dark text-light" style="background-color: #121212 !important;">
     <div class="container">
@@ -16,7 +22,7 @@
                 <a href="/config" class="btn btn-secondary">Configuration</a>
             </div>
         </div>
-        
+
         <!-- Agent Overview -->
         <div class="card mb-4">
             <div class="card-header">
@@ -48,25 +54,28 @@
         <div class="card">
             <div class="card-body">
                 <h5 class="card-title">Create New Agents</h5>
+                <div class="mb-3">
+                    <input type="text" class="form-control" id="taskSearch" placeholder="Search tasks...">
+                </div>
                 <form id="agentForm">
                     <div class="form-group">
                         <label for="repoUrl">Git Repository URL</label>
                         <input type="text" class="form-control" id="repoUrl" required
                                placeholder="https://github.com/username/repo.git">
                     </div>
-                    
+
                     <div class="form-group">
                         <label for="agentCount">Number of Agents per Task</label>
-                        <input type="number" class="form-control" id="agentCount" 
-                               min="1" max="10" value="1" 
+                        <input type="number" class="form-control" id="agentCount"
+                               min="1" max="10" value="1"
                                placeholder="Number of agents to create for each task">
                     </div>
 
                     <div class="form-group">
                         <label for="githubToken">GitHub Token</label>
-                        <input type="password" class="form-control" id="githubToken" 
+                        <input type="password" class="form-control" id="githubToken"
                                placeholder="Enter your GitHub Personal Access Token">
-                        <small class="form-text text-muted">Required: Create a token with 'repo' scope at 
+                        <small class="form-text text-muted">Required: Create a token with 'repo' scope at
                             <a href="https://github.com/settings/tokens" target="_blank">GitHub Settings</a>
                         </small>
                     </div>
@@ -77,29 +86,29 @@
                                placeholder="--test-cmd pytest">
                         <small class="form-text text-muted">Optional: Add custom command line arguments for aider</small>
                     </div>
-                    
+
                     <div class="form-group">
                         <label>Tasks</label>
                         <div class="d-flex gap-2 mb-2">
                             <button type="button" id="addTask" class="btn btn-secondary btn-sm">+ Add Another Task</button>
                             <button type="button" id="fetchIssues" class="btn btn-info btn-sm">Load GitHub Issues</button>
                         </div>
-                        <div id="taskList">
+                        <div class="task-list-container" id="taskList">
                             <!-- Tasks will be dynamically populated here -->
                         </div>
+                        <button type="button" id="toggleTasks" class="btn btn-secondary mt-2">Show/Hide Tasks</button>
                     </div>
-                    
+
                     <button type="submit" class="btn btn-primary">Create Agents</button>
                 </form>
             </div>
         </div>
-        
+
         <div id="result" class="mt-4" style="display: none;">
             <div class="alert" role="alert"></div>
         </div>
     </div>
 
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
     <script src="/static/js/index.js"></script>
 </body>
