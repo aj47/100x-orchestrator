@@ -108,9 +108,11 @@ You need to set up environment variables to configure API keys and model choices
     ```
     MY_MODEL=provider/model_name
     
-You can set default models for the Orchestrator, Aider, and Agent components by providing LiteLLM model strings. These strings now support multiple providers. For example:
+You can set default models for the Orchestrator, Aider, and Agent components by providing LiteLLM model strings. These strings support any provider supported by LiteLLM. For example:
    
 MY_MODEL=together_ai/OpenAssistant/llama2-70b-oasst-sft-v10
+MY_MODEL=openai/gpt-4
+MY_MODEL=azure_openai/davinci
     ```
     -   **Note**: LiteLLM model strings can be found [here](https://docs.litellm.ai/docs/providers).
 3. Add your `GITHUB_TOKEN` to the `.env` file:
@@ -134,12 +136,12 @@ The database is automatically initialized when you first run the application.
 
 ### Model Configuration
 
-You can configure the default models for the Orchestrator, Aider, and Agent components. By default, all use `openrouter/google/gemini-flash-1.5`.
+You can configure the default models for the Orchestrator, Aider, and Agent components. By default, all use `openrouter/google/gemini-flash-1.5`. You can use any provider supported by LiteLLM.
 
 To change the defaults:
 
 1. Go to the "Configuration" section in the web interface.
-2. Enter the desired LiteLLM model strings.
+2. Enter the desired LiteLLM model strings, such as `openai/gpt-4`, `azure_openai/davinci`, or `together_ai/OpenAssistant/llama2-70b-oasst-sft-v10`.
 3. Click "Update Configuration".
 
 ### Usage
