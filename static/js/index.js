@@ -109,6 +109,13 @@ function loadStoredValues() {
     if (savedRepo) {
         document.getElementById('repoUrl').value = savedRepo;
     }
+
+    // Load tasks visibility from localStorage
+    const showTasks = loadFromStorage('showTasks');
+    if (showTasks !== null) {
+        document.getElementById('toggleTasks').textContent = showTasks === 'true' ? 'Hide Tasks' : 'Show Tasks';
+        document.getElementById('taskList').style.display = showTasks === 'true' ? 'block' : 'none';
+    }
 }
 
 document.addEventListener('DOMContentLoaded', async () => {
@@ -123,6 +130,8 @@ document.addEventListener('DOMContentLoaded', async () => {
     const taskList = document.getElementById('taskList');
     const repoUrl = document.getElementById('repoUrl');
     const addTaskButton = document.getElementById('addTask');
+    const taskSearch = document.getElementById('taskSearch');
+    const toggleTasksButton = document.getElementById('toggleTasks');
 
     // Function to create a task item
     function createTaskItem(initialValue = '', isFirst = false) {
@@ -210,7 +219,6 @@ document.addEventListener('DOMContentLoaded', async () => {
             const issues = await response.json();
 
             // Clear existing tasks
-            const taskList = document.getElementById('taskList');
             taskList.innerHTML = '';
 
             // Create issue selection UI
@@ -225,7 +233,7 @@ document.addEventListener('DOMContentLoaded', async () => {
                 checkbox.type = 'checkbox';
                 checkbox.id = `issue-${issue.id}`;
                 checkbox.value = issue.id;
-                
+
                 // Add change event listener to checkbox
                 checkbox.addEventListener('change', () => {
                     if (checkbox.checked) {
@@ -238,7 +246,7 @@ document.addEventListener('DOMContentLoaded', async () => {
                     } else {
                         // Remove task when unchecked
                         const tasks = Array.from(taskList.querySelectorAll('.task-item'));
-                        const matchingTask = tasks.find(task => 
+                        const matchingTask = tasks.find(task =>
                             task.querySelector('.task-title').value === issue.title
                         );
                         if (matchingTask) {
@@ -249,10 +257,10 @@ document.addEventListener('DOMContentLoaded', async () => {
 
                 const label = document.createElement('label');
                 label.htmlFor = `issue-${issue.id}`;
-                
+
                 const titleSpan = document.createElement('span');
                 titleSpan.textContent = issue.title;
-                
+
                 const numberSpan = document.createElement('span');
                 numberSpan.className = 'issue-number';
                 numberSpan.textContent = `#${issue.number}`;
@@ -280,6 +288,30 @@ document.addEventListener('DOMContentLoaded', async () => {
             alertDiv.className = 'alert alert-danger';
             alertDiv.textContent = `Error loading GitHub issues: ${error.message}`;
         }
+    });
+
+    // Search functionality
+    taskSearch.addEventListener('input', () => {
+        const searchTerm = taskSearch.value.toLowerCase();
+        const taskItems = taskList.querySelectorAll('.task-item');
+        taskItems.forEach(item => {
+            const title = item.querySelector('.task-title').value.toLowerCase();
+            const description = item.querySelector('.task-description').value.toLowerCase();
+            if (title.includes(searchTerm) || description.includes(searchTerm)) {
+                item.style.display = 'block';
+            } else {
+                item.style.display = 'none';
+            }
+        });
+    });
+
+    // Toggle tasks visibility
+    toggleTasksButton.addEventListener('click', () => {
+        const taskList = document.getElementById('taskList');
+        const isVisible = taskList.style.display !== 'none';
+        taskList.style.display = isVisible ? 'none' : 'block';
+        toggleTasksButton.textContent = isVisible ? 'Show Tasks' : 'Hide Tasks';
+        saveToStorage('showTasks', !isVisible);
     });
 
     // Form submission
@@ -347,3 +379,4 @@ document.addEventListener('DOMContentLoaded', async () => {
         }
     });
 });
+
