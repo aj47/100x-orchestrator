@@ -1,28 +1,44 @@
 import os
-import sys
 import pytest
+from unittest.mock import patch, MagicMock
 from pathlib import Path
-
-# Add project root to Python path
-project_root = str(Path(__file__).parent.parent)
-sys.path.insert(0, project_root)
+import tempfile
 
 @pytest.fixture
-def temp_workspace():
-    """Create a temporary workspace for testing."""
-    import tempfile
-    with tempfile.TemporaryDirectory() as tmpdir:
-        old_cwd = os.getcwd()
-        os.chdir(tmpdir)
-        yield tmpdir
-        os.chdir(old_cwd)
+def mock_env_vars(monkeypatch):
+    """Fixture to mock environment variables."""
+    with patch.dict(os.environ, clear=True):
+        yield monkeypatch.setenv
 
 @pytest.fixture
-def mock_github_token():
-    """Mock GitHub token for testing."""
-    return "mock_github_token_12345"
+def mock_api_key_file(tmp_path):
+    """Fixture to create a temporary API key file."""
+    api_key_file = tmp_path / "api_key.txt"
+    api_key_file.write_text("mock_api_key_from_file")
+    yield str(api_key_file)
 
 @pytest.fixture
-def mock_litellm_api_key():
-    """Mock LiteLLM API key for testing."""
-    return "mock_litellm_api_key_12345"
+def mock_completion():
+    """Fixture to mock litellm.completion."""
+    mock_completion = MagicMock()
+    mock_completion.return_value = {
+        'choices': [{'message': {'content': '{"result": "test"}'}}]
+    }
+    return mock_completion
+
+@pytest.fixture
+def mock_db_config():
+    """Fixture for a mock database configuration."""
+    return {
+        'model_config': {
+            'provider': 'openai',
+            'api_key_source': 'env:OPENAI_API_KEY'
+        }
+    }
+
+@pytest.fixture
+def mock_db(monkeypatch, mock_db_config):
+    """Fixture to mock database interactions."""
+    with patch('database.get_model_config', return_value=mock_db_config['model_config']):
+        yield
+
