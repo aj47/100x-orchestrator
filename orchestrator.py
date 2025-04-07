@@ -105,6 +105,7 @@ def initialiseCodingAgent(repository_url: str = None, task_description: str = No
     created_agent_ids = []
     try:
         tasks_data = load_tasks()
+        model_config = get_model_config()
         agent_config = tasks_data.get('config', {}).get('agent_session', {})
         for i in range(num_agents):
             agent_id = str(uuid.uuid4())
@@ -248,7 +249,8 @@ def main_loop():
     pr_manager = PullRequestManager()
     """Main orchestration loop to manage agents."""
     logging.info("Starting main loop")
-    litellm_client = LiteLLMClient()  # Create LiteLLM client instance
+    model_config = get_model_config()
+    litellm_client = LiteLLMClient(provider=model_config.get('provider'), api_key=model_config.get('orchestrator_api_key'))  # Create LiteLLM client instance
     while True:
         try:
             tasks_data = load_tasks()
@@ -270,12 +272,13 @@ def main_loop():
                                 PROMPT_AIDER(agent_session.task),
                                 session_logs,
                                 model_type="agent",
-                                agent_id=agent_id
+                                provider=model_config.get('provider'),
+                                api_key=model_config.get('agent_api_key')
                             )
                             logging.info(f"Agent {agent_id} response: {follow_up_message}")
                             if agent_id in tasks_data['agents']:
                                 try:
-                                    follow_up_data = json.loads(follow_up_message)
+                                    follow_up_data = json.loads(follow_up_message.response)
                                     current_time = datetime.datetime.now().isoformat()
                                     if 'progress_history' not in tasks_data['agents'][agent_id]:
                                         tasks_data['agents'][agent_id]['progress_history'] = []
@@ -303,7 +306,7 @@ def main_loop():
                                     logging.error(f"Invalid JSON in follow_up_message: {follow_up_message}")
                             if agent_id in prompt_processors:
                                 processor = prompt_processors[agent_id]
-                                action = processor.process_response(agent_id, follow_up_message)
+                                action = processor.process_response(agent_id, follow_up_message.response)
                                 if agent_id in aider_sessions:
                                     action_message = f'\n\n [AGENT ACTION]: {action} \n\n'
                                     aider_sessions[agent_id].output_buffer.write(action_message)

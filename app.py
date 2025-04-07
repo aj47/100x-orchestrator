@@ -183,12 +183,12 @@ def update_model_config():
     """Update the model configuration for orchestrator, aider and agent."""
     try:
         data = request.get_json()
-        required_fields = ['orchestrator_model', 'aider_model', 'agent_model']
+        required_fields = ['orchestrator_model', 'aider_model', 'agent_model', 'orchestrator_api_key', 'aider_api_key', 'agent_api_key', 'provider']
         
         if not all(field in data for field in required_fields):
             return jsonify({
                 'success': False,
-                'error': 'Missing required fields. Need orchestrator_model, aider_model, and agent_model'
+                'error': 'Missing required fields. Need orchestrator_model, aider_model, agent_model, orchestrator_api_key, aider_api_key, agent_api_key and provider'
             }), 400
         
         # Get existing config to preserve aider_prompt_suffix if not provided
@@ -205,15 +205,20 @@ def update_model_config():
             cursor.execute("""
                 INSERT INTO model_config (
                     orchestrator_model, aider_model, agent_model, 
-                    aider_prompt_suffix, created_at, updated_at
-                ) VALUES (?, ?, ?, ?, ?, ?)
+                    aider_prompt_suffix, created_at, updated_at,
+                    orchestrator_api_key, aider_api_key, agent_api_key, provider
+                ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
             """, (
                 data['orchestrator_model'],
                 data['aider_model'],
                 data['agent_model'],
                 aider_prompt_suffix,
                 datetime.datetime.now().isoformat(),
-                datetime.datetime.now().isoformat()
+                datetime.datetime.now().isoformat(),
+                data['orchestrator_api_key'],
+                data['aider_api_key'],
+                data['agent_api_key'],
+                data['provider']
             ))
             conn.commit()
             
@@ -240,14 +245,18 @@ def get_model_config():
             if config:
                 config_dict = dict(config)
                 # Ensure all required fields are present
-                required_fields = ['orchestrator_model', 'aider_model', 'agent_model', 'aider_prompt_suffix']
+                required_fields = ['orchestrator_model', 'aider_model', 'agent_model', 'aider_prompt_suffix', 'orchestrator_api_key', 'aider_api_key', 'agent_api_key', 'provider']
                 for field in required_fields:
                     if field not in config_dict:
                         config_dict[field] = {
                             'orchestrator_model': 'openrouter/google/gemini-flash-1.5',
                             'aider_model': 'openrouter/google/gemini-flash-1.5',
                             'agent_model': 'openrouter/google/gemini-flash-1.5',
-                            'aider_prompt_suffix': ''
+                            'aider_prompt_suffix': '',
+                            'orchestrator_api_key': '',
+                            'aider_api_key': '',
+                            'agent_api_key': '',
+                            'provider': ''
                         }[field]
                 return {
                     'success': True,
@@ -261,7 +270,11 @@ def get_model_config():
                         'orchestrator_model': 'openrouter/google/gemini-flash-1.5',
                         'aider_model': 'openrouter/google/gemini-flash-1.5',
                         'agent_model': 'openrouter/google/gemini-flash-1.5',
-                        'aider_prompt_suffix': ''
+                        'aider_prompt_suffix': '',
+                        'orchestrator_api_key': '',
+                        'aider_api_key': '',
+                        'agent_api_key': '',
+                        'provider': ''
                     }
                 }
     except Exception as e:
