@@ -17,7 +17,7 @@ from agent_session import AgentSession, normalize_path
 
 from database import (
     save_agent, get_agent, get_all_agents, delete_agent as db_delete_agent,
-    save_task, get_all_tasks, save_config, get_config
+    save_task, get_all_tasks, save_config, get_config, get_model_config # Added import
 )
 
 # Configuration
