@@ -1,6 +1,6 @@
 import pytest
 from litellm_client import LiteLLMClient
-from unittest.mock import patch
+from unittest.mock import patch, MagicMock
 
 def test_litellm_client_init_default():
     client = LiteLLMClient()

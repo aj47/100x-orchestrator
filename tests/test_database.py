@@ -2,6 +2,7 @@ import pytest
 import sqlite3
 from pathlib import Path
 from database import get_model_config, save_config
+from unittest.mock import patch, MagicMock
 
 @pytest.fixture
 def db_path(tmp_path):
