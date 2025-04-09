@@ -11,6 +11,12 @@ DATABASE_PATH = Path("tasks.db")
 class TasksJsonLogFilter(logging.Filter):
     def filter(self, record):
         # Suppress log messages for tasks.json requests
+        """
+        Filters out log records for /tasks/tasks.json requests.
+        
+        This method inspects the log record's message and returns False if it contains
+        the substring '/tasks/tasks.json', thereby suppressing those log entries.
+        """
         return not ('/tasks/tasks.json' in record.getMessage())
 from orchestrator import (
     initialiseCodingAgent, 
@@ -43,17 +49,36 @@ for handler in logging.getLogger().handlers:
 
 @app.route('/')
 def index():
+    """
+    Renders the index page.
+    
+    Returns:
+        The rendered HTML content of the index page.
+    """
     return render_template('index.html')
 
 @app.route('/tasks/tasks.json')
 def serve_tasks_json():
-    """Serve tasks data in JSON format from database."""
+    """
+    Return tasks as a JSON response.
+    
+    Fetches task data from the database using load_tasks() and returns the results
+    formatted as JSON via Flask's jsonify.
+    """
     tasks_data = load_tasks()
     return jsonify(tasks_data)
 
 @app.route('/agents')
 def agent_view():
-    """Render the agent view with all agent details."""
+    """
+    Render the agent view page with updated agent details.
+    
+    Loads the current tasks and agent data, ensuring each agent has default fields for output
+    and progress tracking. If any required fields are missing (such as 'aider_output', 'last_updated',
+    'progress', 'thought', 'future', or 'last_action'), they are initialized with default values.
+    The updated tasks data is then saved before rendering the 'agent_view.html' template with the agent
+    information.
+    """
     tasks_data = load_tasks()
     agents = tasks_data.get('agents', {})
     
@@ -81,6 +106,15 @@ def agent_view():
 
 @app.route('/create_agent', methods=['POST'])
 def create_agent():
+    """
+    Creates coding agents based on the request payload.
+    
+    Parses the JSON body for a repository URL, task details, the number of agents to
+    create, and optional aider commands. Requires a valid GitHub token in the 'X-GitHub-Token'
+    header. For each specified task, initializes coding agents and updates the stored tasks,
+    ensuring that the main orchestration loop is running. Returns a JSON response with the
+    created agent IDs upon success or an error message and corresponding HTTP status code on failure.
+    """
     try:
         data = request.get_json()
         repo_url = data.get('repo_url')
@@ -180,7 +214,17 @@ def create_agent():
 
 @app.route('/config/models', methods=['POST'])
 def update_model_config():
-    """Update the model configuration for orchestrator, aider and agent."""
+    """
+    Update model configuration using JSON payload.
+    
+    Retrieves configuration settings for orchestrator, aider, and agent models along with their
+    API keys and provider information from the request's JSON data. Validates that all required
+    fields (orchestrator_model, aider_model, agent_model, orchestrator_api_key, aider_api_key,
+    agent_api_key, and provider) are present and returns a 400 error if any are missing.
+    If validation succeeds, it preserves the current aider_prompt_suffix (if not provided in the payload),
+    clears any existing configuration, and saves the new settings with current timestamps.
+    Returns a JSON response indicating success, or a 500 error response with details of any exceptions.
+    """
     try:
         data = request.get_json()
         required_fields = ['orchestrator_model', 'aider_model', 'agent_model', 'orchestrator_api_key', 'aider_api_key', 'agent_api_key', 'provider']
@@ -234,7 +278,22 @@ def update_model_config():
 
 @app.route('/config/models', methods=['GET'])
 def get_model_config():
-    """Get the current model configuration."""
+    """
+    Retrieve the current model configuration from the database.
+    
+    Connects to the SQLite database, fetches the most recent configuration from the
+    model_config table, and ensures that all required fields are present by providing
+    default values for any missing entries. The required fields include:
+    'orchestrator_model', 'aider_model', 'agent_model', 'aider_prompt_suffix',
+    'orchestrator_api_key', 'aider_api_key', 'agent_api_key', and 'provider'. If no
+    configuration is found, a default configuration is returned. In case of an exception,
+    an error response along with an HTTP status code of 500 is returned.
+    
+    Returns:
+        dict or tuple: On success, returns a dictionary with keys 'success' (bool) and
+        'config' (dict) representing the model configuration. On failure, returns a tuple
+        containing an error dictionary and the status code 500.
+    """
     try:
         with sqlite3.connect(DATABASE_PATH) as conn:
             conn.row_factory = sqlite3.Row
@@ -290,6 +349,16 @@ def config_view():
 
 @app.route('/delete_agent/<agent_id>', methods=['DELETE'])
 def remove_agent(agent_id):
+    """
+    Removes the agent with the specified ID.
+    
+    Deletes the agent from persistent storage and updates the tasks record. Returns a JSON
+    response indicating success if the agent is deleted, a 404 error if the agent is not found,
+    or a 500 error if deletion fails or an unexpected exception occurs.
+    
+    Args:
+        agent_id: The unique identifier of the agent to be removed.
+    """
     try:
         # Load current tasks
         tasks_data = load_tasks()
