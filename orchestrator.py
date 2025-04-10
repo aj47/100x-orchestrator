@@ -31,7 +31,15 @@ aider_sessions = {}
 prompt_processors = {}
 
 def load_tasks():
-    """Load tasks and agents from database."""
+    """
+    Load tasks, agents, and repository URL from the database.
+    
+    Returns:
+        dict: A dictionary containing:
+            - 'tasks': A list of tasks from the database.
+            - 'agents': A list of agents from the database.
+            - 'repository_url': The repository URL from configuration, or an empty string if not set.
+    """
     return {
         'tasks': get_all_tasks(),
         'agents': get_all_agents(),
@@ -39,7 +47,13 @@ def load_tasks():
     }
 
 def save_tasks(tasks_data):
-    """Save tasks and agents to database."""
+    """
+    Save tasks and agent configurations to persistent storage.
+    
+    This function persists the repository URL, if provided in tasks_data, and iterates
+    over the agents listed under the 'agents' key to save each agent's details. Any
+    errors encountered during the process are logged.
+    """
     try:
         # Save repository URL
         if 'repository_url' in tasks_data:
@@ -52,7 +66,20 @@ def save_tasks(tasks_data):
         logging.error(f"Error saving tasks: {e}", exc_info=True)
 
 def delete_agent(agent_id):
-    """Delete a specific agent and clean up its workspace."""
+    """
+    Delete an agent and remove its associated resources.
+    
+    This function terminates the agent's session (if active), deletes the agent record
+    from the database, and removes its workspace directory if present. It also updates
+    the in-memory tasks data to reflect the removal. The function returns True if all
+    cleanup operations succeed; otherwise, it returns False.
+    
+    Args:
+        agent_id: Identifier of the agent to delete.
+    
+    Returns:
+        bool: True if the agent was successfully deleted, False otherwise.
+    """
     try:
         logging.info(f"Deleting agent {agent_id}")
         
@@ -95,7 +122,27 @@ def delete_agent(agent_id):
         return False
 
 def initialiseCodingAgent(repository_url: str = None, task_description: str = None, num_agents: int = None, aider_commands: str = None):
-    """Initialise coding agents with configurable agent count."""
+    """
+    Initialize coding agents for a specified task and repository.
+    
+    This function sets up one or more isolated workspaces for coding agents by cloning the 
+    given Git repository, creating a new branch for each agent, and initializing agent sessions 
+    with the provided task description and configuration. It updates persistent tasks data with 
+    the new agent details. If the required task description or repository URL is missing, or if any 
+    initialization step fails, the function logs the error and skips that agent.
+    
+    Args:
+        repository_url (str): The URL of the Git repository to clone.
+        task_description (str): Description of the coding task for the agents.
+        num_agents (int, optional): Number of agents to initialize; defaults to a preconfigured 
+            value if not provided.
+        aider_commands (str, optional): Additional commands to execute during agent session 
+            initialization.
+    
+    Returns:
+        list[str] or None: A list of identifiers for the successfully created agents, or None 
+            if initialization fails due to missing parameters or errors.
+    """
     logging.info("Starting agent initialization")
     logging.debug(f"Initializing {num_agents} agents for task: {task_description}")
     num_agents = num_agents or DEFAULT_AGENTS_PER_TASK
@@ -188,7 +235,14 @@ def initialiseCodingAgent(repository_url: str = None, task_description: str = No
         return None
 
 def get_github_token():
-    """Retrieve GitHub token from environment variables."""
+    """
+    Retrieve a valid GitHub token from environment variables.
+    
+    Loads environment variables from a .env file and fetches the 'GITHUB_TOKEN'. The token is validated by attempting to retrieve the user login via the GitHub API. If the token is missing or invalid, an error is logged and None is returned.
+    
+    Returns:
+        str or None: The valid GitHub token if available and valid; otherwise, None.
+    """
     load_dotenv()
     token = os.getenv('GITHUB_TOKEN')
     if not token:
@@ -203,7 +257,17 @@ def get_github_token():
         return None
 
 def cloneRepository(repository_url: str) -> bool:
-    """Clone git repository using subprocess."""
+    """
+    Clone a Git repository from the specified URL.
+    
+    This function uses a subprocess call to execute the git clone command. It returns True when the repository is successfully cloned and logs any errors before returning False if the repository URL is empty, the cloning process fails, or an unexpected error occurs.
+    
+    Args:
+        repository_url (str): The URL of the repository to clone.
+    
+    Returns:
+        bool: True if the repository is successfully cloned; otherwise, False.
+    """
     try:
         if not repository_url:
             logging.error("No repository URL provided")
@@ -227,7 +291,19 @@ def cloneRepository(repository_url: str) -> bool:
         return False
 
 def update_agent_output(agent_id):
-    """Update the output for a specific agent."""
+    """
+    Updates the output for the specified agent by retrieving its current session output and refreshing its task data.
+    
+    This function loads the tasks data, obtains the agent's output from an active session, updates the agent's record 
+    with the new output and current timestamp, and then saves the updated tasks. It returns True if the update is successful, 
+    or False if the agent is not found or an error occurs.
+        
+    Args:
+        agent_id: Unique identifier of the agent.
+        
+    Returns:
+        bool: True if the agent's output was updated and saved, False otherwise.
+    """
     try:
         tasks_data = load_tasks()
         agent_data = tasks_data['agents'].get(agent_id)
@@ -246,6 +322,15 @@ def update_agent_output(agent_id):
         return False
 
 def main_loop():
+    """
+    Main loop to coordinate agent tasks and manage agent outputs.
+    
+    This function continuously loads task data, updates agent session outputs, and processes
+    responses via a language model client. It triggers follow-up actions based on processed
+    responses, updates agent progress and thought histories, and creates pull requests when
+    agents complete their tasks. Errors encountered during processing are logged, and the
+    loop pauses briefly before retrying.
+    """
     pr_manager = PullRequestManager()
     """Main orchestration loop to manage agents."""
     logging.info("Starting main loop")
