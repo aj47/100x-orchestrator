@@ -39,13 +39,13 @@ def client(mock_env_vars):
 def test_init_with_env_file(mock_env_file, mock_env_vars):
     """Test client initialization with .env file."""
     client = LiteLLMClient()
-    assert client.api_key == "test_key_123"
+    assert client.api_keys["openrouter"] == "test_key_123"
 
 def test_init_without_env_file():
     """Test client initialization without .env file."""
     with patch.dict(os.environ, clear=True):
         with patch('pathlib.Path.home', return_value=Path('/nonexistent')):
-            with pytest.raises(ValueError, match="OPENROUTER_API_KEY not found"):
+            with pytest.raises(ValueError, match="No API keys found"):
                 LiteLLMClient()
 
 @patch('litellm_client.completion')
