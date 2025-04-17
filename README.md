@@ -79,8 +79,6 @@ The 100x-orchestrator system consists of three key components:
    pipx install aider-chat
    ```
 
-   **Note**: Currently, this project only works with the OpenRouter provider.
-
 ## Configuration
 
 ### Environment Variables
@@ -93,18 +91,48 @@ You need to set up environment variables to configure API keys and model choices
     touch ~/.env
     ```
 
-2. Add your API keys and model preferences to the `.env` file using LiteLLM notation. You can specify any model and its associated API key. For example:
+2. Add your API keys to the `.env` file. The system supports multiple providers through LiteLLM. You can add any of the following API keys:
 
     ```
+    # OpenRouter
     OPENROUTER_API_KEY=your_openrouter_api_key
-    ANY_OTHER_API_KEY=your_other_api_key
+    
+    # OpenAI
+    OPENAI_API_KEY=your_openai_api_key
+    
+    # Anthropic
+    ANTHROPIC_API_KEY=your_anthropic_api_key
+    
+    # Together AI
+    TOGETHER_API_KEY=your_together_api_key
+    
+    # Azure
+    AZURE_API_KEY=your_azure_api_key
+    
+    # Cohere
+    COHERE_API_KEY=your_cohere_api_key
+    
+    # Mistral
+    MISTRAL_API_KEY=your_mistral_api_key
+    
+    # Groq
+    GROQ_API_KEY=your_groq_api_key
     ```
 
     You can set the default models for Orchestrator, Aider, and Agent components in the web interface under the "Configuration" section. Use LiteLLM model strings to specify your preferred models. For example:
 
     ```
-    MY_MODEL=provider/model_name
+    # Examples of model strings for different providers:
+    # OpenRouter: openrouter/google/gemini-flash-1.5
+    # OpenAI: openai/gpt-4-turbo
+    # Anthropic: anthropic/claude-3-opus-20240229
+    # Together AI: together/togethercomputer/llama-3-70b-instruct
+    # Mistral: mistral/mistral-large-latest
+    # Groq: groq/llama-3-70b-8192
     ```
+    
+    The system will automatically use the appropriate API key based on the model provider.
+    
     -   **Note**: LiteLLM model strings can be found [here](https://docs.litellm.ai/docs/providers).
 3. Add your `GITHUB_TOKEN` to the `.env` file:
 
