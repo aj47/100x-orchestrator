@@ -331,7 +331,7 @@ if __name__ == '__main__':
         from database import init_db
         init_db()
         
-        app.run(debug=True, use_reloader=False)
+        app.run(debug=os.getenv('FLASK_DEBUG', 'False').lower() == 'true', use_reloader=False)
     except Exception as e:
         print(f"Fatal error during startup: {e}")
         print("Try deleting tasks.db and restarting the application")
