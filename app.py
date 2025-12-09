@@ -193,7 +193,7 @@ def update_model_config():
         
         # Get existing config to preserve aider_prompt_suffix if not provided
         existing_config = get_model_config()
-        aider_prompt_suffix = data.get('aider_prompt_suffix', existing_config.get('aider_prompt_suffix', ''))
+        aider_prompt_suffix = data.get('aider_prompt_suffix', (existing_config or {}).get('aider_prompt_suffix', ''))
         
         # Save to database
         with sqlite3.connect(DATABASE_PATH) as conn:
