@@ -11,6 +11,12 @@ DATABASE_PATH = Path("tasks.db")
 class TasksJsonLogFilter(logging.Filter):
     def filter(self, record):
         # Suppress log messages for tasks.json requests
+        """
+        Filter log records to suppress messages for '/tasks/tasks.json' requests.
+        
+        This method checks if the log record's message contains '/tasks/tasks.json' and returns
+        False to suppress logging for these specific requests; otherwise, it returns True.
+        """
         return not ('/tasks/tasks.json' in record.getMessage())
 from orchestrator import (
     initialiseCodingAgent, 
@@ -43,6 +49,11 @@ for handler in logging.getLogger().handlers:
 
 @app.route('/')
 def index():
+    """
+    Render the main index page.
+    
+    This view function renders and returns the 'index.html' template as the landing page.
+    """
     return render_template('index.html')
 
 @app.route('/tasks/tasks.json')
@@ -53,7 +64,13 @@ def serve_tasks_json():
 
 @app.route('/agents')
 def agent_view():
-    """Render the agent view with all agent details."""
+    """
+    Render the agent view HTML with updated agent details.
+    
+    Loads tasks data, ensures each agent contains default fields for output and progress
+    tracking (such as 'aider_output', 'last_updated', 'progress', 'thought', 'future',
+    and 'last_action'), saves any modifications, and returns the rendered HTML template.
+    """
     tasks_data = load_tasks()
     agents = tasks_data.get('agents', {})
     
@@ -81,6 +98,15 @@ def agent_view():
 
 @app.route('/create_agent', methods=['POST'])
 def create_agent():
+    """
+    Creates coding agents based on repository and task information provided in a JSON request.
+    
+    Extracts the repository URL, tasks, number of agents, and aider commands from the JSON payload, and requires a 
+    GitHub token supplied in the "X-GitHub-Token" header. For each task, initializes an agent using the repository and 
+    task details, updates the tasks store, and ensures that the main orchestrator loop is running in a separate thread.
+    Returns a JSON response with a success flag and agent identifiers if agents are created successfully; otherwise, 
+    an error message with an appropriate HTTP status code.
+    """
     try:
         data = request.get_json()
         repo_url = data.get('repo_url')
@@ -180,7 +206,23 @@ def create_agent():
 
 @app.route('/config/models', methods=['POST'])
 def update_model_config():
-    """Update the model configuration for orchestrator, aider and agent."""
+    """
+    Update and persist model configuration settings.
+    
+    This endpoint processes a JSON payload containing updated model settings for the orchestrator,
+    aider, and agent. The payload must include the following keys:
+      - orchestrator_model
+      - aider_model
+      - agent_model
+      - orchestrator_api_key
+      - aider_api_key
+      - agent_api_key
+      - provider
+    
+    Optionally, an 'aider_prompt_suffix' can be provided; if omitted, the existing value is retained.
+    Upon successful validation, any previous configuration is cleared and the new settings are saved
+    to the database. A JSON response is returned indicating success or describing any error encountered.
+    """
     try:
         data = request.get_json()
         required_fields = ['orchestrator_model', 'aider_model', 'agent_model', 'orchestrator_api_key', 'aider_api_key', 'agent_api_key', 'provider']
@@ -234,7 +276,20 @@ def update_model_config():
 
 @app.route('/config/models', methods=['GET'])
 def get_model_config():
-    """Get the current model configuration."""
+    """
+    Retrieve the latest model configuration from the database.
+    
+    This function queries the "model_config" table for the most recent record. If a configuration
+    is found, it verifies that all required fields—namely, orchestrator_model, aider_model, agent_model,
+    aider_prompt_suffix, orchestrator_api_key, aider_api_key, agent_api_key, and provider—are present,
+    assigning default values for any missing fields. If no record is found, a default configuration is returned.
+    In case of a database error, the function returns an error dictionary paired with an HTTP 500 status code.
+    
+    Returns:
+        dict: On success, a dictionary with "success" set to True and a "config" key containing the model
+              configuration. On error, a tuple where the first element is a dictionary with "success" set to
+              False and an "error" message, and the second element is the HTTP status code 500.
+    """
     try:
         with sqlite3.connect(DATABASE_PATH) as conn:
             conn.row_factory = sqlite3.Row
@@ -290,6 +345,21 @@ def config_view():
 
 @app.route('/delete_agent/<agent_id>', methods=['DELETE'])
 def remove_agent(agent_id):
+    """
+    Remove an agent identified by agent_id from the tasks data and database.
+    
+    This function loads the current tasks data and checks for the existence of the specified agent.
+    If the agent is found, it attempts to delete the agent from the database and, upon success,
+    removes the agent from the tasks data and updates the JSON file. It returns a JSON response
+    with a success message if the deletion is successful, or an error message with an appropriate
+    HTTP status code if the agent is not found or if the deletion fails.
+      
+    Args:
+        agent_id: The identifier of the agent to remove.
+      
+    Returns:
+        A JSON response object containing a 'success' flag and either a success message or an error message.
+    """
     try:
         # Load current tasks
         tasks_data = load_tasks()
