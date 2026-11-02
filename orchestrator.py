@@ -209,8 +209,7 @@ def cloneRepository(repository_url: str) -> bool:
             return False
         logging.info(f"Cloning {repository_url}")
         result = subprocess.run(
-            f"git clone --quiet {repository_url}",
-            shell=True,
+            ["git", "clone", "--quiet", repository_url],
             capture_output=True,
             text=True
         )
